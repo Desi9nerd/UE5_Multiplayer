@@ -19,13 +19,36 @@
 			]
 		},
 		{
-			"Name": "OnlineSubsystemSteam",
-			"Enabled": true
-		},
-		{
 			"Name": "ElectronicNodes",
 			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/5cb2a394d0c04e73891762be4cbd7216"
+		},
+		{
+			"Name": "OnlineSubsystemNull",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineSubsystemUtils",
+			"Enabled": false
+		},
+		{
+			"Name": "OnlineSubsystemGooglePlay",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"Android"
+			]
+		},
+		{
+			"Name": "OnlineSubsystemIOS",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"IOS",
+				"TVOS"
+			]
+		},
+		{
+			"Name": "OnlineSubsystemSteam",
+			"Enabled": true
 		}
 	]
 }
