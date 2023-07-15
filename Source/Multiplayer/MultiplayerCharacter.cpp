@@ -13,8 +13,9 @@
 //////////////////////////////////////////////////////////////////////////
 // AMultiplayerCharacter
 
-AMultiplayerCharacter::AMultiplayerCharacter()
-	: CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete))
+AMultiplayerCharacter::AMultiplayerCharacter() :
+	CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete)),
+	FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete))
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -122,8 +123,29 @@ void AMultiplayerCharacter::CreateGameSession()
 	SessionSettings->bShouldAdvertise = true;//Steam에서 Advertise가 가능하여 사람들이 찾아 들어올 수 있게 한다.
 	SessionSettings->bUsesPresence = true;//같은 region에서 session을 찾을 수 있게 해준다.
 	SessionSettings->Set(FName("MatchType"), FString("FreeForAll"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	SessionSettings->bUseLobbiesIfAvailable = true;//Session을 찾기 힘들때 사용하는 세팅.
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings);//위의 SessionSettings를 만족하는 Session을 생성한다.
+}
+
+void AMultiplayerCharacter::JoinGameSession()
+{
+	//Game Sessions 찾기
+	if (false == OnlineSessionInterface.IsValid())
+	{
+		return;
+	}
+
+	//OnlineSessionInterface에 FindSessionsCompleteDelegate을 연결시킨다.
+	OnlineSessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	SessionSearch->MaxSearchResults = 10000;//DevID 찾기 최대 개수.
+	SessionSearch->bIsLanQuery = false;//LAN을 사용하지 않으므로 false 설정.
+	SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);//The query to use for finding matching servers. set조건에 만족하는 서버들을 찾는다.
+
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	OnlineSessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), SessionSearch.ToSharedRef());
 }
 
 void AMultiplayerCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
@@ -158,6 +180,49 @@ void AMultiplayerCharacter::OnCreateSessionComplete(FName SessionName, bool bWas
 				FColor::Red,
 				FString(TEXT("Failed to create session!"))
 			);
+		}
+	}
+}
+
+void AMultiplayerCharacter::OnFindSessionsComplete(bool bWasSuccessful)
+{
+	if (false == OnlineSessionInterface.IsValid())
+	{
+		return;
+	}
+
+	//SearchResults를 for문으로 순회
+	for (auto Result : SessionSearch->SearchResults)
+	{
+		FString Id = Result.GetSessionIdStr();
+		FString User = Result.Session.OwningUserName;
+		FString MatchType;
+		Result.Session.SessionSettings.Get(FName("MatchType"), MatchType);
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.f,
+				FColor::Cyan,
+				FString::Printf(TEXT("Id: %s, User: %s"), *Id, *User)
+			);
+		}
+		if (MatchType == FString("FreeForAll"))
+		{
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(
+					-1,
+					15.f,
+					FColor::Cyan,
+					FString::Printf(TEXT("Joining Match Type: %s"), *MatchType)
+				);
+			}
+
+			OnlineSessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+
+			const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+			OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, Result);
 		}
 	}
 }
