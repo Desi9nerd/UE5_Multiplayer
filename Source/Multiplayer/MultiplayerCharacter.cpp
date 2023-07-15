@@ -8,12 +8,13 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "OnlineSubsystem.h"
-#include "Interfaces/OnlineSessionInterface.h"
+#include "OnlineSessionSettings.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AMultiplayerCharacter
 
 AMultiplayerCharacter::AMultiplayerCharacter()
+	: CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete))
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -93,6 +94,72 @@ void AMultiplayerCharacter::SetupPlayerInputComponent(class UInputComponent* Pla
 	// handle touch devices
 	PlayerInputComponent->BindTouch(IE_Pressed, this, &AMultiplayerCharacter::TouchStarted);
 	PlayerInputComponent->BindTouch(IE_Released, this, &AMultiplayerCharacter::TouchStopped);
+}
+
+void AMultiplayerCharacter::CreateGameSession()
+{
+	// 1번 키를 눌렀을 때 콜 된다. BP_ThirdPersonCharacter에서 1번 키를 누르면 콜 되게 해줬다.
+
+	if (false == OnlineSessionInterface.IsValid())
+	{	//OnlineSessionInterface가 유효하지 않다면 리턴.
+		return;
+	}
+
+	auto ExistingSession = OnlineSessionInterface->GetNamedSession(NAME_GameSession);
+	if (ExistingSession != nullptr)
+	{
+		OnlineSessionInterface->DestroySession(NAME_GameSession);//Session을 끝낸다.
+	}
+
+	//Delegate 연결
+	OnlineSessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
+
+	TSharedPtr<FOnlineSessionSettings> SessionSettings = MakeShareable(new FOnlineSessionSettings());
+	SessionSettings->bIsLANMatch = false;//Internet으로 연결할 것이므로 LANMatch를 사용하지 않는다.
+	SessionSettings->NumPublicConnections = 4;//4명의 Players까지 접속이 가능하게 설정.
+	SessionSettings->bAllowJoinInProgress = true;//Session이 실행중일 때 Player들이 원할 때 들어올 수 있음
+	SessionSettings->bAllowJoinViaPresence = true;//Steam 기준에서 같은 region에 있는 Player들만 들어올 수 있게 설정.
+	SessionSettings->bShouldAdvertise = true;//Steam에서 Advertise가 가능하여 사람들이 찾아 들어올 수 있게 한다.
+	SessionSettings->bUsesPresence = true;//같은 region에서 session을 찾을 수 있게 해준다.
+	SessionSettings->Set(FName("MatchType"), FString("FreeForAll"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings);//위의 SessionSettings를 만족하는 Session을 생성한다.
+}
+
+void AMultiplayerCharacter::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
+{
+	//Session 생성이 성공한 경우
+	if (bWasSuccessful)
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.0f,
+				FColor::Blue,
+				FString::Printf(TEXT("Created session: %s"), *SessionName.ToString())
+			);
+		}
+		//Lobby라는 Level 맵을 띄운다.
+		UWorld* World = GetWorld();
+		if (World)
+		{
+			World->ServerTravel(FString("/Game/ThirdPerson/Maps/Lobby?listen"));
+		}
+	}
+	//Session 생성이 실패한 경우
+	else
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.f,
+				FColor::Red,
+				FString(TEXT("Failed to create session!"))
+			);
+		}
+	}
 }
 
 void AMultiplayerCharacter::TouchStarted(ETouchIndex::Type FingerIndex, FVector Location)
