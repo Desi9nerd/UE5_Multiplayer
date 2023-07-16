@@ -15,7 +15,8 @@
 
 AMultiplayerCharacter::AMultiplayerCharacter() :
 	CreateSessionCompleteDelegate(FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete)),
-	FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete))
+	FindSessionsCompleteDelegate(FOnFindSessionsCompleteDelegate::CreateUObject(this, &ThisClass::OnFindSessionsComplete)),
+	JoinSessionCompleteDelegate(FOnJoinSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnJoinSessionComplete))
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -122,7 +123,7 @@ void AMultiplayerCharacter::CreateGameSession()
 	SessionSettings->bAllowJoinViaPresence = true;//Steam 기준에서 같은 region에 있는 Player들만 들어올 수 있게 설정.
 	SessionSettings->bShouldAdvertise = true;//Steam에서 Advertise가 가능하여 사람들이 찾아 들어올 수 있게 한다.
 	SessionSettings->bUsesPresence = true;//같은 region에서 session을 찾을 수 있게 해준다.
-	SessionSettings->Set(FName("MatchType"), FString("FreeForAll"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	SessionSettings->Set(FName("MatchType"), FString("FreeForAll"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);//FreeForAll는 여러개의 MatchType을 가능하게 한다. ViaOnlineServiceAndPing는 Session이 OnlineService와 Ping에서 Advertise된다는 의미.
 	SessionSettings->bUseLobbiesIfAvailable = true;//Session을 찾기 힘들때 사용하는 세팅.
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	OnlineSessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *SessionSettings);//위의 SessionSettings를 만족하는 Session을 생성한다.
@@ -166,6 +167,7 @@ void AMultiplayerCharacter::OnCreateSessionComplete(FName SessionName, bool bWas
 		UWorld* World = GetWorld();
 		if (World)
 		{
+			//원하는 Level를 설정한다.
 			World->ServerTravel(FString("/Game/ThirdPerson/Maps/Lobby?listen"));
 		}
 	}
@@ -186,6 +188,7 @@ void AMultiplayerCharacter::OnCreateSessionComplete(FName SessionName, bool bWas
 
 void AMultiplayerCharacter::OnFindSessionsComplete(bool bWasSuccessful)
 {
+	//OnlineSessionInterface가 없다면 리턴
 	if (false == OnlineSessionInterface.IsValid())
 	{
 		return;
@@ -197,7 +200,7 @@ void AMultiplayerCharacter::OnFindSessionsComplete(bool bWasSuccessful)
 		FString Id = Result.GetSessionIdStr();
 		FString User = Result.Session.OwningUserName;
 		FString MatchType;
-		Result.Session.SessionSettings.Get(FName("MatchType"), MatchType);
+		Result.Session.SessionSettings.Get(FName("MatchType"), MatchType);//"MatchType"라는 Key가 있다면 MatchType라는 로컬Value에 접근한다.
 		if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(
@@ -219,10 +222,41 @@ void AMultiplayerCharacter::OnFindSessionsComplete(bool bWasSuccessful)
 				);
 			}
 
+			//JoinSession이 Complete된 후에 callback이 불려진다.
 			OnlineSessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
 
 			const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
-			OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, Result);
+			OnlineSessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, Result);//Result는 해당조건을 만족하고 FreeForAll라는 Value를 가지고 있다.
+		}
+	}
+}
+
+//Join Session이 Complete(완료)되면 불려지는 함수.
+void AMultiplayerCharacter::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
+{
+	//OnlineSessionInterface가 없다면 리턴
+	if (false == OnlineSessionInterface.IsValid())
+	{
+		return;
+	}
+
+	FString Address;
+	if (OnlineSessionInterface->GetResolvedConnectString(NAME_GameSession, Address))
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				15.f,
+				FColor::Yellow,
+				FString::Printf(TEXT("Connect string: %s"), *Address)//Address를 Debugging Message로 출력한다.
+			);
+		}
+
+		APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController();
+		if (PlayerController)
+		{
+			PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 		}
 	}
 }
