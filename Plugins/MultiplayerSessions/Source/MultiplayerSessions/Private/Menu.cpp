@@ -83,7 +83,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 		UWorld* World = GetWorld();
 		if (World)
 		{
-			World->ServerTravel("/Game/ThirdPersonCPP/Maps/Lobby?listen");
+			World->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
 		}
 	}
 	else//실패한 경우
@@ -102,6 +102,17 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 
 void UMenu::HostButtonClicked()
 {
+	//디버깅용
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			15.f,
+			FColor::Yellow,
+			FString(TEXT("Host Button Clicked"))
+		);
+	}
+
 	if (MultiplayerSessionsSubsystem)
 	{
 		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);//NumPublicConnections 숫자 크기까지 Players 접속 가능
