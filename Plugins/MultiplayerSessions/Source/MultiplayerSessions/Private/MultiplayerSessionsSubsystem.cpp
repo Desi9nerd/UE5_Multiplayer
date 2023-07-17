@@ -43,6 +43,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 	LastSessionSettings->bShouldAdvertise = true;//Steam에서 Advertise가 가능하여 사람들이 찾아 들어올 수 있게 한다.
 	LastSessionSettings->bUsesPresence = true;//같은 region에서 session을 찾을 수 있게 해준다.
 	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	LastSessionSettings->BuildUniqueId = 1;
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	if (false == SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings))//CreateSession 리턴값이 false라면(=Session 만들기에 실패한다면)
