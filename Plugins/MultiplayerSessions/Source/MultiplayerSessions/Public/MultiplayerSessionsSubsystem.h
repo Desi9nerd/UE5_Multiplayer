@@ -5,6 +5,12 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "MultiplayerSessionsSubsystem.generated.h"
 
+//
+// Delcaring our own custom delegates for the Menu class to bind callbacks to
+//
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful);
+
+
 UCLASS()
 class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstanceSubsystem
 {
@@ -22,6 +28,11 @@ public:
 	void DestroySession();
 	void StartSession();
 
+	//
+	// Our own custom delegates for the Menu class to bind callbacks to
+	//
+	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
+
 protected:
 	// Internal callbacks for the delegates we'll add to the Online Session Interface delegate list.
 	// 아래의 함수들은 이 클래스 밖에서 콜하지 않는다.
@@ -33,6 +44,7 @@ protected:
 
 private:
 	IOnlineSessionPtr SessionInterface;
+	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 
 	//
 	// To add to the Online Session Interface delegate list.
