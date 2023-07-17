@@ -20,7 +20,7 @@ protected:
 
 	//
 	// Callbacks for the custom delegates on the MultiplayerSessionsSubsystem
-	//
+	// MultiplayerSessionsSubsystem.h의 Dynamic Delegate과 연결된다. Dynamic과 연결되는 경우 UFUNCTION()을 꼭 붙여야 한다. 붙이지 않으면 dynamic delegate과 연결되지 않는다.
 	UFUNCTION()
 		void OnCreateSession(bool bWasSuccessful);
 

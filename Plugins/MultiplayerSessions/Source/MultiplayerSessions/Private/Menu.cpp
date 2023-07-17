@@ -30,6 +30,12 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch)
 		//헤더에서 만든 MultiplayerSessionsSubsystem 변수에 Subsystem을 리턴 값을 넣어준다.
 		MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
 	}
+
+	if (MultiplayerSessionsSubsystem)
+	{
+		//callback을 Bind해준다.
+		MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &ThisClass::OnCreateSession);
+	}
 }
 
 bool UMenu::Initialize()
@@ -80,7 +86,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 			World->ServerTravel("/Game/ThirdPersonCPP/Maps/Lobby?listen");
 		}
 	}
-	else
+	else//실패한 경우
 	{
 		if (GEngine)
 		{
@@ -96,25 +102,10 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 
 void UMenu::HostButtonClicked()
 {
-	//디버깅 테스트
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			15.f,
-			FColor::Yellow,
-			FString(TEXT("Host Button Clicked"))
-		);
-	}
-
 	if (MultiplayerSessionsSubsystem)
 	{
 		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);//NumPublicConnections 숫자 크기까지 Players 접속 가능
 		UWorld* World = GetWorld();
-		if (World)
-		{
-			World->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
-		}
 	}
 }
 

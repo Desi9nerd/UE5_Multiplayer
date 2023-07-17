@@ -50,8 +50,9 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 		//Delegate Handle를 사용하여 Delegate List에서 제거한다.
 		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 
+		// 헤더에서 만든 MultiplayerOnCreateSessionComplete delegate을 Broadcast 해준다.
 		// Broadcast our own custom delegate
-		MultiplayerOnCreateSessionComplete.Broadcast(false);
+		MultiplayerOnCreateSessionComplete.Broadcast(false);//위의 if조건에서는 false
 	}
 }
 
@@ -73,11 +74,12 @@ void UMultiplayerSessionsSubsystem::StartSession()
 
 void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
+	//SessionInterfaces의 Delegate을 지워준다.
 	if (SessionInterface)
 	{
 		SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegateHandle);
 	}
-
+	//MultiplayerOnCreateSessionComplete delegate를 Broadcast 해준다. 이렇게하면 Menu 클래스는 callback function 가지게 된다.
 	MultiplayerOnCreateSessionComplete.Broadcast(bWasSuccessful);
 }
 
