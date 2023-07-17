@@ -12,7 +12,7 @@ class MULTIPLAYERSESSIONS_API UMenu : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintCallable)
-		void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")));//접속할 수 있는 Player 숫자를 input으로 만들고 4를 기본값으로 설정한다.
+		void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")), FString LobbyPath = FString(TEXT("/Game/ThirdPerson/Maps/Lobby")));//접속할 수 있는 Player 숫자를 input으로 만들고 4를 기본값으로 설정한다. Lobby 레벨을 기본으로 설정한다.
 
 protected:
 
@@ -52,4 +52,5 @@ private:
 	
 	int32 NumPublicConnections{ 4 };
 	FString MatchType{ TEXT("FreeForAll") };
+	FString PathToLobby{ TEXT("") };
 };
