@@ -2,6 +2,7 @@
 #include "Components/Button.h"
 #include "MultiplayerSessionsSubsystem.h"
 #include "OnlineSessionSettings.h"
+#include "OnlineSubsystem.h"
 
 void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch)
 {
@@ -107,10 +108,43 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 
 void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
 {
+	if (MultiplayerSessionsSubsystem == nullptr)
+	{
+		return;
+	}
+
+	for (auto Result : SessionResults)//변수로 받은 SessionResults배열을 순회하며 검색
+	{
+		FString SettingsValue;
+		Result.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);
+		//SessionSettings의 결과값이 "MatchType"과 SetingsValue을 가지고 있는지 확인.
+		if (SettingsValue == MatchType)
+		{
+			MultiplayerSessionsSubsystem->JoinSession(Result);
+			return;
+		}
+	}
 }
 
 void UMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 {
+	//IOnlineSubsystem 사용을 위해 위에 #include "OnlineSubsystem.h" 추가
+	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
+	if (Subsystem)
+	{
+		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
+		if (SessionInterface.IsValid())
+		{
+			FString Address;
+			SessionInterface->GetResolvedConnectString(NAME_GameSession, Address);
+
+			APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController();
+			if (PlayerController)
+			{
+				PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
+			}
+		}
+	}
 }
 
 void UMenu::OnDestroySession(bool bWasSuccessful)
@@ -152,6 +186,12 @@ void UMenu::JoinButtonClicked()
 			FColor::Yellow,
 			FString(TEXT("Join Button Clicked"))
 		);
+	}
+
+	if (MultiplayerSessionsSubsystem)
+	{
+		//Steam DevID의 숫자가 클수도 있으니 MaxSearchResults값을 10000으로 넉넉히 잡는다.
+		MultiplayerSessionsSubsystem->FindSessions(10000);
 	}
 }
 

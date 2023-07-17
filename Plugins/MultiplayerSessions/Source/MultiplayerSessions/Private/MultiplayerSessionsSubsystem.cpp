@@ -58,10 +58,48 @@ void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FS
 
 void UMultiplayerSessionsSubsystem::FindSessions(int32 MaxSearchResults)
 {
+	if (false == SessionInterface.IsValid())
+	{
+		return;
+	}
+
+	//MultiplayerSessionsSubsystem.h 내의 FindSessionsCompleteDelegate을 연결시킨다.
+	FindSessionsCompleteDelegateHandle = SessionInterface->AddOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegate);
+
+	LastSessionSearch = MakeShareable(new FOnlineSessionSearch());//생성
+	LastSessionSearch->MaxSearchResults = MaxSearchResults;//DevID 찾기 최대 개수.
+	LastSessionSearch->bIsLanQuery = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? true : false;//Steam Subsystem에 연결하는 경우는 LAN Match가 아니다. NULL Subsystem을 사용하는 경우 LAN Match다.
+	LastSessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
+
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	if (false == SessionInterface->FindSessions(*LocalPlayer->GetPreferredUniqueNetId(), LastSessionSearch.ToSharedRef()))//FindSession 리턴값이 false라면(=Session 찾기에 실패했다면)
+	{
+		//Delegate Handle를 사용하여 FindSessionsCompleteDelegateHandle을 Delegate List에서 제거한다.
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+
+		//헤더에서 만든 MultiplayerOnFindSessionComplete delegate을 Broadcast 해준다.
+		MultiplayerOnFindSessionsComplete.Broadcast(TArray<FOnlineSessionSearchResult>(), false);//menu가 이 Broadcast를 받을 때 false로 받으면 FOnlineSessionSearchResult 배열이 비어있다는 것을 알 수 있다.
+	}
 }
 
 void UMultiplayerSessionsSubsystem::JoinSession(const FOnlineSessionSearchResult& SessionResult)
 {
+	if (false == SessionInterface.IsValid())//SessionInterface가 없다면
+	{
+		//Menu에 UnknownError라고(=JoinSession 할 수 없다고) 알려준다. 
+		MultiplayerOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
+		return;
+	}
+
+	JoinSessionCompleteDelegateHandle = SessionInterface->AddOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegate);
+
+	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
+	if (false == SessionInterface->JoinSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, SessionResult))//JoinSession 리턴값이 false라면(=Session Join에 실패했다면)
+	{
+		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+
+		MultiplayerOnJoinSessionComplete.Broadcast(EOnJoinSessionCompleteResult::UnknownError);
+	}
 }
 
 void UMultiplayerSessionsSubsystem::DestroySession()
@@ -83,12 +121,32 @@ void UMultiplayerSessionsSubsystem::OnCreateSessionComplete(FName SessionName, b
 	MultiplayerOnCreateSessionComplete.Broadcast(bWasSuccessful);
 }
 
+//Session을 성공적으로 찾은 경우 콜 되는 함수 
 void UMultiplayerSessionsSubsystem::OnFindSessionsComplete(bool bWasSuccessful)
 {
+	if (SessionInterface)
+	{
+		SessionInterface->ClearOnFindSessionsCompleteDelegate_Handle(FindSessionsCompleteDelegateHandle);
+	}
+
+	if (LastSessionSearch->SearchResults.Num() <= 0)//SearchResults 배열 결과값을 순회에서 찾았을 때, 찾은것이 0이하라면(=아무것도 찾지 못했다면)
+	{
+		MultiplayerOnFindSessionsComplete.Broadcast(TArray<FOnlineSessionSearchResult>(), false);//menu가 이 Broadcast를 받을 때 false로 받으면 FOnlineSessionSearchResult 배열이 비어있다는 것을 알 수 있다.
+		return;//밑의 코드가 진행되지 않도록 여기서 리턴 시켜준다.
+	}
+
+	MultiplayerOnFindSessionsComplete.Broadcast(LastSessionSearch->SearchResults, bWasSuccessful);
 }
 
 void UMultiplayerSessionsSubsystem::OnJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
 {
+	if (SessionInterface)
+	{
+		SessionInterface->ClearOnJoinSessionCompleteDelegate_Handle(JoinSessionCompleteDelegateHandle);
+	}
+
+	//EOnJoinSessionCompleteResult를 Broadcast 해준다.
+	MultiplayerOnJoinSessionComplete.Broadcast(Result);
 }
 
 void UMultiplayerSessionsSubsystem::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
