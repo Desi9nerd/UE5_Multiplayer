@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Interfaces/OnlineSessionInterface.h"//EOnJoinSessionCompleteResult 사용을 위한 헤더
 #include "Menu.generated.h"
 
 UCLASS()
@@ -22,7 +23,13 @@ protected:
 	// Callbacks for the custom delegates on the MultiplayerSessionsSubsystem
 	// MultiplayerSessionsSubsystem.h의 Dynamic Delegate과 연결된다. Dynamic과 연결되는 경우 UFUNCTION()을 꼭 붙여야 한다. 붙이지 않으면 dynamic delegate과 연결되지 않는다.
 	UFUNCTION()
-		void OnCreateSession(bool bWasSuccessful);
+	void OnCreateSession(bool bWasSuccessful);
+	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
+	void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);
+	UFUNCTION()
+	void OnDestroySession(bool bWasSuccessful);
+	UFUNCTION()
+	void OnStartSession(bool bWasSuccessful);
 
 private:
 	//meta = (BindWidget)을 사용하면 BP의 Button Widget이 아래의 변수와 연결된다. 이 때 BP와 C++변수 이름은 일치하여야 한다.
