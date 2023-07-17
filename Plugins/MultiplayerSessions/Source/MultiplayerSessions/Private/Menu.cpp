@@ -106,6 +106,7 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 			);
 		}
 	}
+	HostButton->SetIsEnabled(true);//실패한 경우 Host 버튼이 눌릴 수 있도록 SetIsEnabled를 true로 만든다.
 }
 
 void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
@@ -125,6 +126,11 @@ void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResu
 			MultiplayerSessionsSubsystem->JoinSession(Result);
 			return;
 		}
+	}
+
+	if (!bWasSuccessful || SessionResults.Num() == 0)
+	{
+		JoinButton->SetIsEnabled(true);//Session 찾기를 실패한 경우 Join 버튼이 눌릴 수 있도록 SetIsEnabled를 true로 만든다.
 	}
 }
 
@@ -160,7 +166,7 @@ void UMenu::OnStartSession(bool bWasSuccessful)
 void UMenu::HostButtonClicked()
 {
 	//디버깅용
-	if (GEngine)
+	/*if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(
 			-1,
@@ -168,7 +174,9 @@ void UMenu::HostButtonClicked()
 			FColor::Yellow,
 			FString(TEXT("Host Button Clicked"))
 		);
-	}
+	}*/
+
+	HostButton->SetIsEnabled(false);//버튼이 여러번 눌려 Session이 계속 생성하거나 찾는것을 방지하기 위해 버튼을 클릭하면 더 이상 눌리지 않게 SetIsEnabled를 false로 설정한다.
 
 	if (MultiplayerSessionsSubsystem)
 	{
@@ -180,7 +188,7 @@ void UMenu::HostButtonClicked()
 void UMenu::JoinButtonClicked()
 {
 	//디버깅 테스트
-	if (GEngine)
+	/*if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(
 			-1,
@@ -188,7 +196,9 @@ void UMenu::JoinButtonClicked()
 			FColor::Yellow,
 			FString(TEXT("Join Button Clicked"))
 		);
-	}
+	}*/
+
+	JoinButton->SetIsEnabled(false);//버튼이 여러번 눌려 Session이 계속 생성하거나 계속 찾는것을 방지하기 위해 버튼을 클릭하면 더 이상 눌리지 않게 SetIsEnabled를 false로 설정한다.
 
 	if (MultiplayerSessionsSubsystem)
 	{
