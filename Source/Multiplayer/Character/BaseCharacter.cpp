@@ -1,5 +1,6 @@
 #include "BaseCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 
 ABaseCharacter::ABaseCharacter()
@@ -14,6 +15,9 @@ ABaseCharacter::ABaseCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraSpringArm, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	bUseControllerRotationYaw = false; //Unequipped로 시작했을때 마우스를 돌릴때 화면만 돌아가지 않고 플레이어와 같이 돌아가도록 false 설정.
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
 void ABaseCharacter::BeginPlay()
