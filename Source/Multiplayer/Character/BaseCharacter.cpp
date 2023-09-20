@@ -3,6 +3,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "Multiplayer/Weapon/Weapon.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -33,7 +35,6 @@ void ABaseCharacter::BeginPlay()
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -48,6 +49,12 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAxis("LookUp", this, &ABaseCharacter::LookUp);
 }
 
+void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingWeapon, COND_OwnerOnly);//OwnerOnly: 해당 캐릭터를 가지고 있는 Client만 적용
+}
 
 void ABaseCharacter::MoveForward(float Value)
 {
@@ -57,14 +64,13 @@ void ABaseCharacter::MoveForward(float Value)
 		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X));//수정된 Yaw의 X방향의 FVector
 		AddMovementInput(Direction, Value);//앞 방향으로 Value만큼 이동
 	}
-
 }
 
 void ABaseCharacter::MoveRight(float Value)
 {
-	if (Controller != nullptr && Value != 0.f)
+	if (Controller != nullptr && Value != 0.0f)
 	{
-		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
+		const FRotator YawRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
 		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y));//수정된 Yaw의 Y방향의 FVector
 		AddMovementInput(Direction, Value);//오른쪽 방향으로 Value만큼 이동
 	}
@@ -80,7 +86,31 @@ void ABaseCharacter::LookUp(float Value)
 	AddControllerPitchInput(Value);
 }
 
-void ABaseCharacter::Jump()
+void ABaseCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
-	Super::Jump();
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(false);
+	}
+
+	OverlappingWeapon = Weapon;
+	if (IsLocallyControlled())
+	{
+		if (OverlappingWeapon)
+		{
+			OverlappingWeapon->ShowPickupWidget(true);
+		}
+	}
+}
+
+void ABaseCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
+{
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	if (LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
+	}
 }
