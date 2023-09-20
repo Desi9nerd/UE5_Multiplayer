@@ -44,4 +44,7 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class UWidgetComponent* PickupWidget; //무기줍기 Widget(Press E-PickUp)
+
+public:
+	FORCEINLINE void SetWeaponState(EWeaponState State) { WeaponState = State; }
 };

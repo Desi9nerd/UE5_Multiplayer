@@ -5,6 +5,7 @@
 #include "Components/WidgetComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "Multiplayer/Weapon/Weapon.h"
+#include "Multiplayer/Components/CombatComponent.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -24,6 +25,9 @@ ABaseCharacter::ABaseCharacter()
 
 	OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
 	OverheadWidget->SetupAttachment(RootComponent);
+
+	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
+	Combat->SetIsReplicated(true); //Combat을 Replicated 컴포넌트로 만들어준다.
 }
 
 void ABaseCharacter::BeginPlay()
@@ -42,6 +46,7 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ABaseCharacter::Jump);
+	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ABaseCharacter::EquipButtonPressed);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
@@ -54,6 +59,16 @@ void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingWeapon, COND_OwnerOnly);//OwnerOnly: 해당 캐릭터를 가지고 있는 Client만 적용
+}
+
+void ABaseCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if (IsValid(Combat))
+	{
+		Combat->Character = this;
+	}
 }
 
 void ABaseCharacter::MoveForward(float Value)
@@ -84,6 +99,14 @@ void ABaseCharacter::Turn(float Value)
 void ABaseCharacter::LookUp(float Value)
 {
 	AddControllerPitchInput(Value);
+}
+
+void ABaseCharacter::EquipButtonPressed()
+{
+	if (Combat && HasAuthority())// Server에서 validate해야하기 때문에 HasAuthority()로 먼저 체크한다.
+	{
+		Combat->EquipWeapon(OverlappingWeapon); //무기를 주어서 캐릭터에 장착시킨다
+	}
 }
 
 void ABaseCharacter::SetOverlappingWeapon(AWeapon* Weapon)
