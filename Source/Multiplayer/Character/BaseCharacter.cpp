@@ -103,9 +103,25 @@ void ABaseCharacter::LookUp(float Value)
 
 void ABaseCharacter::EquipButtonPressed()
 {
-	if (Combat && HasAuthority())// Server에서 validate해야하기 때문에 HasAuthority()로 먼저 체크한다.
+	if (Combat)
 	{
-		Combat->EquipWeapon(OverlappingWeapon); //무기를 주어서 캐릭터에 장착시킨다
+		if (HasAuthority()) //서버 기준. Server에서 validate하는 HasAuthority()
+		{
+			Combat->EquipWeapon(OverlappingWeapon); //무기를 주어서 캐릭터에 장착시킨다
+		}
+		else //클라이언트 기준. Authority가 없는 경우, RPC를 통해 ServerEquipButtonPressed_Implementation()에서 무기장착 수행
+		{
+			ServerEquipButtonPressed(); //무기 장착
+		}
+	}
+}
+
+void ABaseCharacter::ServerEquipButtonPressed_Implementation()
+{
+	// 서버를 통해 무기 장착하는 경우
+	if (Combat)
+	{
+		Combat->EquipWeapon(OverlappingWeapon);//무기를 줍고 캐릭터에 장착시킨다
 	}
 }
 

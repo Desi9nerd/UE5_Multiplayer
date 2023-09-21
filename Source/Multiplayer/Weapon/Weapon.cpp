@@ -2,6 +2,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Multiplayer/Character/BaseCharacter.h"
+#include "Net/UnrealNetwork.h"
 
 AWeapon::AWeapon()
 {
@@ -22,6 +23,27 @@ AWeapon::AWeapon()
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
+}
+
+void AWeapon::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
+void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AWeapon, WeaponState);
+}
+
+void AWeapon::ShowPickupWidget(bool bShowWidget)
+{
+	if (PickupWidget)
+	{
+		PickupWidget->SetVisibility(bShowWidget);
+	}
 }
 
 void AWeapon::BeginPlay()
@@ -63,16 +85,25 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}
 }
 
-void AWeapon::Tick(float DeltaTime)
+void AWeapon::SetWeaponState(EWeaponState State)
 {
-	Super::Tick(DeltaTime);
+	WeaponState = State; //¹«±â»óÅÂ º¯°æ
 
+	switch (WeaponState)
+	{
+	case EWeaponState::EWS_Equipped: //¹«±â ÀåÂø»óÅÂ ½Ã
+		ShowPickupWidget(false); //PickupWidget ²¨ÁÜ
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);//AreaSphereÃæµ¹x
+		break;
+	}	
 }
 
-void AWeapon::ShowPickupWidget(bool bShowWidget)
+void AWeapon::OnRep_WeaponState()
 {
-	if (PickupWidget)
+	switch (WeaponState)
 	{
-		PickupWidget->SetVisibility(bShowWidget);
+	case EWeaponState::EWS_Equipped: //¹«±â ÀåÂø»óÅÂ ½Ã
+		ShowPickupWidget(false); //PickupWidget ²¨ÁÜ
+		break;
 	}
 }

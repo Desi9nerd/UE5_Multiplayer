@@ -45,6 +45,10 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
+	//Reliable RPC는 무조건 실행, Unreliable RPC는 패킷 Drop 가능
+	UFUNCTION(Server, Reliable)
+	void ServerEquipButtonPressed();
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 
