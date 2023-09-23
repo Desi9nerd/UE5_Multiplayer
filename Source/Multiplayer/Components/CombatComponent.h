@@ -19,12 +19,19 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	void SetAiming(bool bIsAiming);
+
+	UFUNCTION(Server, Reliable) //Server RPC
+	void ServerSetAiming(bool bIsAiming);
 
 private:
 	class ABaseCharacter* Character;
 
 	UPROPERTY(Replicated) //UPROPERTY(Replicated)로 서버에 알린다
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(Replicated)
+	bool bAiming;
 
 public:
 		

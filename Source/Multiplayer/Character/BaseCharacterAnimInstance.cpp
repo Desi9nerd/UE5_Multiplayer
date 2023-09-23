@@ -27,4 +27,5 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bIsAccelerating = BaseCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.0f ? true : false;
 	bWeaponEquipped = BaseCharacter->IsWeaponEquipped();
 	bIsCrouched = BaseCharacter->bIsCrouched;
+	bAiming = BaseCharacter->IsAiming();//bAiming 변수의 true/false값을 캐릭터의 조준 true/false값으로 설정해준다.
 }
