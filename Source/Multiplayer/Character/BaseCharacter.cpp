@@ -28,6 +28,8 @@ ABaseCharacter::ABaseCharacter()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	Combat->SetIsReplicated(true); //Combat을 Replicated 컴포넌트로 만들어준다.
+
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 }
 
 void ABaseCharacter::BeginPlay()
@@ -47,6 +49,7 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ABaseCharacter::Jump);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ABaseCharacter::EquipButtonPressed);
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ABaseCharacter::CrouchButtonPressed);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
@@ -125,6 +128,18 @@ void ABaseCharacter::ServerEquipButtonPressed_Implementation()
 	}
 }
 
+void ABaseCharacter::CrouchButtonPressed()
+{
+	if (bIsCrouched)
+	{
+		UnCrouch();
+	}
+	else
+	{
+		Crouch(); // 언리얼 내장함수 Crouch()사용
+	}
+}
+
 void ABaseCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
 	if (OverlappingWeapon)
@@ -152,4 +167,10 @@ void ABaseCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 	{
 		LastWeapon->ShowPickupWidget(false);
 	}
+}
+
+bool ABaseCharacter::IsWeaponEquipped()
+{
+	//CombatComponent가 있고 장착된 무기가 있다면 true 리턴
+	return (Combat && Combat->EquippedWeapon);
 }
