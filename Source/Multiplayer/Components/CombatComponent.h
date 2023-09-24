@@ -24,10 +24,13 @@ protected:
 	UFUNCTION(Server, Reliable) //Server RPC
 	void ServerSetAiming(bool bIsAiming);
 
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
+
 private:
 	class ABaseCharacter* Character;
 
-	UPROPERTY(Replicated) //UPROPERTY(Replicated)로 서버에 알린다
+	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon) //UPROPERTY(Replicated)로 서버에 알린다
 	AWeapon* EquippedWeapon;
 
 	UPROPERTY(Replicated)
