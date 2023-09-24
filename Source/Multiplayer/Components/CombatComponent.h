@@ -30,7 +30,7 @@ protected:
 private:
 	class ABaseCharacter* Character;
 
-	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon) //UPROPERTY(Replicated)로 서버에 알린다
+	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon) //서버에 알린다
 	AWeapon* EquippedWeapon;
 
 	UPROPERTY(Replicated)
