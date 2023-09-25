@@ -6,6 +6,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Multiplayer/Weapon/Weapon.h"
 #include "Multiplayer/Components/CombatComponent.h"
+#include "Components/CapsuleComponent.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -30,6 +31,8 @@ ABaseCharacter::ABaseCharacter()
 	Combat->SetIsReplicated(true); //Combat을 Replicated 컴포넌트로 만들어준다.
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore); //캡슐과 카메라 사이의 충돌을 꺼줌.
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore); //매쉬과 카메라 사이의 충돌을 꺼줌.
 }
 
 void ABaseCharacter::BeginPlay()
