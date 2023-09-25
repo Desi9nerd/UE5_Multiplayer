@@ -42,5 +42,8 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	const FRotator Delta = UKismetMathLibrary::NormalizedDeltaRotator(CharacterRotation, CharacterRotationLastFrame);
 	const float Target = Delta.Yaw / DeltaTime;
 	const float Interp = FMath::FInterpTo(Lean, Target, DeltaTime, 6.0f);
-	Lean = FMath::Clamp(Interp, -90.0f, 90.0f);//lean값이 -90~90도 사이에 있도록 Clamp 
+	Lean = FMath::Clamp(Interp, -90.0f, 90.0f);//lean값이 -90~90도 사이에 있도록 Clamp
+
+	AO_Yaw = BaseCharacter->GetAO_Yaw();
+	AO_Pitch = BaseCharacter->GetAO_Pitch();
 }

@@ -7,6 +7,7 @@
 #include "Multiplayer/Weapon/Weapon.h"
 #include "Multiplayer/Components/CombatComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -44,6 +45,8 @@ void ABaseCharacter::BeginPlay()
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	AimOffset(DeltaTime);
 }
 
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -159,6 +162,31 @@ void ABaseCharacter::AimButtonReleased()
 	{
 		Combat->SetAiming(false);
 	}
+}
+
+void ABaseCharacter::AimOffset(float DeltaTime)
+{
+	if (Combat && Combat->EquippedWeapon == nullptr) return;
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.0f;
+	float Speed = Velocity.Size();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	if (Speed == 0.0f && bIsInAir == false) // standing O, 점프 X
+	{
+		FRotator CurrentAimRotation = FRotator(0.0f, GetBaseAimRotation().Yaw, 0.0f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation); // 회전값(=여기서는 Yaw값) Normalize
+		AO_Yaw = DeltaAimRotation.Yaw; // Yaw값 설정.
+		bUseControllerRotationYaw = false; // 정지 시에는 마우스 회전으로 카메라 회전이 가능하도록 false
+	}
+	if (Speed > 0.0f || bIsInAir) // running O 또는 점프 O
+	{
+		StartingAimRotation = FRotator(0.0f, GetBaseAimRotation().Yaw, 0.0f);
+		AO_Yaw = 0.0f;
+		bUseControllerRotationYaw = true; // 마우스 회전 시 캐릭터가 같이 돌도록 true 설정
+	}
+
+	AO_Pitch = GetBaseAimRotation().Pitch;
 }
 
 void ABaseCharacter::SetOverlappingWeapon(AWeapon* Weapon)
