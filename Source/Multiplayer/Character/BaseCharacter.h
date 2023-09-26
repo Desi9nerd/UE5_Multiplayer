@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Multiplayer/EnumTypes/ETurningInPlace.h"
 #include "BaseCharacter.generated.h"
 
 UCLASS()
@@ -54,8 +55,12 @@ private:
 	void ServerEquipButtonPressed();
 
 	float AO_Yaw; // AO에 사용할 Yaw값
+	float InterpAO_Yaw;
 	float AO_Pitch; // AO에 사용할 Pitch값
 	FRotator StartingAimRotation; //마우스 움직임에 따른 회전값
+
+	ETurningInPlace TurningInPlace;
+	void TurnInPlace(float DeltaTime);
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -65,4 +70,5 @@ public:
 	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	AWeapon* GetEquippedWeapon();
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; } // TurningInPlace Enum값을 return
 };
