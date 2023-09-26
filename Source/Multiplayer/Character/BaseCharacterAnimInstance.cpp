@@ -2,6 +2,7 @@
 #include "BaseCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Multiplayer/Weapon/Weapon.h"
 
 void UBaseCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -27,6 +28,7 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bIsInAir = BaseCharacter->GetCharacterMovement()->IsFalling();
 	bIsAccelerating = BaseCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.0f ? true : false;
 	bWeaponEquipped = BaseCharacter->IsWeaponEquipped();
+	EquippedWeapon = BaseCharacter->GetEquippedWeapon(); 
 	bIsCrouched = BaseCharacter->bIsCrouched;
 	bAiming = BaseCharacter->IsAiming();//bAiming 변수의 true/false값을 캐릭터의 조준 true/false값으로 설정해준다.
 
@@ -46,4 +48,19 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	AO_Yaw = BaseCharacter->GetAO_Yaw();
 	AO_Pitch = BaseCharacter->GetAO_Pitch();
+
+	//** 왼손 FABRIK 적용을 위한 LeftHandSocket 위치, 회전 조정하기
+	// 무기장착여부 && 장착무기 매쉬정보 존재 && 캐릭터 매쉬정보 존재
+	if (bWeaponEquipped && EquippedWeapon && EquippedWeapon->GetWeaponMesh() && BaseCharacter->GetMesh())
+	{		
+		LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World); // EquippedWeapon->GetWeaponMesh(): weapon.h의 FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() 호출 // LeftHandSocket은 무기 SkeletalMesh에 내가 추가한 소켓
+
+		FVector OutPosition;  // LeftHandSocket에 사용될 위치값
+		FRotator OutRotation; // LeftHandSocket에 사용될 회전값
+
+		//** LeftHandTransform이 "hand_r"소켓 위치에서 상대적으로 이동하게 해준다.
+		BaseCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation);
+		LeftHandTransform.SetLocation(OutPosition);
+		LeftHandTransform.SetRotation(FQuat(OutRotation));
+	}
 }

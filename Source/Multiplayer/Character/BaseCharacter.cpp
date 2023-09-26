@@ -235,3 +235,11 @@ bool ABaseCharacter::IsAiming()
 {	//Combat이 있고 bAiming 변수가 true라면 조준 중이다.
 	return (Combat && Combat->bAiming);
 }
+
+AWeapon* ABaseCharacter::GetEquippedWeapon()
+{
+	if (Combat == nullptr) // 무기가 없다면
+		return nullptr;
+
+	return Combat->EquippedWeapon; // 장착된 무기 return
+}

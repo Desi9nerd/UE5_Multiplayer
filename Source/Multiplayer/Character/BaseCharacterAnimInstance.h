@@ -27,7 +27,9 @@ private:
 	bool bIsAccelerating;
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	bool bWeaponEquipped;
+	bool bWeaponEquipped; // 현재 장착된 무기가 있는지 확인 true/false
+
+	class AWeapon* EquippedWeapon; // 현재 장착된 무기
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	bool bIsCrouched;
@@ -50,4 +52,7 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float AO_Pitch; // AO에 사용할 Pitch값
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	FTransform LeftHandTransform; // FABRIK를 위한 변수
 };
