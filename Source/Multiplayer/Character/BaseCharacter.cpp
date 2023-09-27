@@ -41,6 +41,13 @@ ABaseCharacter::ABaseCharacter()
 	MinNetUpdateFrequency = 33.0f;
 }
 
+void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingWeapon, COND_OwnerOnly);//OwnerOnly: 해당 캐릭터를 가지고 있는 Client만 적용
+}
+
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -68,13 +75,6 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("Turn", this, &ABaseCharacter::Turn);
 	PlayerInputComponent->BindAxis("LookUp", this, &ABaseCharacter::LookUp);
-}
-
-void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingWeapon, COND_OwnerOnly);//OwnerOnly: 해당 캐릭터를 가지고 있는 Client만 적용
 }
 
 void ABaseCharacter::PostInitializeComponents()
