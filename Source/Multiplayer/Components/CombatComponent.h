@@ -4,6 +4,8 @@
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
+#define TRACE_LENGTH 80000.0f
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MULTIPLAYER_API UCombatComponent : public UActorComponent
 {
@@ -52,6 +54,7 @@ private:
 	UFUNCTION(NetMulticast, Reliable) // 호출하는 Client에서 실행하는 총 발사 함수
 	void MulticastFire(); 
 
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 public:
 		
