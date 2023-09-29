@@ -57,9 +57,13 @@ void UCombatComponent::OnRep_EquippedWeapon()
 void UCombatComponent::FireButtonPressed(bool bPressed)
 {
 	bFireButtonPressed = bPressed;
+
+	if (EquippedWeapon == nullptr) return; //장착 무기가 없다면 return
+
 	if (Character && bFireButtonPressed)
 	{
-		Character->PlayFireMontage(bAiming);
+		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
+		EquippedWeapon->Fire(); // 장착 무기 발사
 	}
 }
 

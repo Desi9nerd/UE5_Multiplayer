@@ -3,6 +3,8 @@
 #include "Components/WidgetComponent.h"
 #include "Multiplayer/Character/BaseCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "Animation/AnimationAsset.h"
+#include "Components/SkeletalMeshComponent.h"
 
 AWeapon::AWeapon()
 {
@@ -105,5 +107,13 @@ void AWeapon::OnRep_WeaponState()
 	case EWeaponState::EWS_Equipped: //¹«±â ÀåÂø»óÅÂ ½Ã
 		ShowPickupWidget(false); //PickupWidget ²¨ÁÜ
 		break;
+	}
+}
+
+void AWeapon::Fire()
+{
+	if (IsValid(FireAnimation))
+	{
+		WeaponMesh->PlayAnimation(FireAnimation, false);
 	}
 }
