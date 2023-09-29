@@ -27,6 +27,8 @@ protected:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 
+	void FireButtonPressed(bool bPressed); // 총 발사 버튼 Pressed
+
 private:
 	class ABaseCharacter* Character;
 
@@ -41,6 +43,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed; // Aiming(O) 캐릭터 Walk이동속도
+
+	bool bFireButtonPressed;
 
 public:
 		
