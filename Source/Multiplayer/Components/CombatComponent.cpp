@@ -14,6 +14,14 @@ UCombatComponent::UCombatComponent()
 	AimWalkSpeed = 450.0f;
 }
 
+void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UCombatComponent, EquippedWeapon);//replicated된 EquippedWeapon. EquippedWeapon이 변경되면 모든 client에 반영된다.
+	DOREPLIFETIME(UCombatComponent, bAiming);//replicated 되도록 bAiming을 등록
+}
+
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -58,9 +66,22 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 {
 	bFireButtonPressed = bPressed;
 
+	if (bFireButtonPressed)
+	{
+		ServerFire(); // Server RPC 총 발사 함수
+	}
+}
+
+void UCombatComponent::ServerFire_Implementation() // Server RPC 총 발사 함수
+{
+	MulticastFire();
+}
+
+void UCombatComponent::MulticastFire_Implementation()
+{
 	if (EquippedWeapon == nullptr) return; //장착 무기가 없다면 return
 
-	if (Character && bFireButtonPressed)
+	if (Character)
 	{
 		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
 		EquippedWeapon->Fire(); // 장착 무기 발사
@@ -71,14 +92,6 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-}
-
-void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(UCombatComponent, EquippedWeapon);//replicated된 EquippedWeapon. EquippedWeapon이 변경되면 모든 client에 반영된다.
-	DOREPLIFETIME(UCombatComponent, bAiming);//replicated 되도록 bAiming을 등록
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)

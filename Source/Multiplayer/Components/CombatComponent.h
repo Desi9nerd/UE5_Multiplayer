@@ -46,6 +46,13 @@ private:
 
 	bool bFireButtonPressed;
 
+	UFUNCTION(Server, Reliable) // Server RPC 총 발사
+	void ServerFire();
+
+	UFUNCTION(NetMulticast, Reliable) // 호출하는 Client에서 실행하는 총 발사 함수
+	void MulticastFire(); 
+
+
 public:
 		
 };
