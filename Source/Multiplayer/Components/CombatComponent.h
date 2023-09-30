@@ -56,6 +56,8 @@ private:
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
+	FVector HitTarget; //발사체의 충돌지점(=Crosshair위치에서 쏜 linetrace의 충돌지점)
+
 public:
 		
 };

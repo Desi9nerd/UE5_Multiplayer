@@ -106,17 +106,14 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 
 		if (TraceHitResult.bBlockingHit == false)
 		{
-			TraceHitResult.ImpactPoint = End; //충돌하는게 없다면 End 값을 ImpactPoint값으로 설정. 
+			TraceHitResult.ImpactPoint = End; //충돌하는게 없다면 End 값을 ImpactPoint값으로 설정.
+			HitTarget = End; //충돌하는게 없다면 End 값을 발사체의 충돌타겟지점으로 설정.
 		}
 		else
 		{
-			DrawDebugSphere(
-				GetWorld(),
-				TraceHitResult.ImpactPoint,
-				12.0f,
-				12,
-				FColor::Red
-			);
+			HitTarget = TraceHitResult.ImpactPoint; //발사체의 충돌타겟지점(= Crosshair위치에서 쏜 linetrace의 충돌지점)
+
+			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.0f,12,	FColor::Red);//디버깅용
 		}
 	}
 }
@@ -133,7 +130,7 @@ void UCombatComponent::MulticastFire_Implementation()
 	if (Character)
 	{
 		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
-		EquippedWeapon->Fire(); // 장착 무기 발사
+		EquippedWeapon->Fire(HitTarget); // 장착 무기 발사
 	}
 }
 

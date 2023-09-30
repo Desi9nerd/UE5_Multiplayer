@@ -5,6 +5,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimationAsset.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMeshSocket.h"
+#include "Projectile.h"
 
 AWeapon::AWeapon()
 {
@@ -110,7 +112,7 @@ void AWeapon::OnRep_WeaponState()
 	}
 }
 
-void AWeapon::Fire()
+void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (IsValid(FireAnimation))
 	{
