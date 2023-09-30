@@ -6,6 +6,8 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
 
+	if (HasAuthority() == false) return; //Authority가 없다면 아래의 발사과정이 실행되지 않도록 return 해준다.
+
 	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));//GetSocketTransform을 하려면 SkeletalMeshSocket가 필요하다. 아래에서 사용하기 위해 변수 생성.
 
