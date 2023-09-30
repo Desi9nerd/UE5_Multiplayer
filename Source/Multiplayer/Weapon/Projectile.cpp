@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Particles/ParticleSystem.h"
+#include "Sound/SoundCue.h"
 
 AProjectile::AProjectile()
 {
@@ -30,7 +31,7 @@ void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (IsValid(Tracer))
+	if (Tracer)
 	{
 		TracerComponent = UGameplayStatics::SpawnEmitterAttached(
 			Tracer,
@@ -41,10 +42,35 @@ void AProjectile::BeginPlay()
 			EAttachLocation::KeepWorldPosition
 		);//Emitter를 붙일 Bone이 있으면 FName()에 적으면된다. 없으면 위처럼 빈칸으로 나두면된다.
 	}
+
+	if (HasAuthority()) // Server라면
+	{
+		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit); // Dynamic delegate 등록. UserObject는 발사체자신(this), 콜백함수는 &AProjectile::OnHit
+	}
+}
+
+void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	FVector NormalImpulse, const FHitResult& Hit)
+{
+	Destroy(); // 충돌 후 충돌체 소멸
 }
 
 void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AProjectile::Destroyed()
+{
+	Super::Destroyed();
+
+	if (IsValid(ImpactParticles))
+	{	// 파티클 Spawn
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
+	}
+	if (IsValid(ImpactSound))
+	{	
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	}
 }

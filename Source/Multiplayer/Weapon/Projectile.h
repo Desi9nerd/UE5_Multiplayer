@@ -12,9 +12,13 @@ class MULTIPLAYER_API AProjectile : public AActor
 public:
 	AProjectile();
 	virtual void Tick(float DeltaTime) override;
+	virtual void Destroyed() override;
 
 protected:
 	virtual void BeginPlay() override;
+
+	UFUNCTION()
+	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 private:
 	UPROPERTY(EditAnywhere)
@@ -24,9 +28,15 @@ private:
 	class UProjectileMovementComponent* ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
-	class UParticleSystem* Tracer;
+	class UParticleSystem* Tracer; // 발사체 궤적을 보이게 할 파티클
 
 	class UParticleSystemComponent* TracerComponent;//Tracer를 Spawn시킨 후 저장할 변수
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactParticles; // 충돌 후 파티클
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ImpactSound;  // 충돌 후 사운드
 
 public:
 
