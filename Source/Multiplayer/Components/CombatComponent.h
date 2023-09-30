@@ -31,8 +31,17 @@ protected:
 
 	void FireButtonPressed(bool bPressed); // 총 발사 버튼 Pressed
 
+	UFUNCTION(Server, Reliable) // Server RPC 총 발사
+	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
+
+	UFUNCTION(NetMulticast, Reliable) // 호출하는 Client에서 실행하는 총 발사 함수
+	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
+
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+
 private:
-	class ABaseCharacter* Character;
+	//class ABaseCharacter* Character;
+	TWeakObjectPtr<class ABaseCharacter> Character;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon) //서버에 알린다
 	AWeapon* EquippedWeapon;
@@ -47,16 +56,6 @@ private:
 	float AimWalkSpeed; // Aiming(O) 캐릭터 Walk이동속도
 
 	bool bFireButtonPressed;
-
-	UFUNCTION(Server, Reliable) // Server RPC 총 발사
-	void ServerFire();
-
-	UFUNCTION(NetMulticast, Reliable) // 호출하는 Client에서 실행하는 총 발사 함수
-	void MulticastFire(); 
-
-	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
-
-	FVector HitTarget; //발사체의 충돌지점(=Crosshair위치에서 쏜 linetrace의 충돌지점)
 
 public:
 		

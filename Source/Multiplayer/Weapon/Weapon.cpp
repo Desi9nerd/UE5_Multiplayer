@@ -5,8 +5,6 @@
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimationAsset.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Engine/SkeletalMeshSocket.h"
-#include "Projectile.h"
 
 AWeapon::AWeapon()
 {

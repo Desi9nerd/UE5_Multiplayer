@@ -28,7 +28,7 @@ void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (Character)
+	if (IsValid(Character.Get()))
 	{	// 캐릭터의 Walk최대속도를 BaseWalkSpeed로 설정.
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	}
@@ -39,7 +39,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	//서버가 관리하는 모든 캐릭터에 모든 clinet가 Aiming 포즈를 볼 수 있도록 한다.
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
-	if (Character)
+	if (Character.Get())
 	{
 		//캐릭터가 조준(=Aiming)중이라면 MaxWalkSpeed를 AimWalkSpeed로 아니면 BaseWalkSpeed로 설정.
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
@@ -49,7 +49,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)//RPC들은 _Implementation버젼 사용
 {
 	bAiming = bIsAiming;
-	if (Character)
+	if (Character.Get())
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
@@ -57,7 +57,7 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)//RPC들은 _
 
 void UCombatComponent::OnRep_EquippedWeapon()
 {
-	if (EquippedWeapon && Character) //무기장착 시
+	if (EquippedWeapon && Character.Get()) //무기장착 시
 	{
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
 		Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
@@ -70,7 +70,12 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 
 	if (bFireButtonPressed)
 	{
-		ServerFire(); // Server RPC 총 발사 함수
+		// TickComponent()함수가 아닌 여기 위치에 TraceUnderCrosshairs()함수를 콜
+		// ServerFire()에 충돌위치(=HitResult.ImpactPoint)를 보내준다. MulticastFire_Implementation() 내의 EquippedWeapon->Fire(TraceHitTarget)를 실행할 때 TraceHitTarget은 아래의 HitResult.ImpactPoint 값이다. 
+		FHitResult HitResult;
+		TraceUnderCrosshairs(HitResult); // Crosshair에서 LineTrace를 쏘고 HitResult 값을 업데이트한다.
+
+		ServerFire(HitResult.ImpactPoint); // Server RPC 총 발사 함수
 	}
 }
 
@@ -104,33 +109,26 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			ECollisionChannel::ECC_Visibility
 		);
 
-		if (TraceHitResult.bBlockingHit == false)
+		if (TraceHitResult.bBlockingHit == false) //하늘 같이 충돌할게 없는곳에 쏘는 경우
 		{
 			TraceHitResult.ImpactPoint = End; //충돌하는게 없다면 End 값을 ImpactPoint값으로 설정.
-			HitTarget = End; //충돌하는게 없다면 End 값을 발사체의 충돌타겟지점으로 설정.
-		}
-		else
-		{
-			HitTarget = TraceHitResult.ImpactPoint; //발사체의 충돌타겟지점(= Crosshair위치에서 쏜 linetrace의 충돌지점)
-
-			DrawDebugSphere(GetWorld(), TraceHitResult.ImpactPoint, 12.0f,12,	FColor::Red);//디버깅용
 		}
 	}
 }
 
-void UCombatComponent::ServerFire_Implementation() // Server RPC 총 발사 함수
+void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget) // Server RPC 총 발사 함수
 {
-	MulticastFire();
+	MulticastFire(TraceHitTarget);
 }
 
-void UCombatComponent::MulticastFire_Implementation()
+void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (EquippedWeapon == nullptr) return; //장착 무기가 없다면 return
 
-	if (Character)
+	if (Character.Get())
 	{
 		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
-		EquippedWeapon->Fire(HitTarget); // 장착 무기 발사
+		EquippedWeapon->Fire(TraceHitTarget); // 장착 무기 발사, HitTarget(=TraceHitResult.ImpactPoint <-- HitResult값)
 	}
 }
 
@@ -138,8 +136,6 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	FHitResult HitResult;
-	TraceUnderCrosshairs(HitResult);
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -153,7 +149,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh()); //무기를 해당 소켓에 붙여준다.
 	}
-	EquippedWeapon->SetOwner(Character); // 무기의 Owner을 Character로 설정
+	EquippedWeapon->SetOwner(Character.Get()); // 무기의 Owner을 Character로 설정
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
 	Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
 }
