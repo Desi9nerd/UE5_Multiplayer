@@ -39,9 +39,12 @@ protected:
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
+	void SetHUDCrosshairs(float DeltaTime);
+
 private:
-	//class ABaseCharacter* Character;
 	TWeakObjectPtr<class ABaseCharacter> Character;
+	TWeakObjectPtr<class AMainPlayerController> Controller;
+	TWeakObjectPtr<class AMainHUD> HUD;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon) //서버에 알린다
 	AWeapon* EquippedWeapon;

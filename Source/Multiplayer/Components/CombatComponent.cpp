@@ -7,6 +7,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
+#include "Multiplayer/PlayerController/MainPlayerController.h"
+#include "Multiplayer/HUD/MainHUD.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -32,6 +34,13 @@ void UCombatComponent::BeginPlay()
 	{	// 캐릭터의 Walk최대속도를 BaseWalkSpeed로 설정.
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	}
+}
+
+void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	SetHUDCrosshairs(DeltaTime); //HUDcrosshair를 갱신
 }
 
 void UCombatComponent::SetAiming(bool bIsAiming)
@@ -116,6 +125,43 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	}
 }
 
+void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
+{
+	if (Character == nullptr || Character->Controller == nullptr) return;
+
+
+	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;
+
+	if (Controller.IsValid()) // (MainPlayer)Conroller가 있다면
+	{
+		HUD = HUD == nullptr ? Cast<AMainHUD>(Controller->GetHUD()) : HUD;
+
+		if (HUD.IsValid())
+		{
+			FHUDPackage HUDPackage;
+
+			if (IsValid(EquippedWeapon)) // 장착된 무기가 있다면 Crosshair 세팅
+			{
+				HUDPackage.CrosshairCenter = EquippedWeapon->CrosshairCenter;
+				HUDPackage.CrosshairLeft = EquippedWeapon->CrosshairLeft;
+				HUDPackage.CrosshairRight = EquippedWeapon->CrosshairRight;
+				HUDPackage.CrosshairBottom = EquippedWeapon->CrosshairBottom;
+				HUDPackage.CrosshairTop = EquippedWeapon->CrosshairTop;
+			}
+			else // 장착된 무기가 없다면 Crosshair = nullptr 세팅
+			{
+				HUDPackage.CrosshairCenter = nullptr;
+				HUDPackage.CrosshairLeft = nullptr;
+				HUDPackage.CrosshairRight = nullptr;
+				HUDPackage.CrosshairBottom = nullptr;
+				HUDPackage.CrosshairTop = nullptr;
+			}
+
+			HUD->SetHUDPackage(HUDPackage);
+		}
+	}
+}
+
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget) // Server RPC 총 발사 함수
 {
 	MulticastFire(TraceHitTarget);
@@ -130,12 +176,6 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
 		EquippedWeapon->Fire(TraceHitTarget); // 장착 무기 발사, HitTarget(=TraceHitResult.ImpactPoint <-- HitResult값)
 	}
-}
-
-void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
