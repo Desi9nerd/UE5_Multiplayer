@@ -53,6 +53,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	class UAnimationAsset* FireAnimation; //¹«±â Animation
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class ACasing> CasingClass; //ÃÑ¾Ë ÅºÇÇ class
+
 public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }

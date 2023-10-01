@@ -5,6 +5,8 @@
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimationAsset.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Casing.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 AWeapon::AWeapon()
 {
@@ -114,6 +116,27 @@ void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (IsValid(FireAnimation))
 	{
-		WeaponMesh->PlayAnimation(FireAnimation, false);
+		WeaponMesh->PlayAnimation(FireAnimation, false); //발사 애니메이션 플레이
+	}
+
+	if (IsValid(CasingClass)) //총알 탄피 클래스가 있다면
+	{
+		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject")); //GetSocketTransform을 사용하려면 SkeletalMeshSocket가 필요하다.아래에서 사용하기 위해 변수 생성.
+
+		if (IsValid(AmmoEjectSocket)) // "AmmoEject"소켓이 있다면
+		{
+			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(WeaponMesh);// Spawn위치로 쓸 FTransform 변수
+
+			UWorld* World = GetWorld();
+			if (IsValid(World))
+			{
+				// 월드에 총알탄피(CasingClass)를 SocketTransform위치에 Spawn 시킨다.
+				World->SpawnActor<ACasing>(
+					CasingClass,
+					SocketTransform.GetLocation(),
+					SocketTransform.GetRotation().Rotator()
+					); 
+			}
+		}
 	}
 }
