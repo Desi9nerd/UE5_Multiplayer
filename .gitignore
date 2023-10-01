@@ -77,3 +77,6 @@ DerivedDataCache/*
 # Assets
 Content/Assets/*
 Content/TrainStation/*
+Content/LevelPrototyping/*
+Content/ThirdPerson/*
+Content/Migrated/*
