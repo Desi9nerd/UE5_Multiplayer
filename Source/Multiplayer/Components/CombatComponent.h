@@ -60,6 +60,10 @@ private:
 
 	bool bFireButtonPressed;
 
+	//** HUD + Crosshair
+	float CrosshairVelocityFactor;// 캐릭터 이동으로 Crosshair 퍼짐에 영향을 주는 정도
+	float CrosshairInAirFactor;// 캐릭터가 공중에 있을때 Crosshair 퍼짐에 영향을 주는 정도
+
 public:
 		
 };

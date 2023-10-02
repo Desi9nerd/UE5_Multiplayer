@@ -157,6 +157,27 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 				HUDPackage.CrosshairTop = nullptr;
 			}
 
+			//** Crosshair 퍼지는 정도 계산하기
+			// [0, 600] -> [0, 1]
+			FVector2D WalkSpeedRange(0.0f, Character->GetCharacterMovement()->MaxWalkSpeed);// 걷기 속도
+			FVector2D VelocityMultiplierRange(0.0f, 1.0f);//
+			FVector Velocity = Character->GetVelocity(); // 캐릭터의 속도
+			Velocity.Z = 0.0f; // 캐릭터의 속도 중 Z값은 0으로 설정
+
+			CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());// Velocity.Size()값을 WalkSpeedRange 범위 내의 값에서 VelocityMultiplierRange 범위 내의 값으로 치환한다.
+
+			if (Character->GetCharacterMovement()->IsFalling()) // 공중에 있을 때
+			{
+				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 2.25f, DeltaTime, 2.25f);
+			}
+			else // 바닥에 있을 때
+			{
+				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.0f, DeltaTime, 30.0f);
+			}
+
+			HUDPackage.CrosshairSpread = CrosshairVelocityFactor + CrosshairInAirFactor;
+			//**  **//
+
 			HUD->SetHUDPackage(HUDPackage);
 		}
 	}
