@@ -48,7 +48,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	//서버가 관리하는 모든 캐릭터에 모든 clinet가 Aiming 포즈를 볼 수 있도록 한다.
 	bAiming = bIsAiming;
 	ServerSetAiming(bIsAiming);
-	if (Character.Get())
+	if (Character.IsValid())
 	{
 		//캐릭터가 조준(=Aiming)중이라면 MaxWalkSpeed를 AimWalkSpeed로 아니면 BaseWalkSpeed로 설정.
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
@@ -58,7 +58,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)//RPC들은 _Implementation버젼 사용
 {
 	bAiming = bIsAiming;
-	if (Character.Get())
+	if (Character.IsValid())
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
