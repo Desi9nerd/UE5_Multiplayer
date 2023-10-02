@@ -324,3 +324,10 @@ AWeapon* ABaseCharacter::GetEquippedWeapon()
 
 	return Combat->EquippedWeapon; // 장착된 무기 return
 }
+
+FVector ABaseCharacter::GetHitTarget() const
+{
+	if (Combat == nullptr) return FVector(); //nullptr면 빈 FVector 리턴
+
+	return Combat->HitTarget; // CombatComponent의 HitTaget을 return
+}

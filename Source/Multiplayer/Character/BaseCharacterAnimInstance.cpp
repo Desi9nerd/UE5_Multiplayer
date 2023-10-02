@@ -63,5 +63,22 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		BaseCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation);
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
+
+		
+
+		if (BaseCharacter->IsLocallyControlled())
+		{
+			bLocallyControlled = true;
+
+			//** 오른손을 회전시켜 Crosshair 방향과 Muzzle 방향 일치시키기
+			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("Hand_R"), ERelativeTransformSpace::RTS_World); // 오른손 소켓의 회전, 비율, 위치값을 담아준다.
+			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - BaseCharacter->GetHitTarget()));// 오른손 회전값 구하기: 시작위치 벡터, 시작위치 벡터 + 충돌지점을 향하는 벡터 사용
+
+			//** 디버깅용 라인 (추후에 삭제 예정)
+			//FTransform MuzzleTipTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("MuzzleFlash"), ERelativeTransformSpace::RTS_World);
+			//FVector MuzzleX(FRotationMatrix(MuzzleTipTransform.GetRotation().Rotator()).GetUnitAxis(EAxis::X));
+			//DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), MuzzleTipTransform.GetLocation() + MuzzleX * 1000.0f, FColor::Blue);
+			//DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), BaseCharacter->GetHitTarget(), FColor::Red);
+		}
 	}
 }

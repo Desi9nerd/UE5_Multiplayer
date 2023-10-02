@@ -64,6 +64,8 @@ private:
 	float CrosshairVelocityFactor;// 캐릭터 이동으로 Crosshair 퍼짐에 영향을 주는 정도
 	float CrosshairInAirFactor;// 캐릭터가 공중에 있을때 Crosshair 퍼짐에 영향을 주는 정도
 
+	FVector HitTarget; // 총알이 발사되서 충돌하게 될 지점
+
 public:
 		
 };
