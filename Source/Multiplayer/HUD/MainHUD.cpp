@@ -14,32 +14,32 @@ void AMainHUD::DrawHUD() //HUD 그리기(=Crosshair 그리기)
 		if (IsValid(HUDPackage.CrosshairCenter))
 		{
 			FVector2D Spread(0.0f, 0.0f);
-			DrawCrosshair(HUDPackage.CrosshairCenter, ViewportCenter, Spread);
+			DrawCrosshair(HUDPackage.CrosshairCenter, ViewportCenter, Spread, HUDPackage.CrosshairColor);
 		}
 		if (IsValid(HUDPackage.CrosshairLeft))
 		{
 			FVector2D Spread(-SpreadScaled, 0.0f);
-			DrawCrosshair(HUDPackage.CrosshairLeft, ViewportCenter, Spread);
+			DrawCrosshair(HUDPackage.CrosshairLeft, ViewportCenter, Spread, HUDPackage.CrosshairColor);
 		}
 		if (IsValid(HUDPackage.CrosshairRight))
 		{
 			FVector2D Spread(SpreadScaled, 0.0f);
-			DrawCrosshair(HUDPackage.CrosshairRight, ViewportCenter, Spread);
+			DrawCrosshair(HUDPackage.CrosshairRight, ViewportCenter, Spread, HUDPackage.CrosshairColor);
 		}
 		if (IsValid(HUDPackage.CrosshairTop))
 		{
 			FVector2D Spread(0.0f, -SpreadScaled);
-			DrawCrosshair(HUDPackage.CrosshairTop, ViewportCenter, Spread);
+			DrawCrosshair(HUDPackage.CrosshairTop, ViewportCenter, Spread, HUDPackage.CrosshairColor);
 		}
 		if (IsValid(HUDPackage.CrosshairBottom))
 		{
 			FVector2D Spread(0.f, SpreadScaled);
-			DrawCrosshair(HUDPackage.CrosshairBottom, ViewportCenter, Spread);
+			DrawCrosshair(HUDPackage.CrosshairBottom, ViewportCenter, Spread, HUDPackage.CrosshairColor);
 		}
 	}
 }
 
-void AMainHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread)
+void AMainHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread, FLinearColor CrosshairColor)
 {
 	const float TextureWidth = Texture->GetSizeX();  // Texture 너비
 	const float TextureHeight = Texture->GetSizeY(); // Texture 높이
@@ -50,5 +50,5 @@ void AMainHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVec
 	);
 
 	// Texture 그리기
-	DrawTexture(Texture, TextureDrawPoint.X, TextureDrawPoint.Y, TextureWidth, TextureHeight, 0.0f,0.0f,1.0f,1.0f, FLinearColor::White);
+	DrawTexture(Texture, TextureDrawPoint.X, TextureDrawPoint.Y, TextureWidth, TextureHeight, 0.0f,0.0f,1.0f,1.0f, CrosshairColor);
 }

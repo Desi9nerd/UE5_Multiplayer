@@ -3,10 +3,12 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Multiplayer/EnumTypes/ETurningInPlace.h"
+#include "Multiplayer/Interfaces/ICrosshair.h"
 #include "BaseCharacter.generated.h"
 
 UCLASS()
-class MULTIPLAYER_API ABaseCharacter : public ACharacter
+class MULTIPLAYER_API ABaseCharacter
+	: public ACharacter, public IICrosshair
 {
 	GENERATED_BODY()
 

@@ -8,7 +8,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "Multiplayer/PlayerController/MainPlayerController.h"
-#include "Multiplayer/HUD/MainHUD.h"
 #include "Camera/CameraComponent.h"
 
 UCombatComponent::UCombatComponent()
@@ -142,6 +141,16 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 		{
 			TraceHitResult.ImpactPoint = End; //충돌하는게 없다면 End 값을 ImpactPoint값으로 설정.
 		}
+
+		//**Crosshair 색 설정하기
+		if (TraceHitResult.GetActor() && TraceHitResult.GetActor()->Implements<UICrosshair>())
+		{
+			HUDPackage.CrosshairColor = FLinearColor::Red;
+		}
+		else
+		{
+			HUDPackage.CrosshairColor = FLinearColor::White;
+		}
 	}
 }
 
@@ -158,8 +167,6 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 
 		if (HUD.IsValid())
 		{
-			FHUDPackage HUDPackage;
-
 			if (IsValid(EquippedWeapon)) // 장착된 무기가 있다면 Crosshair 세팅
 			{
 				HUDPackage.CrosshairCenter = EquippedWeapon->CrosshairCenter;

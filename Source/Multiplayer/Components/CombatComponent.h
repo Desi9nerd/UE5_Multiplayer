@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Multiplayer/HUD/MainHUD.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGTH 80000.0f
@@ -67,6 +68,7 @@ private:
 	float CrosshairShootingFactor; // 발사 할 때
 
 	FVector HitTarget; // 총알이 발사되서 충돌하게 될 지점
+	FHUDPackage HUDPackage;
 
 	//** 조준(Aiming) & FOV
 	float DefaultFOV; // FOV 기본값. 카메라의 기본 FOV값(=Aiming(X) 일 때 FOV 값)

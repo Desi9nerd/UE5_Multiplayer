@@ -72,7 +72,8 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 			//** 오른손을 회전시켜 Crosshair 방향과 Muzzle 방향 일치시키기
 			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("Hand_R"), ERelativeTransformSpace::RTS_World); // 오른손 소켓의 회전, 비율, 위치값을 담아준다.
-			RightHandRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - BaseCharacter->GetHitTarget()));// 오른손 회전값 구하기: 시작위치 벡터, 시작위치 벡터 + 충돌지점을 향하는 벡터 사용
+			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(RightHandTransform.GetLocation(), RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - BaseCharacter->GetHitTarget())); // 회전값 구하기: 시작위치 벡터, 시작위치 벡터 + 충돌지점을 향하는 벡터 사용
+			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 30.0f);// 오른손 회전값 구하기: 현재 값에서 LookAtRotation값으로 보간하여 변경
 
 			//** 디버깅용 라인 (추후에 삭제 예정)
 			//FTransform MuzzleTipTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("MuzzleFlash"), ERelativeTransformSpace::RTS_World);

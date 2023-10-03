@@ -36,6 +36,7 @@ ABaseCharacter::ABaseCharacter()
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore); //캡슐과 카메라 사이의 충돌을 꺼줌.
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore); //매쉬과 카메라 사이의 충돌을 꺼줌.
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 0.0f, 850.0f);//FPS 게임에서 화면 회전이 빠르게 되도록 값을 850으로 올려준다.
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning; //TurningInPlace 기본값 설정.
 	NetUpdateFrequency = 66.0f;
