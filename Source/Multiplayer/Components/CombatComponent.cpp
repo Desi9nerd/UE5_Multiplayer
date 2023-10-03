@@ -128,6 +128,14 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	if (bScreenToWorld)
 	{
 		FVector Start = CrosshairWorldPosition;
+
+		if (Character.IsValid())
+		{
+			float DistanceToCharacter = (Character->GetActorLocation() - Start).Size();
+			Start += CrosshairWorldDirection * (DistanceToCharacter + 100.0f);
+			//DrawDebugSphere(GetWorld(), Start, 16.0f, 12, FColor::Red, false);//디버깅용
+		}
+
 		FVector End = Start + CrosshairWorldDirection * TRACE_LENGTH; //TRACE_LENGTH는 내가 설정한 80000.0f
 
 		GetWorld()->LineTraceSingleByChannel(
