@@ -100,6 +100,11 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 		TraceUnderCrosshairs(HitResult); // Crosshair에서 LineTrace를 쏘고 HitResult 값을 업데이트한다.
 
 		ServerFire(HitResult.ImpactPoint); // Server RPC 총 발사 함수
+
+		if (IsValid(EquippedWeapon))
+		{
+			CrosshairShootingFactor = 0.75f; // 발사 시에는 Crosshair의 퍼짐정도가 특정값으로 돌아오도록 설정
+		}
 	}
 }
 
@@ -181,16 +186,27 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 
 			CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());// Velocity.Size()값을 WalkSpeedRange 범위 내의 값에서 VelocityMultiplierRange 범위 내의 값으로 치환한다.
 
-			if (Character->GetCharacterMovement()->IsFalling()) // 공중에 있을 때
+			if (Character->GetCharacterMovement()->IsFalling()) // 공중 O
 			{
 				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 2.25f, DeltaTime, 2.25f);
 			}
-			else // 바닥에 있을 때
+			else // 공중 X, 바닥에 있을 때
 			{
 				CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.0f, DeltaTime, 30.0f);
 			}
 
-			HUDPackage.CrosshairSpread = CrosshairVelocityFactor + CrosshairInAirFactor;
+			if (bAiming) // Aiming O
+			{
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.58f, DeltaTime, 30.0f);
+			}
+			else // Aiming X
+			{
+				CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.0f, DeltaTime, 30.0f);
+			}
+
+			CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor, 0.0f, DeltaTime, 40.0f);
+
+			HUDPackage.CrosshairSpread = 0.5f + CrosshairVelocityFactor + CrosshairInAirFactor - CrosshairAimFactor + CrosshairShootingFactor;
 			//**  **//
 
 			HUD->SetHUDPackage(HUDPackage);
