@@ -61,6 +61,7 @@ void ABaseCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AimOffset(DeltaTime);
+	HideCameraIfCharacterClose();
 }
 
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -274,6 +275,29 @@ void ABaseCharacter::TurnInPlace(float DeltaTime)
 		{
 			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 			StartingAimRotation = FRotator(0.0f, GetBaseAimRotation().Yaw, 0.0f);
+		}
+	}
+}
+
+void ABaseCharacter::HideCameraIfCharacterClose()
+{
+	if (IsLocallyControlled() == false) return;
+
+	// '카메라 위치 - 캐릭터 위치 < CameraThreshold로 정한 값'이면
+	if ((FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold)
+	{
+		GetMesh()->SetVisibility(false); // 캐릭터의 매쉬를 꺼준다
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh()) 
+		{
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;// 무기의 매쉬를 꺼준다
+		}
+	}
+	else 
+	{
+		GetMesh()->SetVisibility(true); // 캐릭터의 매쉬를 켜준다.
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;// 무기의 매쉬를 켜준다
 		}
 	}
 }
