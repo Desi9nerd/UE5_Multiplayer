@@ -66,6 +66,19 @@ private:
 
 	FVector HitTarget; // 총알이 발사되서 충돌하게 될 지점
 
+	//** 조준(Aiming) & FOV
+	float DefaultFOV; // FOV 기본값. 카메라의 기본 FOV값(=Aiming(X) 일 때 FOV 값)
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ZoomedFOV = 30.0f; //조준(Aiming) 시 FOV 값
+
+	float CurrentFOV; // 현재 FOV 값
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ZoomInterpSpeed = 20.0f; // FOV 전환 시간간격
+
+	void InterpFOV(float DeltaTime);
+
 public:
 		
 };

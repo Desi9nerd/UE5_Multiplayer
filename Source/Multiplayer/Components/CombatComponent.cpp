@@ -9,6 +9,7 @@
 #include "DrawDebugHelpers.h"
 #include "Multiplayer/PlayerController/MainPlayerController.h"
 #include "Multiplayer/HUD/MainHUD.h"
+#include "Camera/CameraComponent.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -30,9 +31,15 @@ void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (IsValid(Character.Get()))
-	{	// 캐릭터의 Walk최대속도를 BaseWalkSpeed로 설정.
-		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
+	if (Character.IsValid())
+	{	
+		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;// 캐릭터의 Walk최대속도를 BaseWalkSpeed로 설정
+
+		if (Character->GetFollowCamera())
+		{
+			DefaultFOV = Character->GetFollowCamera()->FieldOfView;
+			CurrentFOV = DefaultFOV;
+		}
 	}
 }
 
@@ -40,13 +47,14 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	SetHUDCrosshairs(DeltaTime); //HUDcrosshair를 갱신
-
 	if (Character.IsValid() && Character->IsLocallyControlled())
 	{
 		FHitResult HitResult;
 		TraceUnderCrosshairs(HitResult);
 		HitTarget = HitResult.ImpactPoint;
+
+		SetHUDCrosshairs(DeltaTime); // HUDcrosshair를 갱신
+		InterpFOV(DeltaTime); // Aiming O, X 여부에 따라 FOV 변경
 	}
 }
 
@@ -190,6 +198,26 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 	}
 }
 
+void UCombatComponent::InterpFOV(float DeltaTime)
+{
+	if (EquippedWeapon == nullptr) return; // 무기 장착 중이 아니라면 return
+
+	//** 무기 장착 중
+	if (bAiming) // Aiming O
+	{
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, EquippedWeapon->GetZoomedFOV(), DeltaTime, EquippedWeapon->GetZoomInterpSpeed());// FOV 전환
+	}
+	else // Aiming X
+	{
+		CurrentFOV = FMath::FInterpTo(CurrentFOV, DefaultFOV, DeltaTime, ZoomInterpSpeed);// FOV 전환, ZoomInterpSpeed의 시간간격동안 CurrentFOV의 값이 DefaultFOV로 변경
+	}
+
+	if (Character.IsValid() && Character->GetFollowCamera())
+	{
+		Character->GetFollowCamera()->SetFieldOfView(CurrentFOV); // 캐릭터 카메라의 FOV값을 CurrentFOV값으로 변경
+	}
+}
+
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget) // Server RPC 총 발사 함수
 {
 	MulticastFire(TraceHitTarget);
@@ -199,7 +227,7 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 {
 	if (EquippedWeapon == nullptr) return; //장착 무기가 없다면 return
 
-	if (Character.Get())
+	if (Character.IsValid())
 	{
 		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
 		EquippedWeapon->Fire(TraceHitTarget); // 장착 무기 발사, HitTarget(=TraceHitResult.ImpactPoint <-- HitResult값)

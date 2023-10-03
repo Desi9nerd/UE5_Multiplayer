@@ -79,4 +79,5 @@ public:
 	AWeapon* GetEquippedWeapon();
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; } // TurningInPlace Enum값을 return
 	FVector GetHitTarget() const; // CombatComponent의 HitTaget을 return하는 함수
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 };
