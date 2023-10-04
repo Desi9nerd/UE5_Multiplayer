@@ -23,6 +23,8 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)//피격은 자주 일어나니 Unreliable RPC로 설정
 	void MulticastHit();
 
+	virtual void OnRep_ReplicatedMovement() override;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -35,6 +37,8 @@ protected:
 	void AimButtonPressed();
 	void AimButtonReleased();
 	void AimOffset(float DeltaTime);
+	void CalculateAO_Pitch();
+	void SimProxiesTurn();
 	virtual void Jump() override;
 	void FireButtonPressed();
 	void FireButtonReleased();
@@ -83,6 +87,14 @@ private:
 	UPROPERTY(EditAnywhere)
 	float CameraThreshold = 200.0f;
 
+	bool bRotateRootBone; 
+	float TurnThreshold = 0.5f;
+	FRotator ProxyRotationLastFrame;
+	FRotator ProxyRotation;
+	float ProxyYaw;
+	float TimeSinceLastMovementReplication;//마지막 움직임이 Replicated된 후 경과한 시간
+	float CalculateSpeed();
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
@@ -94,4 +106,5 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; } // TurningInPlace Enum값을 return
 	FVector GetHitTarget() const; // CombatComponent의 HitTaget을 return하는 함수
 	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
 };

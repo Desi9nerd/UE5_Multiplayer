@@ -52,6 +52,14 @@ void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingWeapon, COND_OwnerOnly);//OwnerOnly: 해당 캐릭터를 가지고 있는 Client만 적용
 }
 
+void ABaseCharacter::OnRep_ReplicatedMovement()
+{
+	Super::OnRep_ReplicatedMovement();// Actor.h에 있는 내장함수
+
+	SimProxiesTurn();
+	TimeSinceLastMovementReplication = 0.0f; // 마지막 움직임이 Replicated된 후 경과한 시간을 0으로 초기화
+}
+
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -62,7 +70,21 @@ void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	AimOffset(DeltaTime);
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;// 마지막 움직임이 Replicated된 후 경과 시간을 계속 기록
+		if (TimeSinceLastMovementReplication > 0.25f) // 값이 0.25가 넘으면 움직임을 Replicated 해준다
+		{
+			OnRep_ReplicatedMovement();
+		}
+
+		CalculateAO_Pitch();
+	}
+	
 	HideCameraIfCharacterClose();
 }
 
@@ -111,7 +133,6 @@ void ABaseCharacter::PlayFireMontage(bool bAiming)
 void ABaseCharacter::PlayHitReactMontage()
 {
 	//if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return; //무기 안 들고 있을때는 return
-	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 
 	//** 피격 몽타주 재생
 	TWeakObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
@@ -210,16 +231,24 @@ void ABaseCharacter::AimButtonReleased()
 	}
 }
 
+float ABaseCharacter::CalculateSpeed()
+{
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.0f;
+
+	return Velocity.Size();
+}
+
 void ABaseCharacter::AimOffset(float DeltaTime)
 {
 	if (Combat && Combat->EquippedWeapon == nullptr) return;
-	FVector Velocity = GetVelocity();
-	Velocity.Z = 0.0f;
-	float Speed = Velocity.Size();
+	
+	float Speed = CalculateSpeed();
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 
 	if (Speed == 0.0f && bIsInAir == false) // standing O, 점프 X
 	{
+		bRotateRootBone = true; // RootBone 기준 회전O
 		FRotator CurrentAimRotation = FRotator(0.0f, GetBaseAimRotation().Yaw, 0.0f);
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation); // 회전값(=여기서는 Yaw값) Normalize
 		AO_Yaw = DeltaAimRotation.Yaw; // Yaw값 설정.
@@ -232,13 +261,20 @@ void ABaseCharacter::AimOffset(float DeltaTime)
 	}
 	if (Speed > 0.0f || bIsInAir) // running O 또는 점프 O
 	{
+		bRotateRootBone = false; // RootBone 기준 회전X
 		StartingAimRotation = FRotator(0.0f, GetBaseAimRotation().Yaw, 0.0f);
 		AO_Yaw = 0.0f;
 		bUseControllerRotationYaw = true; // 마우스 회전 시 캐릭터가 같이 돌도록 true 설정
 		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	}
 
+	CalculateAO_Pitch();
+}
+
+void ABaseCharacter::CalculateAO_Pitch()
+{
 	AO_Pitch = GetBaseAimRotation().Pitch;
+
 	if (AO_Pitch > 90.0f && IsLocallyControlled() == false)// 90도가 넘고, 호스트라면
 	{
 		// AO_Pitch값 범위를 제한한다.from [270, 360) to [-90, 0)
@@ -246,6 +282,45 @@ void ABaseCharacter::AimOffset(float DeltaTime)
 		FVector2D OutRange(-90.0f, 0.0f);
 		AO_Pitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AO_Pitch);
 	}
+}
+
+void ABaseCharacter::SimProxiesTurn()
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+
+	bRotateRootBone = false;
+	float Speed = CalculateSpeed();
+	if (Speed > 0.0f)
+	{
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+
+	ProxyRotationLastFrame = ProxyRotation;
+	ProxyRotation = GetActorRotation();
+	ProxyYaw = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotationLastFrame).Yaw;
+
+	UE_LOG(LogTemp, Warning, TEXT("ProxyYaw: %f"), ProxyYaw);
+
+	if (FMath::Abs(ProxyYaw) > TurnThreshold)
+	{
+		if (ProxyYaw > TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Right;
+		}
+		else if (ProxyYaw < -TurnThreshold)
+		{
+			TurningInPlace = ETurningInPlace::ETIP_Left;
+		}
+		else
+		{
+			TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		}
+
+		return;
+	}
+
+	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 }
 
 void ABaseCharacter::Jump()
