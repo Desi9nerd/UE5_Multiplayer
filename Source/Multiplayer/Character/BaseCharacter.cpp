@@ -9,6 +9,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "BaseCharacterAnimInstance.h"
+#include "Multiplayer/Multiplayer.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -34,9 +35,10 @@ ABaseCharacter::ABaseCharacter()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore); //캡슐과 카메라 사이의 충돌을 꺼줌.
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore); //매쉬과 카메라 사이의 충돌을 꺼줌.
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 0.0f, 850.0f);//FPS 게임에서 화면 회전이 빠르게 되도록 값을 850으로 올려준다.
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	GetCharacterMovement()->RotationRate = FRotator(0.0f, 0.0f, 850.0f);//FPS 게임에서 화면 회전이 빠르게 되도록 값을 850으로 올려준다.
 
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning; //TurningInPlace 기본값 설정.
 	NetUpdateFrequency = 66.0f;
@@ -108,7 +110,8 @@ void ABaseCharacter::PlayFireMontage(bool bAiming)
 
 void ABaseCharacter::PlayHitReactMontage()
 {
-	
+	//if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return; //무기 안 들고 있을때는 return
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
 
 	//** 피격 몽타주 재생
 	TWeakObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
