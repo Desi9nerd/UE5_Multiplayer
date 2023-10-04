@@ -106,6 +106,25 @@ void ABaseCharacter::PlayFireMontage(bool bAiming)
 	}
 }
 
+void ABaseCharacter::PlayHitReactMontage()
+{
+	
+
+	//** 피격 몽타주 재생
+	TWeakObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance.IsValid() && IsValid(HitReactMontage))
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName("FromFront");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ABaseCharacter::MulticastHit_Implementation()
+{
+	PlayHitReactMontage();
+}
+
 void ABaseCharacter::MoveForward(float Value)
 {
 	if (Controller != nullptr && Value != 0.0f)
