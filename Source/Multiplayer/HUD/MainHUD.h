@@ -33,7 +33,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Player Attributes")
 	TSubclassOf<class UUserWidget> CharacterOverlayClass;
 	
-	TWeakObjectPtr<class UCharacterOverlay> CharacterOverlay;
+	TObjectPtr<class UCharacterOverlay> CharacterOverlay;
 
 protected:
 	virtual void BeginPlay() override;

@@ -10,6 +10,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "BaseCharacterAnimInstance.h"
 #include "Multiplayer/Multiplayer.h"
+#include "Multiplayer//PlayerController/MainPlayerController.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -64,7 +65,13 @@ void ABaseCharacter::OnRep_ReplicatedMovement()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	// Ã¼·Â¹Ù
+	MainPlayerController = Cast<AMainPlayerController>(Controller);
+	if (MainPlayerController.IsValid())
+	{
+		MainPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
 }
 
 void ABaseCharacter::Tick(float DeltaTime)

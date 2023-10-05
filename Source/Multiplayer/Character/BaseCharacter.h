@@ -105,6 +105,8 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health();
+	
+	TWeakObjectPtr<class AMainPlayerController> MainPlayerController;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
