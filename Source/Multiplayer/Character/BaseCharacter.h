@@ -95,6 +95,17 @@ private:
 	float TimeSinceLastMovementReplication;//마지막 움직임이 Replicated된 후 경과한 시간
 	float CalculateSpeed();
 
+	//** 체력 Health
+	UPROPERTY(EditAnywhere, Category = "Player Attributes")
+	float MaxHealth = 100.0f;
+
+	//ReplicatedUsing으로 사용하려면 GetLifetimeReplicatedProps에 등록해야 한다. 
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Attribute")
+	float Health = 100.0f; 
+
+	UFUNCTION()
+	void OnRep_Health();
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();

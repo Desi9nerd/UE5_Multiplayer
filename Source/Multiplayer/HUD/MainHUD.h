@@ -4,8 +4,8 @@
 #include "GameFramework/HUD.h"
 #include "MainHUD.generated.h"
 
-/**
- *
+/** HUD. UserWidget들을 통합하여 관리하는 HUD 클래스
+ *  HUD는 GameMode에 등록된다.
  */
 
 USTRUCT(BlueprintType)
@@ -29,6 +29,15 @@ class MULTIPLAYER_API AMainHUD : public AHUD
 
 public:
 	virtual void DrawHUD() override;
+
+	UPROPERTY(EditAnywhere, Category = "Player Attributes")
+	TSubclassOf<class UUserWidget> CharacterOverlayClass;
+	
+	TWeakObjectPtr<class UCharacterOverlay> CharacterOverlay;
+
+protected:
+	virtual void BeginPlay() override;
+	void AddCharacterOverlay();
 
 private:
 	FHUDPackage HUDPackage;

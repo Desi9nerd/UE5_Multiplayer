@@ -1,4 +1,23 @@
 #include "MainHUD.h"
+#include "GameFramework/PlayerController.h"
+#include "CharacterOverlay.h"
+
+void AMainHUD::BeginPlay()
+{
+	Super::BeginPlay();
+
+	AddCharacterOverlay();
+}
+
+void AMainHUD::AddCharacterOverlay()
+{
+	TWeakObjectPtr<APlayerController> PlayerController = GetOwningPlayerController();
+	if (PlayerController.IsValid() && CharacterOverlayClass)
+	{
+		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController.Get(), CharacterOverlayClass);
+		CharacterOverlay->AddToViewport(); // Viewport에 등록
+	}
+}
 
 void AMainHUD::DrawHUD() //HUD 그리기(=Crosshair 그리기)
 {

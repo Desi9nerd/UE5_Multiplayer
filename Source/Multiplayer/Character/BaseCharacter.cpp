@@ -50,6 +50,7 @@ void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingWeapon, COND_OwnerOnly);//OwnerOnly: 해당 캐릭터를 가지고 있는 Client만 적용
+	DOREPLIFETIME(ABaseCharacter, Health);
 }
 
 void ABaseCharacter::OnRep_ReplicatedMovement()
@@ -397,6 +398,11 @@ void ABaseCharacter::HideCameraIfCharacterClose()
 			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;// 무기의 매쉬를 켜준다
 		}
 	}
+}
+
+void ABaseCharacter::OnRep_Health()
+{
+
 }
 
 void ABaseCharacter::SetOverlappingWeapon(AWeapon* Weapon)
