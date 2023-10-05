@@ -49,7 +49,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	float ZoomInterpSpeed = 20.0f; // Zoom 전환 시간간격
 
-	
+	//** 자동 발사 Automatic fire	
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float FireDelay = 0.15f; // 발사 간 간격 시간. 발사대기 시간
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	bool bAutomatic = true; // 자동 발사무기 true/false
+
 protected:
 	virtual void BeginPlay() override;
 

@@ -31,6 +31,7 @@ protected:
 	void OnRep_EquippedWeapon();
 
 	void FireButtonPressed(bool bPressed); // 총 발사 버튼 Pressed
+	void Fire();
 
 	UFUNCTION(Server, Reliable) // Server RPC 총 발사
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
@@ -82,6 +83,13 @@ private:
 	float ZoomInterpSpeed = 20.0f; // FOV 전환 시간간격
 
 	void InterpFOV(float DeltaTime);
+
+	//** 자동 발사 Automatic Fire
+	FTimerHandle FireTimer; // Automatic Fire 타이머 핸들러
+	bool bCanFire = true;
+
+	void StartFireTimer();
+	void FireTimerFinished();
 
 public:
 		

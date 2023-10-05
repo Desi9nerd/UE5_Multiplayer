@@ -9,6 +9,7 @@
 #include "DrawDebugHelpers.h"
 #include "Multiplayer/PlayerController/MainPlayerController.h"
 #include "Camera/CameraComponent.h"
+#include "TimerManager.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -49,41 +50,11 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	if (Character.IsValid() && Character->IsLocallyControlled())
 	{
 		FHitResult HitResult;
-		TraceUnderCrosshairs(HitResult);
+		TraceUnderCrosshairs(HitResult); // Crosshair에서 LineTrace를 쏘고 HitResult 값을 업데이트한다.
 		HitTarget = HitResult.ImpactPoint;
 
 		SetHUDCrosshairs(DeltaTime); // HUDcrosshair를 갱신
 		InterpFOV(DeltaTime); // Aiming O, X 여부에 따라 FOV 변경
-	}
-}
-
-void UCombatComponent::SetAiming(bool bIsAiming)
-{
-	//서버가 관리하는 모든 캐릭터에 모든 clinet가 Aiming 포즈를 볼 수 있도록 한다.
-	bAiming = bIsAiming;
-	ServerSetAiming(bIsAiming);
-	if (Character.IsValid())
-	{
-		//캐릭터가 조준(=Aiming)중이라면 MaxWalkSpeed를 AimWalkSpeed로 아니면 BaseWalkSpeed로 설정.
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-	}
-}
-
-void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)//RPC들은 _Implementation버젼 사용
-{
-	bAiming = bIsAiming;
-	if (Character.IsValid())
-	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-	}
-}
-
-void UCombatComponent::OnRep_EquippedWeapon()
-{
-	if (EquippedWeapon && Character.Get()) //무기장착 시
-	{
-		Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
-		Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
 	}
 }
 
@@ -93,17 +64,90 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 
 	if (bFireButtonPressed)
 	{
-		// TickComponent()함수가 아닌 여기 위치에 TraceUnderCrosshairs()함수를 콜
-		// ServerFire()에 충돌위치(=HitResult.ImpactPoint)를 보내준다. MulticastFire_Implementation() 내의 EquippedWeapon->Fire(TraceHitTarget)를 실행할 때 TraceHitTarget은 아래의 HitResult.ImpactPoint 값이다. 
-		FHitResult HitResult;
-		TraceUnderCrosshairs(HitResult); // Crosshair에서 LineTrace를 쏘고 HitResult 값을 업데이트한다.
+		Fire();
+	}
+}
 
-		ServerFire(HitResult.ImpactPoint); // Server RPC 총 발사 함수
+void UCombatComponent::Fire()
+{
+	if (bCanFire && EquippedWeapon)
+	{
+		bCanFire = false;
+		// TickComponent()함수 내의 TraceUnderCrosshairs()함수를 사용하여 Crosshair으로 나가서 충돌위치를 매 틱 갱신한다.
+		// ServerFire()에 충돌위치(=HitResult.ImpactPoint=HitTarget)를 보내준다. MulticastFire_Implementation() 내의 EquippedWeapon->Fire(TraceHitTarget)를 실행할 때 TraceHitTarget은 아래의 HitResult.ImpactPoint 값이다. 
+		ServerFire(HitTarget); // Server RPC 총 발사 함수
 
 		if (IsValid(EquippedWeapon))
 		{
 			CrosshairShootingFactor = 0.75f; // 발사 시에는 Crosshair의 퍼짐정도가 특정값으로 돌아오도록 설정
 		}
+
+		StartFireTimer(); // Automatic Fire 타이머 핸들러 시작
+	}
+}
+
+void UCombatComponent::StartFireTimer()
+{
+	if (EquippedWeapon == nullptr || Character == nullptr) return;
+
+	// 타이머 설정
+	Character->GetWorldTimerManager().SetTimer(
+		FireTimer,
+		this,
+		&UCombatComponent::FireTimerFinished,
+		EquippedWeapon->FireDelay
+	);
+}
+
+void UCombatComponent::FireTimerFinished()
+{
+	if (EquippedWeapon == nullptr) return;
+
+	bCanFire = true;
+	if (bFireButtonPressed && EquippedWeapon->bAutomatic) //발사버튼 누르고 있고 장착된 무기가 자동 발사무기라면
+	{
+		Fire();
+	}
+}
+
+void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget) // Server RPC 총 발사 함수
+{
+	MulticastFire(TraceHitTarget);
+}
+
+void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
+{
+	if (EquippedWeapon == nullptr) return; //장착 무기가 없다면 return
+
+	if (Character.IsValid())
+	{
+		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
+		EquippedWeapon->Fire(TraceHitTarget); // 장착 무기 발사, HitTarget(=TraceHitResult.ImpactPoint <-- HitResult값)
+	}
+}
+
+void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
+{
+	if (Character == nullptr || WeaponToEquip == nullptr) return;
+
+	EquippedWeapon = WeaponToEquip;
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);//무기 상태를 Equipped(=장착)으로 변경
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));//소켓을 변수로 저장
+	if (IsValid(HandSocket)) // 해당 소켓이 존재하면
+	{
+		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh()); //무기를 해당 소켓에 붙여준다.
+	}
+	EquippedWeapon->SetOwner(Character.Get()); // 무기의 Owner을 Character로 설정
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
+	Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
+}
+
+void UCombatComponent::OnRep_EquippedWeapon()
+{
+	if (EquippedWeapon && Character.Get()) //무기장착 시
+	{
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
+		Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
 	}
 }
 
@@ -249,34 +293,23 @@ void UCombatComponent::InterpFOV(float DeltaTime)
 	}
 }
 
-void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget) // Server RPC 총 발사 함수
+void UCombatComponent::SetAiming(bool bIsAiming)
 {
-	MulticastFire(TraceHitTarget);
-}
-
-void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
-{
-	if (EquippedWeapon == nullptr) return; //장착 무기가 없다면 return
-
+	//서버가 관리하는 모든 캐릭터에 모든 clinet가 Aiming 포즈를 볼 수 있도록 한다.
+	bAiming = bIsAiming;
+	ServerSetAiming(bIsAiming);
 	if (Character.IsValid())
 	{
-		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
-		EquippedWeapon->Fire(TraceHitTarget); // 장착 무기 발사, HitTarget(=TraceHitResult.ImpactPoint <-- HitResult값)
+		//캐릭터가 조준(=Aiming)중이라면 MaxWalkSpeed를 AimWalkSpeed로 아니면 BaseWalkSpeed로 설정.
+		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
 }
 
-void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
+void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)//RPC들은 _Implementation버젼 사용
 {
-	if (Character == nullptr || WeaponToEquip == nullptr) return;
-
-	EquippedWeapon = WeaponToEquip;
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);//무기 상태를 Equipped(=장착)으로 변경
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));//소켓을 변수로 저장
-	if (IsValid(HandSocket)) // 해당 소켓이 존재하면
+	bAiming = bIsAiming;
+	if (Character.IsValid())
 	{
-		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh()); //무기를 해당 소켓에 붙여준다.
+		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
-	EquippedWeapon->SetOwner(Character.Get()); // 무기의 Owner을 Character로 설정
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
-	Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
 }
