@@ -66,11 +66,11 @@ void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// 체력바
-	MainPlayerController = Cast<AMainPlayerController>(Controller);
-	if (MainPlayerController.IsValid())
+
+	UpdateHUDHealth();
+	if (HasAuthority())
 	{
-		MainPlayerController->SetHUDHealth(Health, MaxHealth);
+		OnTakeAnyDamage.AddDynamic(this, &ABaseCharacter::ReceiveDamage); // Delegate 등록
 	}
 }
 
@@ -149,6 +149,24 @@ void ABaseCharacter::PlayHitReactMontage()
 		AnimInstance->Montage_Play(HitReactMontage);
 		FName SectionName("FromFront");
 		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ABaseCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
+	AController* InstigatorController, AActor* DamageCauser)
+{
+	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth); // 체력 - 데미지
+
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+}
+
+void ABaseCharacter::UpdateHUDHealth()
+{
+	MainPlayerController = MainPlayerController == nullptr ? Cast<AMainPlayerController>(Controller) : MainPlayerController;
+	if (MainPlayerController.IsValid())
+	{
+		MainPlayerController->SetHUDHealth(Health, MaxHealth);
 	}
 }
 

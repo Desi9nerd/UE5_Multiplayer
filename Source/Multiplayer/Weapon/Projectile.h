@@ -20,6 +20,9 @@ protected:
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	UPROPERTY(EditAnywhere) // 하위 클래스에서 접근할 수 있도록 protected
+	float Damage = 20.0f; // 발사체가 입힐 데미지
+
 private:
 	UPROPERTY(EditAnywhere)
 	class UBoxComponent* CollisionBox;

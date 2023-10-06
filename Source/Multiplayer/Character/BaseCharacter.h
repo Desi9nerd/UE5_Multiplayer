@@ -44,6 +44,10 @@ protected:
 	void FireButtonReleased();
 	void PlayHitReactMontage();
 
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);// 피격 데미지
+	void UpdateHUDHealth(); // 체력 Update
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class USpringArmComponent* CameraSpringArm;
