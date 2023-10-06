@@ -19,10 +19,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
-
-	UFUNCTION(NetMulticast, Unreliable)//피격은 자주 일어나니 Unreliable RPC로 설정
-	void MulticastHit();
-
+	
 	virtual void OnRep_ReplicatedMovement() override;
 
 protected:

@@ -55,12 +55,6 @@ void AProjectile::BeginPlay()
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(OtherActor);
-	if (BaseCharacter.IsValid()) // 총알을 맞춘 대상이 캐릭터(=적 플레이어)라면
-	{
-		BaseCharacter->MulticastHit(); // 피격 처리. Unreliable RPC: server와 client들에서 PlayHitReactMontage()호출
-	}
-
 	Destroy(); // 충돌 후 충돌체 소멸
 }
 

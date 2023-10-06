@@ -65,9 +65,9 @@ void ABaseCharacter::OnRep_ReplicatedMovement()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-
+	
 	UpdateHUDHealth();
+
 	if (HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABaseCharacter::ReceiveDamage); // Delegate 등록
@@ -158,20 +158,6 @@ void ABaseCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDa
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth); // 체력 - 데미지
 
 	UpdateHUDHealth();
-	PlayHitReactMontage();
-}
-
-void ABaseCharacter::UpdateHUDHealth()
-{
-	MainPlayerController = MainPlayerController == nullptr ? Cast<AMainPlayerController>(Controller) : MainPlayerController;
-	if (MainPlayerController.IsValid())
-	{
-		MainPlayerController->SetHUDHealth(Health, MaxHealth);
-	}
-}
-
-void ABaseCharacter::MulticastHit_Implementation()
-{
 	PlayHitReactMontage();
 }
 
@@ -427,7 +413,17 @@ void ABaseCharacter::HideCameraIfCharacterClose()
 
 void ABaseCharacter::OnRep_Health()
 {
+	UpdateHUDHealth();
+	PlayHitReactMontage();
+}
 
+void ABaseCharacter::UpdateHUDHealth()
+{
+	MainPlayerController = MainPlayerController == nullptr ? Cast<AMainPlayerController>(Controller) : MainPlayerController;
+	if (MainPlayerController.IsValid())
+	{
+		MainPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
 }
 
 void ABaseCharacter::SetOverlappingWeapon(AWeapon* Weapon)

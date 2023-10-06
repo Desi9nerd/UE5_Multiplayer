@@ -15,5 +15,5 @@ void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 		}
 	}
 
-	Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
+	Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit); // Destroy() 호출이 부모 Projectile 클래스에서 일어나기 때문에 마지막에 Super 호출
 }
