@@ -19,8 +19,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
 	void PlayFireMontage(bool bAiming);
-	
 	virtual void OnRep_ReplicatedMovement() override;
+	void Elim(); // Player ªË¡¶
 
 protected:
 	virtual void BeginPlay() override;
@@ -107,7 +107,7 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 	
-	TWeakObjectPtr<class AMainPlayerController> MainPlayerController;
+	TObjectPtr<class AMainPlayerController> MainPlayerController;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

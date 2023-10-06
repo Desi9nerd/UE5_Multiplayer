@@ -11,6 +11,7 @@
 #include "BaseCharacterAnimInstance.h"
 #include "Multiplayer/Multiplayer.h"
 #include "Multiplayer//PlayerController/MainPlayerController.h"
+#include "Multiplayer/GameMode/MultiplayerGameMode.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -60,6 +61,11 @@ void ABaseCharacter::OnRep_ReplicatedMovement()
 
 	SimProxiesTurn();
 	TimeSinceLastMovementReplication = 0.0f; // 마지막 움직임이 Replicated된 후 경과한 시간을 0으로 초기화
+}
+
+void ABaseCharacter::Elim()
+{
+
 }
 
 void ABaseCharacter::BeginPlay()
@@ -159,6 +165,18 @@ void ABaseCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDa
 
 	UpdateHUDHealth();
 	PlayHitReactMontage();
+
+	if (Health == 0.0f)
+	{
+		TWeakObjectPtr<AMultiplayerGameMode> MultiplayerGameMode = GetWorld()->GetAuthGameMode<AMultiplayerGameMode>();
+		if (MultiplayerGameMode.IsValid())
+		{
+			MainPlayerController = MainPlayerController == nullptr ? Cast<AMainPlayerController>(Controller) : MainPlayerController;
+
+			TObjectPtr<AMainPlayerController> AttackerController = Cast<AMainPlayerController>(InstigatorController);
+			MultiplayerGameMode->PlayerEliminated(this, MainPlayerController, AttackerController);
+		}
+	}
 }
 
 void ABaseCharacter::MoveForward(float Value)
@@ -420,7 +438,7 @@ void ABaseCharacter::OnRep_Health()
 void ABaseCharacter::UpdateHUDHealth()
 {
 	MainPlayerController = MainPlayerController == nullptr ? Cast<AMainPlayerController>(Controller) : MainPlayerController;
-	if (MainPlayerController.IsValid())
+	if (IsValid(MainPlayerController))
 	{
 		MainPlayerController->SetHUDHealth(Health, MaxHealth);
 	}
