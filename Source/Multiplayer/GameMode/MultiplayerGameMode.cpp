@@ -5,4 +5,8 @@
 void AMultiplayerGameMode::PlayerEliminated(ABaseCharacter* ElimmedCharacter, AMainPlayerController* VictimController,
 	AMainPlayerController* AttackerController)
 {
+	if (IsValid(ElimmedCharacter))
+	{
+		ElimmedCharacter->Elim();
+	}
 }

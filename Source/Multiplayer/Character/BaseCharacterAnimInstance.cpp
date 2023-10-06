@@ -33,6 +33,7 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	bAiming = BaseCharacter->IsAiming();//bAiming 변수의 true/false값을 캐릭터의 조준 true/false값으로 설정해준다.
 	TurningInPlace = BaseCharacter->GetTurningInPlace();
 	bRotateRootBone = BaseCharacter->ShouldRotateRootBone();
+	bElimmed = BaseCharacter->IsElimmed();
 
 	// YawOffset: Straft동작을 위한 Yaw Offset 설정
 	FRotator AimRotation = BaseCharacter->GetBaseAimRotation();//-180 ~ 180도. local값이 아닌 world값

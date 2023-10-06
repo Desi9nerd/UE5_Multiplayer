@@ -63,9 +63,10 @@ void ABaseCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.0f; // 마지막 움직임이 Replicated된 후 경과한 시간을 0으로 초기화
 }
 
-void ABaseCharacter::Elim()
+void ABaseCharacter::Elim_Implementation()
 {
-
+	bElimmed = true;
+	PlayElimMontage();
 }
 
 void ABaseCharacter::BeginPlay()
@@ -141,6 +142,15 @@ void ABaseCharacter::PlayFireMontage(bool bAiming)
 		FName SectionName;
 		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ABaseCharacter::PlayElimMontage()
+{
+	TWeakObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance.IsValid() && IsValid(ElimMontage))
+	{
+		AnimInstance->Montage_Play(ElimMontage);
 	}
 }
 
