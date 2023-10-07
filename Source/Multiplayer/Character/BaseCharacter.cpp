@@ -48,6 +48,8 @@ ABaseCharacter::ABaseCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning; //TurningInPlace 기본값 설정.
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
+
+	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
 }
 
 void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -82,6 +84,15 @@ void ABaseCharacter::MulticastElim_Implementation() // RPC
 {
 	bElimmed = true;
 	PlayElimMontage();
+
+	if (DissolveMaterialInstance)
+	{
+		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
+		GetMesh()->SetMaterial(0, DynamicDissolveMaterialInstance);
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
+	}
+	StartDissolve();
 }
 
 void ABaseCharacter::ElimTimerFinished()
@@ -90,6 +101,24 @@ void ABaseCharacter::ElimTimerFinished()
 	if (MultiplayerGameMode.IsValid())
 	{
 		MultiplayerGameMode->RequestRespawn(this, Controller); // 리스폰
+	}
+}
+
+void ABaseCharacter::UpdateDissolveMaterial(float DissolveValue)
+{
+	if (IsValid(DynamicDissolveMaterialInstance))
+	{
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
+	}
+}
+
+void ABaseCharacter::StartDissolve()
+{
+	DissolveTrack.BindDynamic(this, &ABaseCharacter::UpdateDissolveMaterial); // Delegate
+	if (IsValid(DissolveCurve) && IsValid(DissolveTimeline))
+	{
+		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
+		DissolveTimeline->Play();
 	}
 }
 

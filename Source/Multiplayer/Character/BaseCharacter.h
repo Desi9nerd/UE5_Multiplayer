@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "Multiplayer/EnumTypes/ETurningInPlace.h"
 #include "Multiplayer/Interfaces/ICrosshair.h"
+#include "Components/TimelineComponent.h"
 #include "BaseCharacter.generated.h"
 
 UCLASS()
@@ -124,6 +125,24 @@ private:
 	float ElimDelay = 3.0f; // 죽은 Player가 사라지는데 걸리는 시간
 
 	void ElimTimerFinished();
+
+	//** Dissolve effect
+	UPROPERTY(VisibleAnywhere)
+	UTimelineComponent* DissolveTimeline;
+	FOnTimelineFloat DissolveTrack;
+
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* DissolveCurve;
+
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue);
+	void StartDissolve();
+	
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance; // 런타임에 변경되는 Dynamic Instance. 
+	
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* DissolveMaterialInstance;// Material Instance. BP에서 등록
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
