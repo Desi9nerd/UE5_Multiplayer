@@ -27,6 +27,8 @@ public:
 	UFUNCTION(NetMulticast, Reliable) // RPC
 	void MulticastElim(); // Player 삭제
 
+	virtual void Destroyed() override;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -143,6 +145,16 @@ private:
 	
 	UPROPERTY(EditAnywhere, Category = Elim)
 	UMaterialInstance* DissolveMaterialInstance;// Material Instance. BP에서 등록
+
+	//** Elim Bot
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ElimBotEffect; 
+
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* ElimBotComponent;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ElimBotSound;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

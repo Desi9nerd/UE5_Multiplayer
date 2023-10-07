@@ -13,6 +13,9 @@
 #include "Multiplayer//PlayerController/MainPlayerController.h"
 #include "Multiplayer/GameMode/MultiplayerGameMode.h"
 #include "TimerManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
+#include "Particles/ParticleSystemComponent.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -111,6 +114,26 @@ void ABaseCharacter::MulticastElim_Implementation() // RPC
 	//** 충돌X. Disable Collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Capsule 충돌 꺼줌
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Mesh 충돌 꺼줌
+
+	// Elim Bot 스폰시키기
+	if (IsValid(ElimBotEffect))
+	{
+		FVector ElimBotSpawnPoint(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z + 200.f);//캐릭터 위치(Z만 +200)
+		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			ElimBotEffect,
+			ElimBotSpawnPoint,
+			GetActorRotation()
+		); // Elim Bot Effect 스폰 시키기. ElimBotComponent 변수에 담기.
+	}
+	if (IsValid(ElimBotSound)) 
+	{
+		UGameplayStatics::SpawnSoundAtLocation(
+			this,
+			ElimBotSound,
+			GetActorLocation()
+		); // Elim Bot Sound 
+	}
 }
 
 void ABaseCharacter::ElimTimerFinished()
@@ -137,6 +160,16 @@ void ABaseCharacter::StartDissolve()
 	{
 		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
 		DissolveTimeline->Play();
+	}
+}
+
+void ABaseCharacter::Destroyed()
+{
+	Super::Destroyed();
+
+	if (IsValid(ElimBotComponent))
+	{
+		ElimBotComponent->DestroyComponent(); // Elim Bot 소멸
 	}
 }
 
