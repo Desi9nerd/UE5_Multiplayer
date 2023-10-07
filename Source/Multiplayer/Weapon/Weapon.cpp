@@ -97,7 +97,19 @@ void AWeapon::SetWeaponState(EWeaponState State)
 	{
 	case EWeaponState::EWS_Equipped: //무기 장착상태 시
 		ShowPickupWidget(false); //PickupWidget 꺼줌
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);//AreaSphere충돌x
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision); // AreaSphere 충돌X
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);// WeaponMesh. 충돌X. 
+		break;
+	case EWeaponState::EWS_Dropped: // 무기가 떨어져 있을 시
+		if (HasAuthority())
+		{
+			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // AreaSphere 충돌O
+		}
+		WeaponMesh->SetSimulatePhysics(true); // 물리법칙O, 만약 false면 Gravity와 같은 물리법칙들이 적용X
+		WeaponMesh->SetEnableGravity(true); // 중력O
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 충돌O
 		break;
 	}	
 }
@@ -108,6 +120,14 @@ void AWeapon::OnRep_WeaponState()
 	{
 	case EWeaponState::EWS_Equipped: //무기 장착상태 시
 		ShowPickupWidget(false); //PickupWidget 꺼줌
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 충돌X
+		break;
+	case EWeaponState::EWS_Dropped: // 무기가 떨어져 있을 시
+		WeaponMesh->SetSimulatePhysics(true); // 물리법칙O, 만약 false면 Gravity와 같은 물리법칙들이 적용X
+		WeaponMesh->SetEnableGravity(true); // 중력O
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 충돌O
 		break;
 	}
 }
@@ -139,4 +159,12 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
+}
+
+void AWeapon::Dropped()
+{
+	SetWeaponState(EWeaponState::EWS_Dropped); // 무기상태 Dropped로 변경
+	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);//소멸 시 World에 무기가 떨어지도록 DetachmentTransformRules 설정
+	WeaponMesh->DetachFromComponent(DetachRules); // WeaponMesh를 캐릭터에서 떨어뜨린다.
+	SetOwner(nullptr); // 캐릭터가 무기를 떨어뜨린 후 무기의 Owner가 없도록 Owner를 nullptr로 설정 
 }

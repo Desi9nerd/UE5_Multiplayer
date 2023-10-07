@@ -25,6 +25,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
+	void Dropped(); // ¼Ò¸ê ÈÄ ¹«±â ¶³¾î¶ß¸®±â
 
 	//** Crosshair Texture
 	UPROPERTY(EditAnywhere, Category = Crosshairs)

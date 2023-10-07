@@ -70,6 +70,11 @@ void ABaseCharacter::OnRep_ReplicatedMovement()
 
 void ABaseCharacter::Elim() // Server Only
 {
+	if (Combat && Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->Dropped();
+	}
+
 	MulticastElim();
 
 	GetWorldTimerManager().SetTimer(
@@ -85,6 +90,7 @@ void ABaseCharacter::MulticastElim_Implementation() // RPC
 	bElimmed = true;
 	PlayElimMontage();
 
+	//** Dissolve 효과 시작
 	if (DissolveMaterialInstance)
 	{
 		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
@@ -93,6 +99,18 @@ void ABaseCharacter::MulticastElim_Implementation() // RPC
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
 	}
 	StartDissolve();
+
+	//** 캐릭터 움직임 제한
+	GetCharacterMovement()->DisableMovement(); // 이동 움직임X
+	GetCharacterMovement()->StopMovementImmediately(); // 마우스 회전도 불가능하게 움직임 멈춰줌.
+	if (IsValid(MainPlayerController))
+	{
+		DisableInput(MainPlayerController); // PlayerController의 입력이 불가능하도록 제한
+	}
+
+	//** 충돌X. Disable Collision
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Capsule 충돌 꺼줌
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Mesh 충돌 꺼줌
 }
 
 void ABaseCharacter::ElimTimerFinished()
