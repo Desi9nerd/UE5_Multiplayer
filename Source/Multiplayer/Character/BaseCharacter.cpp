@@ -12,11 +12,14 @@
 #include "Multiplayer/Multiplayer.h"
 #include "Multiplayer//PlayerController/MainPlayerController.h"
 #include "Multiplayer/GameMode/MultiplayerGameMode.h"
+#include "TimerManager.h"
 
 ABaseCharacter::ABaseCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	
+
+	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;// 스폰 시 위치가 겹쳐있으면 겹치지않게 조금 이동하여 스폰 시킨다.
+
 	CameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraSpringArm"));
 	CameraSpringArm->SetupAttachment(GetMesh());//Mesh 아래 항목으로 붙인다.
 	CameraSpringArm->TargetArmLength = 600.0f;
@@ -63,10 +66,31 @@ void ABaseCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.0f; // 마지막 움직임이 Replicated된 후 경과한 시간을 0으로 초기화
 }
 
-void ABaseCharacter::Elim_Implementation()
+void ABaseCharacter::Elim() // Server Only
+{
+	MulticastElim();
+
+	GetWorldTimerManager().SetTimer(
+		ElimTimer,
+		this,
+		&ABaseCharacter::ElimTimerFinished,
+		ElimDelay
+	); // SetTimer 후 ElimTimerFinished() 함수 호출
+}
+
+void ABaseCharacter::MulticastElim_Implementation() // RPC
 {
 	bElimmed = true;
 	PlayElimMontage();
+}
+
+void ABaseCharacter::ElimTimerFinished()
+{
+	TWeakObjectPtr<AMultiplayerGameMode> MultiplayerGameMode = GetWorld()->GetAuthGameMode<AMultiplayerGameMode>();
+	if (MultiplayerGameMode.IsValid())
+	{
+		MultiplayerGameMode->RequestRespawn(this, Controller); // 리스폰
+	}
 }
 
 void ABaseCharacter::BeginPlay()

@@ -21,9 +21,10 @@ public:
 	void PlayFireMontage(bool bAiming); 
 	void PlayElimMontage();
 	virtual void OnRep_ReplicatedMovement() override;
+	void Elim(); // Server에서만 콜되는 Elim함수
 
 	UFUNCTION(NetMulticast, Reliable) // RPC
-	void Elim(); // Player 삭제
+	void MulticastElim(); // Player 삭제
 
 protected:
 	virtual void BeginPlay() override;
@@ -116,6 +117,13 @@ private:
 	TObjectPtr<class AMainPlayerController> MainPlayerController;
 
 	bool bElimmed = false;
+
+	FTimerHandle ElimTimer;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ElimDelay = 3.0f; // 죽은 Player가 사라지는데 걸리는 시간
+
+	void ElimTimerFinished();
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
