@@ -14,6 +14,7 @@ class MULTIPLAYER_API AMainPlayerController : public APlayerController
 
 public:
 	void SetHUDHealth(float Health, float MaxHealth); // HealthBar에 Health/MaxHealth
+	virtual void OnPossess(APawn* InPawn) override; // possed된 Pawn에 접근하는 함수
 
 protected:
 	virtual void BeginPlay() override;
