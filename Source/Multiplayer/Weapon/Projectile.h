@@ -33,6 +33,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* Tracer; // 발사체 궤적을 보이게 할 파티클
 
+	UPROPERTY()
 	class UParticleSystemComponent* TracerComponent;//Tracer를 Spawn시킨 후 저장할 변수
 
 	UPROPERTY(EditAnywhere)

@@ -16,6 +16,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -205,6 +206,7 @@ void ABaseCharacter::Tick(float DeltaTime)
 	}
 	
 	HideCameraIfCharacterClose();
+	PollInit(); // HUD와 점수/승리횟수 매기기 관련 클래스 초기화
 }
 
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -553,6 +555,19 @@ void ABaseCharacter::UpdateHUDHealth()
 	if (IsValid(MainPlayerController))
 	{
 		MainPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
+}
+
+void ABaseCharacter::PollInit()
+{
+	if (MultiplayerPlayerState.IsValid() == false)
+	{
+		MultiplayerPlayerState = GetPlayerState<AMultiplayerPlayerState>();
+		if (MultiplayerPlayerState.IsValid())
+		{
+			MultiplayerPlayerState->AddToScore(0.0f); // 점수 초기화
+			MultiplayerPlayerState->AddToDefeats(0); // 승리횟수 초기화
+		}
 	}
 }
 

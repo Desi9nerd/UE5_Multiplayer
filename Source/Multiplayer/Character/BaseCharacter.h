@@ -51,6 +51,7 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);// 피격 데미지
 	void UpdateHUDHealth(); // 체력 Update
+	void PollInit(); // HUD와 점수/승리횟수 매기기 관련 클래스 초기화
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -155,6 +156,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ElimBotSound;
+
+	TWeakObjectPtr<class AMultiplayerPlayerState> MultiplayerPlayerState;
+	//class AMultiplayerPlayerState* MultiplayerPlayerState;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
