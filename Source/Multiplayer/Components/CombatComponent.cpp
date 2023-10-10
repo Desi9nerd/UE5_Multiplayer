@@ -70,7 +70,7 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 
 void UCombatComponent::Fire()
 {
-	if (bCanFire && EquippedWeapon)
+	if (CanFire() && EquippedWeapon)
 	{
 		bCanFire = false;
 		// TickComponent()함수 내의 TraceUnderCrosshairs()함수를 사용하여 Crosshair으로 나가서 충돌위치를 매 틱 갱신한다.
@@ -323,4 +323,11 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)//RPC들은 _
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
 	}
+}
+
+bool UCombatComponent::CanFire()
+{
+	if (EquippedWeapon == nullptr) return false; // 장착된 무기가 없다면 false 리턴
+
+	return !EquippedWeapon->IsEmpty() || !bCanFire; // 총알이 비어있지 않았다면(=총알이 있다면) 
 }

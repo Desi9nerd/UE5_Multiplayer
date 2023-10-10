@@ -149,7 +149,7 @@ void AWeapon::SetHUDAmmo()
 
 void AWeapon::SpendRound() 
 {
-	--Ammo; // 총알 소모 -1
+	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity); // 총알 소모 -1, 0~MagCapcity 값을 벗어나지 않도록 설정.
 	SetHUDAmmo(); // HUD에 총알(Ammo) 수 업데이트
 }
 
@@ -214,4 +214,9 @@ void AWeapon::Dropped()
 
 	BaseCharcterOwnerCharacter = nullptr; // 무기소유 캐릭터가 없도록 nullptr
 	MainPlayerOwnerController = nullptr; // 무기소유 controller가 없도록 nullptr
+}
+
+bool AWeapon::IsEmpty()
+{
+	return Ammo <= 0;
 }

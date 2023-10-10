@@ -86,10 +86,12 @@ private:
 
 	//** 자동 발사 Automatic Fire
 	FTimerHandle FireTimer; // Automatic Fire 타이머 핸들러
-	bool bCanFire = true;
+	bool bCanFire = true; // 총알 발사 여부가 가능한지 정하는 true/false 변수
 
 	void StartFireTimer();
 	void FireTimerFinished();
+
+	bool CanFire(); // 총알 발사가 가능한지 true/false 리턴하는 함수
 
 public:
 		
