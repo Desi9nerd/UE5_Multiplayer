@@ -158,7 +158,6 @@ private:
 	class USoundCue* ElimBotSound;
 
 	TWeakObjectPtr<class AMultiplayerPlayerState> MultiplayerPlayerState;
-	//class AMultiplayerPlayerState* MultiplayerPlayerState;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

@@ -16,6 +16,7 @@ public:
 	void SetHUDHealth(float Health, float MaxHealth); // HealthBar에 Health/MaxHealth
 	void SetHUDScore(float Score); // 점수 매기기
 	void SetHUDDefeats(int32 Defeats); // 승리횟수 매기기
+	void SetHUDWeaponAmmo(int32 Ammo); // 총알 수 업데이트해서 띄우기
 	virtual void OnPossess(APawn* InPawn) override; // possed된 Pawn에 접근하는 함수
 
 protected:

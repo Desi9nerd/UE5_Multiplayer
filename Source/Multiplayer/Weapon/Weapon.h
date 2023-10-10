@@ -23,6 +23,8 @@ public:
 	AWeapon();
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void OnRep_Owner() override; // AActor의 함수 오버라이드
+	void SetHUDAmmo();
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped(); // 소멸 후 무기 떨어뜨리기
@@ -86,6 +88,22 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass; //총알 탄피 class
+
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo; // 현재 총알 수
+
+	void SpendRound();
+
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity; // 무기 탄알집에 들어갈 수 있는 총알 최대값
+
+	UPROPERTY()
+	class ABaseCharacter* BaseCharcterOwnerCharacter;
+	UPROPERTY()
+	class AMainPlayerController* MainPlayerOwnerController;
 
 public:
 	void SetWeaponState(EWeaponState State);

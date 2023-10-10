@@ -7,6 +7,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Casing.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Multiplayer/PlayerController/MainPlayerController.h"
 
 AWeapon::AWeapon()
 {
@@ -39,7 +40,8 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AWeapon, WeaponState);
+	DOREPLIFETIME(AWeapon, WeaponState); // WeaponState를 모든 Client들에게 Replicate 해준다.
+	DOREPLIFETIME(AWeapon, Ammo); // Ammo를 모든 Client들에게 Replicate 해준다.
 }
 
 void AWeapon::ShowPickupWidget(bool bShowWidget)
@@ -132,6 +134,46 @@ void AWeapon::OnRep_WeaponState()
 	}
 }
 
+void AWeapon::SetHUDAmmo()
+{
+	BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(GetOwner()) : BaseCharcterOwnerCharacter;
+	if (IsValid(BaseCharcterOwnerCharacter))
+	{
+		MainPlayerOwnerController = MainPlayerOwnerController == nullptr ? Cast<AMainPlayerController>(BaseCharcterOwnerCharacter->Controller) : MainPlayerOwnerController;
+		if (IsValid(MainPlayerOwnerController))
+		{
+			MainPlayerOwnerController->SetHUDWeaponAmmo(Ammo);
+		}
+	}
+}
+
+void AWeapon::SpendRound() 
+{
+	--Ammo; // 총알 소모 -1
+	SetHUDAmmo(); // HUD에 총알(Ammo) 수 업데이트
+}
+
+void AWeapon::OnRep_Ammo() // Client
+{
+	BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(GetOwner()) : BaseCharcterOwnerCharacter;
+	SetHUDAmmo(); // HUD에 총알(Ammo) 수 업데이트
+}
+
+void AWeapon::OnRep_Owner() // Client
+{
+	Super::OnRep_Owner(); // AActor에 정의된 함수 Super
+
+	if (Owner == nullptr)
+	{
+		BaseCharcterOwnerCharacter = nullptr;
+		MainPlayerOwnerController = nullptr;
+	}
+	else
+	{
+		SetHUDAmmo(); // HUD에 총알(Ammo) 수 업데이트
+	}
+}
+
 void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (IsValid(FireAnimation))
@@ -158,6 +200,8 @@ void AWeapon::Fire(const FVector& HitTarget)
 					); 
 			}
 		}
+
+		SpendRound(); // 총알 소모 -1
 	}
 }
 
@@ -166,5 +210,8 @@ void AWeapon::Dropped()
 	SetWeaponState(EWeaponState::EWS_Dropped); // 무기상태 Dropped로 변경
 	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);//소멸 시 World에 무기가 떨어지도록 DetachmentTransformRules 설정
 	WeaponMesh->DetachFromComponent(DetachRules); // WeaponMesh를 캐릭터에서 떨어뜨린다.
-	SetOwner(nullptr); // 캐릭터가 무기를 떨어뜨린 후 무기의 Owner가 없도록 Owner를 nullptr로 설정 
+	SetOwner(nullptr); // 캐릭터가 무기를 떨어뜨린 후 무기의 Owner가 없도록 Owner를 nullptr로 설정
+
+	BaseCharcterOwnerCharacter = nullptr; // 무기소유 캐릭터가 없도록 nullptr
+	MainPlayerOwnerController = nullptr; // 무기소유 controller가 없도록 nullptr
 }

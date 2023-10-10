@@ -91,6 +91,11 @@ void ABaseCharacter::Elim() // Server Only
 
 void ABaseCharacter::MulticastElim_Implementation() // RPC
 {
+	if (MainPlayerController)
+	{
+		MainPlayerController->SetHUDWeaponAmmo(0); // 캐릭터가 죽으면(=Elim) 총알 수 0으로 업데이트
+	}
+
 	bElimmed = true;
 	PlayElimMontage();
 
