@@ -41,6 +41,11 @@ void UCombatComponent::BeginPlay()
 			DefaultFOV = Character->GetFollowCamera()->FieldOfView;
 			CurrentFOV = DefaultFOV;
 		}
+
+		if (Character->HasAuthority()) // Server
+		{
+			InitializeCarriedAmmo(); // 게임 시작 시 CarriedAmmo 설정
+		}
 	}
 }
 
@@ -144,6 +149,18 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	}
 	EquippedWeapon->SetOwner(Character.Get()); // 무기의 Owner을 Character로 설정
 	EquippedWeapon->SetHUDAmmo(); // HUD에 총알 수 업데이트
+
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType())) // CarriedAmmoMap에 변경된 무기타입이 있다면
+	{
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()]; // 현재 장착무기 탄창의 최대 총알 수(=CarriedAmmo)를 CarriedAmmoMap에서 해당 무기의 정보를 찾아 설정.
+	}
+
+	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;
+	if (Controller.IsValid())
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo); // HUD에 최대 총알 수 업데이트
+	}
+
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
 	Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
 }
@@ -335,4 +352,9 @@ bool UCombatComponent::CanFire()
 
 void UCombatComponent::OnRep_CarriedAmmo()
 {
+}
+
+void UCombatComponent::InitializeCarriedAmmo()
+{
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo); // AssaultRifle과 StartingARAmmo 한쌍을 게임 시작 시 기본값으로 설정
 }

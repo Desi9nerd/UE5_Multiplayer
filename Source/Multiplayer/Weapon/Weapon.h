@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Multiplayer/EnumTypes/EWeaponTypes.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -105,6 +106,9 @@ private:
 	UPROPERTY()
 	class AMainPlayerController* MainPlayerOwnerController;
 
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType; // 무기 종류
+
 public:
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -112,4 +116,5 @@ public:
 	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	bool IsEmpty(); // 총알이 없는지 확인하는 함수. Ammo<=0면 true 리턴.
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 };

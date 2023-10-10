@@ -102,6 +102,11 @@ private:
 
 	TMap<EWeaponType, int32> CarriedAmmoMap; // 무기별 탄창 최대 총알 수 Map
 
+	UPROPERTY(EditAnywhere)
+	int32 StartingARAmmo = 30; // 게임 시작 시 CarriedAmmo 기본값
+
+	void InitializeCarriedAmmo(); // 게임 시작 시 CarriedAmmo 설정
+
 public:
 		
 };
