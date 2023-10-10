@@ -25,6 +25,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);//replicated된 EquippedWeapon. EquippedWeapon이 변경되면 모든 client에 반영된다.
 	DOREPLIFETIME(UCombatComponent, bAiming);//replicated 되도록 bAiming을 등록
+	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly); //replicated 되도록 CarriedAmmo을 등록. CarriedAmmo를 가지고 있는 Client만 적용되기 때문에 COND_OwnerOnly 컨디션으로 설정한다. 이렇게 하면 Owning Client에만 적용이 되고 다른 Client들에게는 적용이 되지 않는다.
 }
 
 void UCombatComponent::BeginPlay()
@@ -330,4 +331,8 @@ bool UCombatComponent::CanFire()
 	if (EquippedWeapon == nullptr) return false; // 장착된 무기가 없다면 false 리턴
 
 	return !EquippedWeapon->IsEmpty() || !bCanFire; // 총알이 비어있지 않았다면(=총알이 있다면) 
+}
+
+void UCombatComponent::OnRep_CarriedAmmo()
+{
 }

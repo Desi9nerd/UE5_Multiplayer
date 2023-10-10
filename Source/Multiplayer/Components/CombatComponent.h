@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Multiplayer/HUD/MainHUD.h"
+#include "Multiplayer/EnumTypes/EWeaponTypes.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGTH 80000.0f
@@ -92,6 +93,14 @@ private:
 	void FireTimerFinished();
 
 	bool CanFire(); // 총알 발사가 가능한지 true/false 리턴하는 함수
+
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo; // 현재 장착무기 탄창의 최대 총알 수
+
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	TMap<EWeaponType, int32> CarriedAmmoMap; // 무기별 탄창 최대 총알 수 Map
 
 public:
 		

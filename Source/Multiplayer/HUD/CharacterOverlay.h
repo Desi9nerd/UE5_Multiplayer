@@ -26,6 +26,9 @@ public:
 	UTextBlock* DefeatsAmount; // 승리 횟수
 
 	UPROPERTY(meta = (BindWidget))
-	UTextBlock* WeaponAmmoAmount; // 총알 수
+	UTextBlock* WeaponAmmoAmount; // 현재 총알 수
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* CarriedAmmoAmount; // 탄창이 가질 수 있는 최대 총알 수
 
 };
