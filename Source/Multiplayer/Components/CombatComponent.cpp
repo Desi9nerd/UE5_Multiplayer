@@ -26,6 +26,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);//replicated된 EquippedWeapon. EquippedWeapon이 변경되면 모든 client에 반영된다.
 	DOREPLIFETIME(UCombatComponent, bAiming);//replicated 되도록 bAiming을 등록
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly); //replicated 되도록 CarriedAmmo을 등록. CarriedAmmo를 가지고 있는 Client만 적용되기 때문에 COND_OwnerOnly 컨디션으로 설정한다. 이렇게 하면 Owning Client에만 적용이 되고 다른 Client들에게는 적용이 되지 않는다.
+	DOREPLIFETIME(UCombatComponent, CombatState); //replicated 되도록 CombatState을 등록
 }
 
 void UCombatComponent::BeginPlay()
@@ -167,7 +168,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 void UCombatComponent::Reload()
 {
-	if (CarriedAmmo > 0) // 0보다 큰지 확인. 0보다 작은면 재장전 할 필요X
+	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading) // 0보다 큰지 확인. 0보다 작은면 재장전 할 필요X
 	{
 		ServerReload(); // Server RPC 호출.
 	}
@@ -175,8 +176,34 @@ void UCombatComponent::Reload()
 
 void UCombatComponent::ServerReload_Implementation() // Server RPC, 이 함수가 호출되면 Server이든 Client이든 서버에서만 실행된다. 
 {
-	if (Character.IsValid() == false) return;
+	if (Character == nullptr) return;
 
+	CombatState = ECombatState::ECS_Reloading; // CombatState을 재장전 상태로 변경
+	HandleReload();
+}
+
+void UCombatComponent::FinishReloading()
+{
+	if (Character == nullptr) return;
+
+	if (Character->HasAuthority()) // Server
+	{
+		CombatState = ECombatState::ECS_Unoccupied; 
+	}
+}
+
+void UCombatComponent::OnRep_CombatState() // Client
+{
+	switch (CombatState)
+	{
+	case ECombatState::ECS_Reloading:
+		HandleReload();
+		break;
+	}
+}
+
+void UCombatComponent::HandleReload()
+{
 	Character->PlayReloadMontage(); // 재장전 몽타주 재생
 }
 
@@ -367,6 +394,11 @@ bool UCombatComponent::CanFire()
 
 void UCombatComponent::OnRep_CarriedAmmo()
 {
+	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;
+	if (Controller.IsValid())
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
 }
 
 void UCombatComponent::InitializeCarriedAmmo()

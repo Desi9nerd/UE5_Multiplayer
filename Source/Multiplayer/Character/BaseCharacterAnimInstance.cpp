@@ -3,6 +3,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Multiplayer/Weapon/Weapon.h"
+#include "Multiplayer/EnumTypes/ECombatState.h"
 
 void UBaseCharacterAnimInstance::NativeInitializeAnimation()
 {
@@ -84,4 +85,6 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 			DrawDebugLine(GetWorld(), MuzzleTipTransform.GetLocation(), BaseCharacter->GetHitTarget(), FColor::Red);
 		}
 	}
+
+	bUseFABRIK = BaseCharacter->GetCombatState() != ECombatState::ECS_Reloading; // 재장전 상태가 아닐 때는 FABRIK를 사용한다.
 }

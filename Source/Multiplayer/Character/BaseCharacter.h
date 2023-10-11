@@ -5,6 +5,7 @@
 #include "Multiplayer/EnumTypes/ETurningInPlace.h"
 #include "Multiplayer/Interfaces/ICrosshair.h"
 #include "Components/TimelineComponent.h"
+#include "Multiplayer/EnumTypes/ECombatState.h"
 #include "BaseCharacter.generated.h"
 
 UCLASS()
@@ -69,7 +70,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)  
 	class AWeapon* OverlappingWeapon;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* Combat;
 
 	UFUNCTION()
@@ -180,4 +181,5 @@ public:
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	ECombatState GetCombatState() const;
 };

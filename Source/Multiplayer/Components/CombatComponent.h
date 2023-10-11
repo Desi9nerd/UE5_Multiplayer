@@ -4,6 +4,7 @@
 #include "Components/ActorComponent.h"
 #include "Multiplayer/HUD/MainHUD.h"
 #include "Multiplayer/EnumTypes/EWeaponTypes.h"
+#include "Multiplayer/EnumTypes/ECombatState.h"
 #include "CombatComponent.generated.h"
 
 #define TRACE_LENGTH 80000.0f
@@ -21,6 +22,9 @@ public:
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 	void Reload();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 
 protected:
 	virtual void BeginPlay() override;
@@ -47,6 +51,8 @@ protected:
 
 	UFUNCTION(Server, Reliable) // Server RPC
 	void ServerReload();
+
+	void HandleReload(); // Server와 Client들 모두에서 실행되는 재장전 몽타주 재생 함수
 
 private:
 	TWeakObjectPtr<class ABaseCharacter> Character;
@@ -110,6 +116,13 @@ private:
 	int32 StartingARAmmo = 30; // 게임 시작 시 CarriedAmmo 기본값
 
 	void InitializeCarriedAmmo(); // 게임 시작 시 CarriedAmmo 설정
+
+	// Server에서 변경하면 Replicate 해준다. 모든 Client들은 CombatState을 알아야 한다.
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState) 
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+
+	UFUNCTION()
+	void OnRep_CombatState();
 
 public:
 		

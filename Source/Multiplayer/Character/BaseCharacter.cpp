@@ -661,3 +661,10 @@ FVector ABaseCharacter::GetHitTarget() const
 
 	return Combat->HitTarget; // CombatComponentÀÇ HitTagetÀ» return
 }
+
+ECombatState ABaseCharacter::GetCombatState() const
+{
+	if (Combat == nullptr) return ECombatState::ECS_MAX;
+
+	return Combat->CombatState;
+}
