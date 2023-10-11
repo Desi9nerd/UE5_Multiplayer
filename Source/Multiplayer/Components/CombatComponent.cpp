@@ -165,6 +165,21 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
 }
 
+void UCombatComponent::Reload()
+{
+	if (CarriedAmmo > 0) // 0보다 큰지 확인. 0보다 작은면 재장전 할 필요X
+	{
+		ServerReload(); // Server RPC 호출.
+	}
+}
+
+void UCombatComponent::ServerReload_Implementation() // Server RPC, 이 함수가 호출되면 Server이든 Client이든 서버에서만 실행된다. 
+{
+	if (Character.IsValid() == false) return;
+
+	Character->PlayReloadMontage(); // 재장전 몽타주 재생
+}
+
 void UCombatComponent::OnRep_EquippedWeapon()
 {
 	if (EquippedWeapon && Character.IsValid()) //무기장착 시

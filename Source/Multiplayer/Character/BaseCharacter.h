@@ -19,7 +19,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
-	void PlayFireMontage(bool bAiming); 
+	void PlayFireMontage(bool bAiming);
+	void PlayReloadMontage();
 	void PlayElimMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 	void Elim(); // Server에서만 콜되는 Elim함수
@@ -38,6 +39,7 @@ protected:
 	void LookUp(float Value);
 	void EquipButtonPressed();
 	void CrouchButtonPressed();
+	void ReloadButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
 	void AimOffset(float DeltaTime);
@@ -82,6 +84,7 @@ private:
 	float AO_Pitch; // AO에 사용할 Pitch값
 	FRotator StartingAimRotation; //마우스 움직임에 따른 회전값
 
+	//** 몽타주
 	ETurningInPlace TurningInPlace;
 	void TurnInPlace(float DeltaTime);
 
@@ -89,10 +92,13 @@ private:
 	class UAnimMontage* FireWeaponMontage; // 발사 몽타주
 
 	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ReloadMontage; // 재장전 몽타주
+
+	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage; // 피격 몽타주
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-	UAnimMontage* ElimMontage;
+	UAnimMontage* ElimMontage; // 사망 몽타주
 
 	void HideCameraIfCharacterClose(); //카메라와 캐릭터가 지나치게 가까워지면 캐릭터를 숨겨준다.
 

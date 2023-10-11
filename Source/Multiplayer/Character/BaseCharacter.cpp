@@ -17,6 +17,7 @@
 #include "Sound/SoundCue.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
+#include "Multiplayer/EnumTypes/EWeaponTypes.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -225,6 +226,7 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ABaseCharacter::AimButtonReleased);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ABaseCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ABaseCharacter::FireButtonReleased);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ABaseCharacter::ReloadButtonPressed);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
@@ -252,6 +254,27 @@ void ABaseCharacter::PlayFireMontage(bool bAiming)
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName;
 		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ABaseCharacter::PlayReloadMontage() // 재장전 몽타주 재생
+{
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+	
+	TWeakObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance.IsValid() && IsValid(ReloadMontage))
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+
+		switch (Combat->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			SectionName = FName("Rifle");
+			break;
+		}
+
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }
@@ -332,7 +355,7 @@ void ABaseCharacter::LookUp(float Value)
 
 void ABaseCharacter::EquipButtonPressed()
 {
-	if (Combat)
+	if (IsValid(Combat))
 	{
 		if (HasAuthority()) //서버 기준. Server에서 validate하는 HasAuthority()
 		{
@@ -348,7 +371,7 @@ void ABaseCharacter::EquipButtonPressed()
 void ABaseCharacter::ServerEquipButtonPressed_Implementation()
 {
 	// 서버를 통해 무기 장착하는 경우
-	if (Combat)
+	if (IsValid(Combat))
 	{
 		Combat->EquipWeapon(OverlappingWeapon);//무기를 줍고 캐릭터에 장착시킨다
 	}
@@ -366,9 +389,17 @@ void ABaseCharacter::CrouchButtonPressed()
 	}
 }
 
+void ABaseCharacter::ReloadButtonPressed()
+{
+	if (IsValid(Combat))
+	{
+		Combat->Reload();
+	}
+}
+
 void ABaseCharacter::AimButtonPressed()
 {
-	if (Combat)
+	if (IsValid(Combat))
 	{
 		Combat->SetAiming(true);
 	}
@@ -376,7 +407,7 @@ void ABaseCharacter::AimButtonPressed()
 
 void ABaseCharacter::AimButtonReleased()
 {
-	if (Combat)
+	if (IsValid(Combat))
 	{
 		Combat->SetAiming(false);
 	}
