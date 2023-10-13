@@ -126,10 +126,15 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 {
 	if (EquippedWeapon == nullptr) return; //장착 무기가 없다면 return
 
-	if (Character.IsValid())
+	if (Character.IsValid() && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
 		EquippedWeapon->Fire(TraceHitTarget); // 장착 무기 발사, HitTarget(=TraceHitResult.ImpactPoint <-- HitResult값)
+	}
+
+	if (bFireButtonPressed)
+	{
+		Fire();
 	}
 }
 
@@ -190,6 +195,11 @@ void UCombatComponent::FinishReloading()
 	{
 		CombatState = ECombatState::ECS_Unoccupied; 
 	}
+
+	if (bFireButtonPressed)
+	{
+		Fire();
+	}
 }
 
 void UCombatComponent::OnRep_CombatState() // Client
@@ -198,6 +208,12 @@ void UCombatComponent::OnRep_CombatState() // Client
 	{
 	case ECombatState::ECS_Reloading:
 		HandleReload();
+		break;
+	case ECombatState::ECS_Unoccupied:
+		if (bFireButtonPressed)
+		{
+			Fire();
+		}
 		break;
 	}
 }
@@ -389,7 +405,7 @@ bool UCombatComponent::CanFire()
 {
 	if (EquippedWeapon == nullptr) return false; // 장착된 무기가 없다면 false 리턴
 
-	return !EquippedWeapon->IsEmpty() || !bCanFire; // 총알이 비어있지 않았다면(=총알이 있다면) 
+	return EquippedWeapon->IsEmpty() == false && bCanFire && CombatState == ECombatState::ECS_Unoccupied; // 총알이 비어있지 않았다면(=총알이 있다면) 
 }
 
 void UCombatComponent::OnRep_CarriedAmmo()
