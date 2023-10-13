@@ -125,7 +125,8 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 	
-	TObjectPtr<class AMainPlayerController> MainPlayerController;
+	UPROPERTY()
+	class AMainPlayerController* MainPlayerController;
 
 	bool bElimmed = false;
 

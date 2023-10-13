@@ -10,7 +10,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "BaseCharacterAnimInstance.h"
 #include "Multiplayer/Multiplayer.h"
-#include "Multiplayer//PlayerController/MainPlayerController.h"
+#include "Multiplayer/PlayerController/MainPlayerController.h"
 #include "Multiplayer/GameMode/MultiplayerGameMode.h"
 #include "TimerManager.h"
 #include "Kismet/GameplayStatics.h"
@@ -290,7 +290,7 @@ void ABaseCharacter::PlayElimMontage()
 
 void ABaseCharacter::PlayHitReactMontage()
 {
-	//if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return; //무기 안 들고 있을때는 return
+	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return; //무기 안 들고 있을때는 return
 
 	//** 피격 몽타주 재생
 	TWeakObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
