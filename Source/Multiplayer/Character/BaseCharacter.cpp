@@ -152,24 +152,6 @@ void ABaseCharacter::ElimTimerFinished()
 	}
 }
 
-void ABaseCharacter::UpdateDissolveMaterial(float DissolveValue)
-{
-	if (IsValid(DynamicDissolveMaterialInstance))
-	{
-		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
-	}
-}
-
-void ABaseCharacter::StartDissolve()
-{
-	DissolveTrack.BindDynamic(this, &ABaseCharacter::UpdateDissolveMaterial); // Delegate
-	if (IsValid(DissolveCurve) && IsValid(DissolveTimeline))
-	{
-		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
-		DissolveTimeline->Play();
-	}
-}
-
 void ABaseCharacter::Destroyed()
 {
 	Super::Destroyed();
@@ -183,7 +165,7 @@ void ABaseCharacter::Destroyed()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	UpdateHUDHealth();
 
 	if (HasAuthority())
@@ -596,7 +578,7 @@ void ABaseCharacter::UpdateHUDHealth()
 
 void ABaseCharacter::PollInit()
 {
-	if (MultiplayerPlayerState.IsValid() == false)
+	if (MultiplayerPlayerState == nullptr)
 	{
 		MultiplayerPlayerState = GetPlayerState<AMultiplayerPlayerState>();
 		if (MultiplayerPlayerState.IsValid())
@@ -604,6 +586,24 @@ void ABaseCharacter::PollInit()
 			MultiplayerPlayerState->AddToScore(0.0f); // 점수 초기화
 			MultiplayerPlayerState->AddToDefeats(0); // 승리횟수 초기화
 		}
+	}
+}
+
+void ABaseCharacter::UpdateDissolveMaterial(float DissolveValue)
+{
+	if (IsValid(DynamicDissolveMaterialInstance))
+	{
+		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
+	}
+}
+
+void ABaseCharacter::StartDissolve()
+{
+	DissolveTrack.BindDynamic(this, &ABaseCharacter::UpdateDissolveMaterial); // Delegate
+	if (IsValid(DissolveCurve) && IsValid(DissolveTimeline))
+	{
+		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
+		DissolveTimeline->Play();
 	}
 }
 
