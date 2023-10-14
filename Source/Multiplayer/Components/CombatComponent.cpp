@@ -116,6 +116,10 @@ void UCombatComponent::FireTimerFinished()
 	{
 		Fire();
 	}
+	if (EquippedWeapon->IsEmpty()) // 발사할 수 있는 총알이 다 떨어져서 0 이하라면
+	{
+		Reload(); // 재장전
+	}
 }
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget) // Server RPC 총 발사 함수
@@ -171,6 +175,11 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip) // Server
 	if (EquippedWeapon->EquipSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, 	EquippedWeapon->EquipSound, Character->GetActorLocation()); // 무기장착 사운드를 캐릭터 위치에서 재생
+	}
+
+	if (EquippedWeapon->IsEmpty()) // 발사할 수 있는 총알이 다 떨어져서 0 이하라면
+	{
+		Reload(); // 재장전
 	}
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
