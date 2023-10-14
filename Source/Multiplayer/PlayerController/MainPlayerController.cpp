@@ -12,6 +12,13 @@ void AMainPlayerController::BeginPlay()
 	MainHUD = Cast<AMainHUD>(GetHUD());
 }
 
+void AMainPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	SetHUDTime(); // HUD에 표시되는 시간을 매 틱 갱신한다.
+}
+
 void AMainPlayerController::SetHUDHealth(float Health, float MaxHealth)
 {
 	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
@@ -85,6 +92,34 @@ void AMainPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		MainHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
+}
+
+void AMainPlayerController::SetHUDMatchCountdown(float CountdownTime) // 남은 시간 띄우기
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+
+	bool bHUDValid = MainHUD &&
+		MainHUD->CharacterOverlay &&
+		MainHUD->CharacterOverlay->MatchCountdownText;
+	if (bHUDValid)
+	{
+		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
+		int32 Seconds = CountdownTime - Minutes * 60;
+
+		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);//%02d: 두자리숫자로 출력
+		MainHUD->CharacterOverlay->MatchCountdownText->SetText(FText::FromString(CountdownText));
+	}
+}
+
+void AMainPlayerController::SetHUDTime() // HUD에 시간 띄우기
+{
+	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetWorld()->GetTimeSeconds());
+	if (CountdownInt != SecondsLeft)
+	{
+		SetHUDMatchCountdown(MatchTime - GetWorld()->GetTimeSeconds());
+	}
+
+	CountdownInt = SecondsLeft;
 }
 
 void AMainPlayerController::OnPossess(APawn* InPawn)

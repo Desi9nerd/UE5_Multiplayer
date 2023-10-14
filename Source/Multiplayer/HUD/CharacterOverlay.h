@@ -31,4 +31,7 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* CarriedAmmoAmount; // 탄창이 가질 수 있는 최대 총알 수
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MatchCountdownText; // 남은 시간
+
 };
