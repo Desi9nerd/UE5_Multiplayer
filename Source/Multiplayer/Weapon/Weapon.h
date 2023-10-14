@@ -29,6 +29,7 @@ public:
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped(); // 소멸 후 무기 떨어뜨리기
+	void AddAmmo(int32 AmmoToAdd);
 
 	//** Crosshair Texture
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
@@ -117,4 +118,6 @@ public:
 	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
 	bool IsEmpty(); // 총알이 없는지 확인하는 함수. Ammo<=0면 true 리턴.
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 };

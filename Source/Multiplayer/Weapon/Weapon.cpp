@@ -216,6 +216,12 @@ void AWeapon::Dropped()
 	MainPlayerOwnerController = nullptr; // 무기소유 controller가 없도록 nullptr
 }
 
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, MagCapacity); // 최소값 0, 최대값 MagCapcity
+	SetHUDAmmo();
+}
+
 bool AWeapon::IsEmpty()
 {
 	return Ammo <= 0;

@@ -53,6 +53,7 @@ protected:
 	void ServerReload();
 
 	void HandleReload(); // Server와 Client들 모두에서 실행되는 재장전 몽타주 재생 함수
+	int32 AmountToReload(); // 재장전하는 총알 수를 리턴하는 함수
 
 private:
 	TWeakObjectPtr<class ABaseCharacter> Character;
@@ -123,6 +124,8 @@ private:
 
 	UFUNCTION()
 	void OnRep_CombatState();
+
+	void UpdateAmmoValues(); // 총알 수 업데이트
 
 public:
 		

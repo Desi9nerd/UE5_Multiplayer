@@ -181,7 +181,7 @@ void UCombatComponent::Reload()
 
 void UCombatComponent::ServerReload_Implementation() // Server RPC, 이 함수가 호출되면 Server이든 Client이든 서버에서만 실행된다. 
 {
-	if (Character == nullptr) return;
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
 
 	CombatState = ECombatState::ECS_Reloading; // CombatState을 재장전 상태로 변경
 	HandleReload();
@@ -193,13 +193,34 @@ void UCombatComponent::FinishReloading()
 
 	if (Character->HasAuthority()) // Server
 	{
-		CombatState = ECombatState::ECS_Unoccupied; 
+		CombatState = ECombatState::ECS_Unoccupied;
+		UpdateAmmoValues(); // 총알 수 업데이트
 	}
 
 	if (bFireButtonPressed)
 	{
 		Fire();
 	}
+}
+
+void UCombatComponent::UpdateAmmoValues()
+{
+	if (Character == nullptr || EquippedWeapon == nullptr) return;
+
+	int32 ReloadAmount = AmountToReload();
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+
+	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;
+	if (Controller.IsValid())
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+
+	EquippedWeapon->AddAmmo(-ReloadAmount);
 }
 
 void UCombatComponent::OnRep_CombatState() // Client
@@ -216,6 +237,23 @@ void UCombatComponent::OnRep_CombatState() // Client
 		}
 		break;
 	}
+}
+
+int32 UCombatComponent::AmountToReload()
+{
+	if (EquippedWeapon == nullptr) return 0;
+	
+	int32 RoomInMag = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo(); // 넣을 수 있는 총알 수 = 장착된 무기가 가질 수 있는 탄창 최대 총알 수 - 현재 총알 수
+
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		int32 AmountCarried = CarriedAmmoMap[EquippedWeapon->GetWeaponType()]; // 장착된 무기 탄창의 최대 총알 수. TMap<EWeaponType, int32> CarriedAmmoMap로 값 찾기. 
+		int32 Least = FMath::Min(RoomInMag, AmountCarried);
+
+		return FMath::Clamp(RoomInMag, 0, Least); // RoomInMag가 음수값이 나오지 않는다. 하지만 오류가 나거나 코드 실수하여 음수가 나오는 상황을 예외처리하기 위해 Clamp 사용
+	}
+
+	return 0;
 }
 
 void UCombatComponent::HandleReload()
