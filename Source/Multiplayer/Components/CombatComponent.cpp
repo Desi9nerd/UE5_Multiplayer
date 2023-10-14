@@ -10,6 +10,7 @@
 #include "Multiplayer/PlayerController/MainPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
+#include "Sound/SoundCue.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -138,7 +139,7 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 	}
 }
 
-void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
+void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip) // Server
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 	if (IsValid(EquippedWeapon)) // 이미 무기 장착 중이라면
@@ -165,6 +166,11 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	if (Controller.IsValid())
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo); // HUD에 최대 총알 수 업데이트
+	}
+
+	if (EquippedWeapon->EquipSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, 	EquippedWeapon->EquipSound, Character->GetActorLocation()); // 무기장착 사운드를 캐릭터 위치에서 재생
 	}
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
@@ -261,7 +267,7 @@ void UCombatComponent::HandleReload()
 	Character->PlayReloadMontage(); // 재장전 몽타주 재생
 }
 
-void UCombatComponent::OnRep_EquippedWeapon()
+void UCombatComponent::OnRep_EquippedWeapon() // Client
 {
 	if (EquippedWeapon && Character.IsValid()) //무기장착 시
 	{
@@ -273,6 +279,11 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
 		Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
+
+		if (EquippedWeapon->EquipSound) 
+		{	// 무기장착 사운드 캐릭터 위치에서 재생하기
+			UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
+		}
 	}
 }
 

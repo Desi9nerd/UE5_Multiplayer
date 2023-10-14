@@ -61,6 +61,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	bool bAutomatic = true; // 자동 발사무기 true/false
 
+	UPROPERTY(EditAnywhere)
+	class USoundCue* EquipSound; // 무기장착 사운드
+
 protected:
 	virtual void BeginPlay() override;
 
