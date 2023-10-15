@@ -5,8 +5,6 @@
 void AMainHUD::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AddCharacterOverlay();
 }
 
 void AMainHUD::AddCharacterOverlay()

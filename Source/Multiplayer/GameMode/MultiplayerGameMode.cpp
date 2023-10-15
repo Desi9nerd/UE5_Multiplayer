@@ -33,6 +33,21 @@ void AMultiplayerGameMode::Tick(float DeltaTime)
 	}
 }
 
+void AMultiplayerGameMode::OnMatchStateSet()
+{
+	Super::OnMatchStateSet(); 
+
+	// GameMode의 MatchState이 변경되면 서버에서 해당되는 PlayerController를 찾아 MatchState을 설정한다.
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		TWeakObjectPtr<AMainPlayerController> SelectedPlayer = Cast<AMainPlayerController>(*It);
+		if (SelectedPlayer.IsValid())
+		{
+			SelectedPlayer->OnMatchStateSet(MatchState);
+		}
+	}
+}
+
 void AMultiplayerGameMode::PlayerEliminated(ABaseCharacter* ElimmedCharacter, AMainPlayerController* VictimController,
                                             AMainPlayerController* AttackerController)
 {

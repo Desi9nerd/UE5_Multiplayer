@@ -14,6 +14,7 @@ class MULTIPLAYER_API AMainPlayerController : public APlayerController
 
 public:
 	virtual void Tick(float DeltaTime) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	void SetHUDHealth(float Health, float MaxHealth); // HealthBar에 Health/MaxHealth
 	void SetHUDScore(float Score); // 점수 매기기
 	void SetHUDDefeats(int32 Defeats); // 승리횟수 매기기
@@ -23,10 +24,12 @@ public:
 	virtual void OnPossess(APawn* InPawn) override; // possed된 Pawn에 접근하는 함수
 	virtual float GetServerTime(); // Synced된 Server world clock를 리턴하는 함수
 	virtual void ReceivedPlayer() override; // 가능한 빨리 server clock을 Sync
+	void OnMatchStateSet(FName State);
 
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
+	void PollInit(); // 체력, 점수, 승패 초기화
 
 	//** Server와 Client 사이의 Sync Time
 	
@@ -51,4 +54,20 @@ private:
 
 	float MatchTime = 120.0f; // 경기시간
 	uint32 CountdownInt = 0;
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState) // Client들에게 Replicated 되도록 설정.
+	FName MatchState; // GameMode.h의 이름이 같은 MatchState이 있다.
+
+	UFUNCTION()
+	void OnRep_MatchState();
+
+	UPROPERTY()
+	class UCharacterOverlay* CharacterOverlay;
+
+	bool bInitializeCharacterOverlay = false;
+
+	float HUDHealth;
+	float HUDMaxHealth;
+	float HUDScore;
+	int32 HUDDefeats;
 };

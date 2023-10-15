@@ -5,6 +5,8 @@
 #include "Components/TextBlock.h"
 #include "Multiplayer/Character/BaseCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "Multiplayer/GameMode/MultiplayerGameMode.h"// GameMode의 MatchState을 사용하기 위해 헤더추가
+#include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -13,12 +15,20 @@ void AMainPlayerController::BeginPlay()
 	MainHUD = Cast<AMainHUD>(GetHUD());
 }
 
+void AMainPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AMainPlayerController, MatchState); // replicated 되도록 MatchState 등록
+}
+
 void AMainPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	SetHUDTime(); // HUD에 표시되는 시간을 매 틱 갱신한다.
 	CheckTimeSync(DeltaTime); // 매 TimeSyncFrequency 마다 Server Time을 Sync한다.
+	PollInit(); // 체력, 점수, 승패 초기화
 }
 
 void AMainPlayerController::CheckTimeSync(float DeltaTime)
@@ -61,6 +71,12 @@ void AMainPlayerController::SetHUDHealth(float Health, float MaxHealth)
 		FString HealthText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Health), FMath::CeilToInt(MaxHealth));
 		MainHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
+	else // HUD가 없다면
+	{	
+		bInitializeCharacterOverlay = true;
+		HUDHealth = Health;
+		HUDMaxHealth = MaxHealth;
+	}
 }
 
 void AMainPlayerController::SetHUDScore(float Score) // 점수 매기기
@@ -75,6 +91,11 @@ void AMainPlayerController::SetHUDScore(float Score) // 점수 매기기
 		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score)); //Score float변수 FloorToInt로 int화 후 Fstring변환
 		MainHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));//CharacterOverlay 안의 ScoreAmount라는 UTextBlock변수를 ScoreText(=SetHUDScore에 들어온 float Score를 string으로 변환한 값)로 설정
 	}
+	else // HUD가 없다면
+	{
+		bInitializeCharacterOverlay = true;
+		HUDScore = Score;
+	}
 }
 
 void AMainPlayerController::SetHUDDefeats(int32 Defeats) // 승리횟수 매기기
@@ -88,6 +109,11 @@ void AMainPlayerController::SetHUDDefeats(int32 Defeats) // 승리횟수 매기기
 	{
 		FString DefeatsText = FString::Printf(TEXT("%d"), Defeats);
 		MainHUD->CharacterOverlay->DefeatsAmount->SetText(FText::FromString(DefeatsText));
+	}
+	else // HUD가 없다면
+	{
+		bInitializeCharacterOverlay = true;
+		HUDDefeats = Defeats;
 	}
 }
 
@@ -147,6 +173,24 @@ void AMainPlayerController::SetHUDTime() // HUD에 시간 띄우기
 	CountdownInt = SecondsLeft;
 }
 
+void AMainPlayerController::PollInit() // 체력, 점수, 승패 초기화
+{
+	if (CharacterOverlay == nullptr)
+	{
+		if (MainHUD && MainHUD->CharacterOverlay)
+		{
+			CharacterOverlay = MainHUD->CharacterOverlay;
+			if (IsValid(CharacterOverlay))
+			{
+				// 체력, 점수, 승패 초기화
+				SetHUDHealth(HUDHealth, HUDMaxHealth);
+				SetHUDScore(HUDScore);
+				SetHUDDefeats(HUDDefeats);
+			}
+		}
+	}
+}
+
 void AMainPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
 {
 	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds(); // Server의 현재 Time
@@ -175,5 +219,31 @@ void AMainPlayerController::ReceivedPlayer()
 	if (IsLocalController())
 	{
 		ServerRequestServerTime(GetWorld()->GetTimeSeconds()); // Server Time을 요청한다. 현재 Client의 Time을 변수로 넘긴다.
+	}
+}
+
+void AMainPlayerController::OnMatchStateSet(FName State)
+{
+	MatchState = State;  // GameMode에서 건내받는 FName State으로 MatchState 설정
+
+	if (MatchState == MatchState::InProgress) //GameMode.h 내의 MatchState::InProgress
+	{
+		MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+		if (IsValid(MainHUD))
+		{
+			MainHUD->AddCharacterOverlay();
+		}
+	}
+}
+
+void AMainPlayerController::OnRep_MatchState()
+{
+	if (MatchState == MatchState::InProgress)
+	{
+		MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+		if (IsValid(MainHUD))
+		{
+			MainHUD->AddCharacterOverlay();
+		}
 	}
 }
