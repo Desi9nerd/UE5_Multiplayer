@@ -32,7 +32,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Player Attributes")
 	TSubclassOf<class UUserWidget> CharacterOverlayClass;
-	
+
+	UPROPERTY()
 	TObjectPtr<class UCharacterOverlay> CharacterOverlay;
 
 protected:

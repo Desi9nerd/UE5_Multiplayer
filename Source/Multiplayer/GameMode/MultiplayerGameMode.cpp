@@ -5,8 +5,36 @@
 #include "GameFramework/PlayerStart.h"
 #include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
 
+AMultiplayerGameMode::AMultiplayerGameMode()
+{
+	bDelayedStart = true; // true면 GameMode가 start 되기 전에 waiting 상태가 된다.
+}
+
+void AMultiplayerGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	LevelStartingTime = GetWorld()->GetTimeSeconds(); // 게임레벨맵에 들어간 시간
+}
+
+void AMultiplayerGameMode::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (MatchState == MatchState::WaitingToStart)
+	{
+		// 게임 시작 전 대기시간 - 현재 시간 + 게임레벨맵에 들어간 시간.
+		// 현재 시간은 게임 시작 직후부터 기록되니 게임레벨맵에 들어간 시간만큼 더해준다.
+		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if (CountdownTime <= 0.0f)
+		{
+			StartMatch();
+		}
+	}
+}
+
 void AMultiplayerGameMode::PlayerEliminated(ABaseCharacter* ElimmedCharacter, AMainPlayerController* VictimController,
-	AMainPlayerController* AttackerController)
+                                            AMainPlayerController* AttackerController)
 {
 	if (AttackerController == nullptr || AttackerController->PlayerState == nullptr) return;
 	if (VictimController == nullptr || VictimController->PlayerState == nullptr) return;

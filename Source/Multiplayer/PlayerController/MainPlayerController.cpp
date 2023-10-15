@@ -4,6 +4,7 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Multiplayer/Character/BaseCharacter.h"
+#include "Net/UnrealNetwork.h"
 
 void AMainPlayerController::BeginPlay()
 {
