@@ -17,6 +17,30 @@ void AMainPlayerController::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	SetHUDTime(); // HUD에 표시되는 시간을 매 틱 갱신한다.
+	CheckTimeSync(DeltaTime); // 매 TimeSyncFrequency 마다 Server Time을 Sync한다.
+}
+
+void AMainPlayerController::CheckTimeSync(float DeltaTime)
+{
+	TimeSyncRunningTime += DeltaTime; // Tick에서의 DeltaTime을 TimeSyncRunningTime에 기록한다.
+
+	// Client && TimeSyncRunningTime가  Server Time을 Sync하는 주기인 TimeSyncFrequency보다 커지면
+	if (IsLocalController() && TimeSyncRunningTime > TimeSyncFrequency)
+	{
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds()); // Server Time을 요청
+		TimeSyncRunningTime = 0.0f; // 리셋
+	}
+}
+
+void AMainPlayerController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(InPawn);
+	if (BaseCharacter.IsValid())
+	{
+		SetHUDHealth(BaseCharacter->GetHealth(), BaseCharacter->GetMaxHealth());
+	}
 }
 
 void AMainPlayerController::SetHUDHealth(float Health, float MaxHealth)
@@ -113,22 +137,42 @@ void AMainPlayerController::SetHUDMatchCountdown(float CountdownTime) // 남은 시
 
 void AMainPlayerController::SetHUDTime() // HUD에 시간 띄우기
 {
-	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetWorld()->GetTimeSeconds());
+	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
 	if (CountdownInt != SecondsLeft)
 	{
-		SetHUDMatchCountdown(MatchTime - GetWorld()->GetTimeSeconds());
+		SetHUDMatchCountdown(MatchTime - GetServerTime());
 	}
 
 	CountdownInt = SecondsLeft;
 }
 
-void AMainPlayerController::OnPossess(APawn* InPawn)
+void AMainPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
 {
-	Super::OnPossess(InPawn);
-	
-	TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(InPawn);
-	if (BaseCharacter.IsValid())
+	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds(); // Server의 현재 Time
+	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt); // Server의 현재 Time를 보낸다
+}
+
+void AMainPlayerController::ClientReportServerTime_Implementation(float TimeOfClientRequest, float TimeServerReceivedClientRequest)
+{
+	float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest; // Client가 Server에 보내고 다시 Client로 돌아올 때까지 소요된 시간 = Client의 현재 Time - Client이 요청한 당시 Time
+	float CurrentServerTime = TimeServerReceivedClientRequest + (0.5f * RoundTripTime); // 현재 Server Time = Server가 Client로부터 Time 요청을 받은 시간 + (0.5f * RoundTripTime) // 0.5f * RoundTripTime 값은 근사값이다. 근사값을 사용해도 충분히 비슷하기 때문에 여기서는 근사값을 사용했다.
+	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds(); // Client와 Server의 시간차 = (위에서 구한)현재 Server Time - 현재 Client Time
+}
+
+float AMainPlayerController::GetServerTime() // Synced된 Server world clock를 리턴하는 함수
+{
+	if (HasAuthority()) // 요청대상이 Server인 경우
+		return GetWorld()->GetTimeSeconds();
+	else // 요청대상이 Client인 경우
+		return GetWorld()->GetTimeSeconds() + ClientServerDelta; //현재 시간 + Client와 Server의 시간차
+}
+
+void AMainPlayerController::ReceivedPlayer()
+{
+	Super::ReceivedPlayer();
+
+	if (IsLocalController())
 	{
-		SetHUDHealth(BaseCharacter->GetHealth(), BaseCharacter->GetMaxHealth());
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds()); // Server Time을 요청한다. 현재 Client의 Time을 변수로 넘긴다.
 	}
 }
