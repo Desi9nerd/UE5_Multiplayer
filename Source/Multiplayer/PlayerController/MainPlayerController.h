@@ -27,6 +27,7 @@ public:
 	virtual void ReceivedPlayer() override; // 가능한 빨리 server clock을 Sync
 	void OnMatchStateSet(FName State);
 	void HandleMatchHasStarted(); // 경기 시작 시 Announcement 위젯 안 보이게 하기
+	void HandleCooldown(); // 경기 끝난 후 Announcement 위젯 보이게 하기
 
 protected:
 	virtual void BeginPlay() override;
@@ -52,7 +53,7 @@ protected:
 	void CheckTimeSync(float DeltaTime); // 매 TimeSyncFrequency 마다 Server Time을 Sync하는 함수
 
 	UFUNCTION(Server, Reliable) // Server RPC
-	void ServerCheckMatchState();
+	void ServerCheckMatchState(); // 게임 관련 시간을 설정하는 함수. GameMode의 값을 넣어주고 Client RPC를 콜하는 함수
 
 	UFUNCTION(Client, Reliable) // Client RPC
 	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StartingTime); // Client가 게임에 들어왔을때 Client에게 MatchState을 알리는 함수

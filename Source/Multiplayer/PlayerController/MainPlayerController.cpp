@@ -292,6 +292,10 @@ void AMainPlayerController::OnMatchStateSet(FName State)
 	{
 		HandleMatchHasStarted();
 	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
+	}
 }
 
 void AMainPlayerController::OnRep_MatchState()
@@ -299,6 +303,10 @@ void AMainPlayerController::OnRep_MatchState()
 	if (MatchState == MatchState::InProgress)
 	{
 		HandleMatchHasStarted();
+	}
+	else if (MatchState == MatchState::Cooldown)
+	{
+		HandleCooldown();
 	}
 }
 
@@ -311,6 +319,19 @@ void AMainPlayerController::HandleMatchHasStarted() // 경기 시작 시 Announcement
 		if (MainHUD->Announcement)
 		{
 			MainHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
+	}
+}
+
+void AMainPlayerController::HandleCooldown() // 경기 끝난 후 Announcement 위젯 보이게 하기
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+	if (IsValid(MainHUD))
+	{
+		MainHUD->CharacterOverlay->RemoveFromParent(); // CharacterOverlay 없애기
+		if (MainHUD->Announcement)
+		{
+			MainHUD->Announcement->SetVisibility(ESlateVisibility::Visible); // Announcement 보이게하기
 		}
 	}
 }

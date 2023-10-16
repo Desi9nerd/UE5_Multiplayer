@@ -5,6 +5,11 @@
 #include "GameFramework/PlayerStart.h"
 #include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
 
+namespace MatchState
+{
+	const FName Cooldown = FName("Cooldown");
+}
+
 AMultiplayerGameMode::AMultiplayerGameMode()
 {
 	bDelayedStart = true; // true면 GameMode가 start 되기 전에 waiting 상태가 된다.
@@ -21,7 +26,7 @@ void AMultiplayerGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (MatchState == MatchState::WaitingToStart)
+	if (MatchState == MatchState::WaitingToStart) // 경기 시작 전 대기시간
 	{
 		// 게임 시작 전 대기시간 - 현재 시간 + 게임레벨맵에 들어간 시간.
 		// 현재 시간은 게임 시작 직후부터 기록되니 게임레벨맵에 들어간 시간만큼 더해준다.
@@ -29,6 +34,15 @@ void AMultiplayerGameMode::Tick(float DeltaTime)
 		if (CountdownTime <= 0.0f)
 		{
 			StartMatch();
+		}
+	}
+	else if (MatchState == MatchState::InProgress) // 경기 중
+	{
+		// 게임 시작 전 대기시간 - 현재 시간 + 게임레벨맵에 들어간 시간 + 설정한 경기시간
+		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime + MatchTime;
+		if (CountdownTime <= 0.0f)
+		{
+			SetMatchState(MatchState::Cooldown); // Cooldown 상태 변경 후 경기 후 대기시간
 		}
 	}
 }
@@ -48,8 +62,7 @@ void AMultiplayerGameMode::OnMatchStateSet()
 	}
 }
 
-void AMultiplayerGameMode::PlayerEliminated(ABaseCharacter* ElimmedCharacter, AMainPlayerController* VictimController,
-                                            AMainPlayerController* AttackerController)
+void AMultiplayerGameMode::PlayerEliminated(ABaseCharacter* ElimmedCharacter, AMainPlayerController* VictimController, AMainPlayerController* AttackerController)
 {
 	if (AttackerController == nullptr || AttackerController->PlayerState == nullptr) return;
 	if (VictimController == nullptr || VictimController->PlayerState == nullptr) return;
