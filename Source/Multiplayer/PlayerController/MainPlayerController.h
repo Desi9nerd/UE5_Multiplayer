@@ -25,6 +25,7 @@ public:
 	virtual float GetServerTime(); // Synced된 Server world clock를 리턴하는 함수
 	virtual void ReceivedPlayer() override; // 가능한 빨리 server clock을 Sync
 	void OnMatchStateSet(FName State);
+	void HandleMatchHasStarted(); // 경기 시작 시 Announcement 위젯 안 보이게 하기
 
 protected:
 	virtual void BeginPlay() override;

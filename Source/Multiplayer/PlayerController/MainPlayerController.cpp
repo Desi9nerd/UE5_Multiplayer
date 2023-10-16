@@ -7,12 +7,18 @@
 #include "Net/UnrealNetwork.h"
 #include "Multiplayer/GameMode/MultiplayerGameMode.h"// GameMode의 MatchState을 사용하기 위해 헤더추가
 #include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
+#include "Multiplayer/HUD/Announcement.h"
+#include "Kismet/GameplayStatics.h"
 
 void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
 	MainHUD = Cast<AMainHUD>(GetHUD());
+	if(IsValid(MainHUD))
+	{
+		MainHUD->AddAnnouncement();
+	}
 }
 
 void AMainPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -228,11 +234,7 @@ void AMainPlayerController::OnMatchStateSet(FName State)
 
 	if (MatchState == MatchState::InProgress) //GameMode.h 내의 MatchState::InProgress
 	{
-		MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
-		if (IsValid(MainHUD))
-		{
-			MainHUD->AddCharacterOverlay();
-		}
+		HandleMatchHasStarted();
 	}
 }
 
@@ -240,10 +242,19 @@ void AMainPlayerController::OnRep_MatchState()
 {
 	if (MatchState == MatchState::InProgress)
 	{
-		MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
-		if (IsValid(MainHUD))
+		HandleMatchHasStarted();
+	}
+}
+
+void AMainPlayerController::HandleMatchHasStarted() // 경기 시작 시 Announcement 위젯 안 보이게 하기
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+	if (IsValid(MainHUD))
+	{
+		MainHUD->AddCharacterOverlay();
+		if (MainHUD->Announcement)
 		{
-			MainHUD->AddCharacterOverlay();
+			MainHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 }

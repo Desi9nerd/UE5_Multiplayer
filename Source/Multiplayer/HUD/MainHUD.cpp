@@ -1,6 +1,7 @@
 #include "MainHUD.h"
 #include "GameFramework/PlayerController.h"
 #include "CharacterOverlay.h"
+#include "Announcement.h"
 
 void AMainHUD::BeginPlay()
 {
@@ -14,6 +15,16 @@ void AMainHUD::AddCharacterOverlay()
 	{
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController.Get(), CharacterOverlayClass);
 		CharacterOverlay->AddToViewport(); // Viewport¿¡ µî·Ï
+	}
+}
+
+void AMainHUD::AddAnnouncement()
+{
+	TWeakObjectPtr<APlayerController> PlayerController = GetOwningPlayerController();
+	if (PlayerController.IsValid() && AnnouncementClass)
+	{
+		Announcement = CreateWidget<UAnnouncement>(PlayerController.Get(), AnnouncementClass);
+		Announcement->AddToViewport();
 	}
 }
 
