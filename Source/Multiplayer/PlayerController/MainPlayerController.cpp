@@ -361,7 +361,7 @@ void AMainPlayerController::HandleCooldown() // 경기 끝난 후 Announcement 위젯 �
 		if (bHUDValid)
 		{
 			MainHUD->Announcement->SetVisibility(ESlateVisibility::Visible); // Announcement 보이게하기
-			FString AnnouncementText("New Match Starts In:");
+			FString AnnouncementText("New Match Starts In:"); // 기본 문구 띄우기(나중에 여기 수정하기)
 			MainHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
 			MainHUD->Announcement->InfoText->SetText(FText()); // InfoText 빈칸으로 설정하여 안 보이게 하기
 		}
