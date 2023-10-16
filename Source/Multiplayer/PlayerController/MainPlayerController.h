@@ -21,6 +21,7 @@ public:
 	void SetHUDWeaponAmmo(int32 Ammo); // 총알 수 업데이트해서 띄우기
 	void SetHUDCarriedAmmo(int32 Ammo);// 최대 총알 수 띄우기
 	void SetHUDMatchCountdown(float CountdownTime); // 남은시간 띄우기
+	void SetHUDAnnouncementCountdown(float CountdownTime);
 	virtual void OnPossess(APawn* InPawn) override; // possed된 Pawn에 접근하는 함수
 	virtual float GetServerTime(); // Synced된 Server world clock를 리턴하는 함수
 	virtual void ReceivedPlayer() override; // 가능한 빨리 server clock을 Sync
@@ -50,10 +51,18 @@ protected:
 	float TimeSyncRunningTime = 0.f;
 	void CheckTimeSync(float DeltaTime); // 매 TimeSyncFrequency 마다 Server Time을 Sync하는 함수
 
+	UFUNCTION(Server, Reliable) // Server RPC
+	void ServerCheckMatchState();
+
+	UFUNCTION(Client, Reliable) // Client RPC
+	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StartingTime); // Client가 게임에 들어왔을때 Client에게 MatchState을 알리는 함수
+
 private:
 	TObjectPtr<class AMainHUD> MainHUD;
 
-	float MatchTime = 120.0f; // 경기시간
+	float LevelStartingTime = 0.0f; // 게임레벨맵에 들어간 시간
+	float MatchTime = 0.0f;		// 경기 시간
+	float WarmupTime = 0.0f;	// 경기 시작 전 대기 시간
 	uint32 CountdownInt = 0;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState) // Client들에게 Replicated 되도록 설정.

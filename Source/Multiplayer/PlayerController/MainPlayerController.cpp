@@ -8,17 +8,15 @@
 #include "Multiplayer/GameMode/MultiplayerGameMode.h"// GameMode의 MatchState을 사용하기 위해 헤더추가
 #include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
 #include "Multiplayer/HUD/Announcement.h"
-#include "Kismet/GameplayStatics.h"
+#include "Kismet/GameplayStatics.h" //UGameplayStatics::GetGameMode() 사용하기 위해 추가
 
 void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
 	MainHUD = Cast<AMainHUD>(GetHUD());
-	if(IsValid(MainHUD))
-	{
-		MainHUD->AddAnnouncement();
-	}
+
+	ServerCheckMatchState();
 }
 
 void AMainPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -49,6 +47,35 @@ void AMainPlayerController::CheckTimeSync(float DeltaTime)
 	}
 }
 
+void AMainPlayerController::ServerCheckMatchState_Implementation() // Server RPC
+{
+	TWeakObjectPtr<AMultiplayerGameMode> GameMode = Cast<AMultiplayerGameMode>(UGameplayStatics::GetGameMode(this));
+	if (GameMode.IsValid())
+	{
+		// MultiplayerGameMode.h의 값을 가져다가 넣어준다.
+		WarmupTime = GameMode->WarmupTime;
+		MatchTime = GameMode->MatchTime;
+		LevelStartingTime = GameMode->LevelStartingTime;
+		MatchState = GameMode->GetMatchState();
+		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+	}
+}
+
+void AMainPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match,
+	float StartingTime) // Client RPC
+{
+	// MultiplayerGameMode.h의 값을 가져다가 넣어준다.
+	WarmupTime = Warmup;
+	MatchTime = Match;
+	LevelStartingTime = StartingTime;
+	MatchState = StateOfMatch;
+	OnMatchStateSet(MatchState);
+
+	if (MainHUD && MatchState == MatchState::WaitingToStart) // MatchState이 WaitingToStart라면
+	{
+		MainHUD->AddAnnouncement(); // Announcement
+	}
+}
 void AMainPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -68,7 +95,6 @@ void AMainPlayerController::SetHUDHealth(float Health, float MaxHealth)
 		MainHUD->CharacterOverlay &&
 		MainHUD->CharacterOverlay->HealthBar &&
 		MainHUD->CharacterOverlay->HealthText;
-
 	if (bHUDValid)
 	{
 		const float HealthPercent = Health / MaxHealth;
@@ -168,12 +194,42 @@ void AMainPlayerController::SetHUDMatchCountdown(float CountdownTime) // 남은 시
 	}
 }
 
+void AMainPlayerController::SetHUDAnnouncementCountdown(float CountdownTime) // 경기 시작까지 남은 시간 띄우기
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+
+	bool bHUDValid = MainHUD &&
+		MainHUD->Announcement &&
+		MainHUD->Announcement->WarmupTime;
+	if (bHUDValid)
+	{
+		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
+		int32 Seconds = CountdownTime - Minutes * 60;
+
+		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+		MainHUD->Announcement->WarmupTime->SetText(FText::FromString(CountdownText));
+	}
+}
+
 void AMainPlayerController::SetHUDTime() // HUD에 시간 띄우기
 {
-	uint32 SecondsLeft = FMath::CeilToInt(MatchTime - GetServerTime());
+	float TimeLeft = 0.0f;
+	if (MatchState == MatchState::WaitingToStart) // 경기 시작 전 대기시간
+		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime; // 경기 시작 전 대기 시간 - 처음부터 지금까지 시간 + 게임레벨맵에 들어간 시간
+	else if (MatchState == MatchState::InProgress) // 경기 시작 후 경기시간
+		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime + MatchTime;
+
+	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
 	if (CountdownInt != SecondsLeft)
 	{
-		SetHUDMatchCountdown(MatchTime - GetServerTime());
+		if (MatchState == MatchState::WaitingToStart) // 경기 시작 전 대기시간
+		{
+			SetHUDAnnouncementCountdown(TimeLeft);
+		}
+		if (MatchState == MatchState::InProgress) // 경기 시작 후 경기시간
+		{
+			SetHUDMatchCountdown(TimeLeft);
+		};
 	}
 
 	CountdownInt = SecondsLeft;

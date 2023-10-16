@@ -21,6 +21,9 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	float WarmupTime = 10.0f; // 게임 시작 전 대기시간
 
+	UPROPERTY(EditDefaultsOnly)
+	float MatchTime = 120.0f; // 경기 시간
+
 	float LevelStartingTime = 0.0f; // 게임레벨맵에 들어간 시간
 
 protected:
