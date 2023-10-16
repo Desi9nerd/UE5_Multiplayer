@@ -53,20 +53,21 @@ void AMainPlayerController::ServerCheckMatchState_Implementation() // Server RPC
 	if (GameMode.IsValid())
 	{
 		// MultiplayerGameMode.h의 값을 가져다가 넣어준다.
+		MatchState = GameMode->GetMatchState();
 		WarmupTime = GameMode->WarmupTime;
 		MatchTime = GameMode->MatchTime;
+		CooldownTime = GameMode->CooldownTime;
 		LevelStartingTime = GameMode->LevelStartingTime;
-		MatchState = GameMode->GetMatchState();
-		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, LevelStartingTime);
+		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
 	}
 }
 
-void AMainPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match,
-	float StartingTime) // Client RPC
+void AMainPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime) // Client RPC
 {
 	// MultiplayerGameMode.h의 값을 가져다가 넣어준다.
 	WarmupTime = Warmup;
 	MatchTime = Match;
+	CooldownTime = Cooldown;
 	LevelStartingTime = StartingTime;
 	MatchState = StateOfMatch;
 	OnMatchStateSet(MatchState);
@@ -186,6 +187,12 @@ void AMainPlayerController::SetHUDMatchCountdown(float CountdownTime) // 남은 시
 		MainHUD->CharacterOverlay->MatchCountdownText;
 	if (bHUDValid)
 	{
+		if (CountdownTime < 0.0f) // CountdownTime이 음수면 텍스트가 안 보이게 해준다. 
+		{
+			MainHUD->CharacterOverlay->MatchCountdownText->SetText(FText());
+			return;
+		}
+
 		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
 		int32 Seconds = CountdownTime - Minutes * 60;
 
@@ -203,7 +210,13 @@ void AMainPlayerController::SetHUDAnnouncementCountdown(float CountdownTime) // 
 		MainHUD->Announcement->WarmupTime;
 	if (bHUDValid)
 	{
-		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
+		if (CountdownTime < 0.0f) // CountdownTime이 음수면 텍스트가 안 보이게 해준다. 
+		{
+			MainHUD->Announcement->WarmupTime->SetText(FText());
+			return;
+		}
+
+		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.0f);
 		int32 Seconds = CountdownTime - Minutes * 60;
 
 		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
@@ -218,17 +231,28 @@ void AMainPlayerController::SetHUDTime() // HUD에 시간 띄우기
 		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime; // 경기 시작 전 대기 시간 - 처음부터 지금까지 시간 + 게임레벨맵에 들어간 시간
 	else if (MatchState == MatchState::InProgress) // 경기 시작 후 경기시간
 		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime + MatchTime;
+	else if (MatchState == MatchState::Cooldown) // 경기 끝난 후 대기시간
+		TimeLeft = WarmupTime  - GetServerTime() + LevelStartingTime + MatchTime + CooldownTime;
 
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
+	if (HasAuthority()) // Server
+	{
+		MultiplayerGameMode = MultiplayerGameMode == nullptr ? Cast<AMultiplayerGameMode>(UGameplayStatics::GetGameMode(this)) : MultiplayerGameMode;
+		if (MultiplayerGameMode)
+		{
+			SecondsLeft = FMath::CeilToInt(MultiplayerGameMode->GetCountdownTime() + LevelStartingTime);
+		}
+	}
+
 	if (CountdownInt != SecondsLeft)
 	{
-		if (MatchState == MatchState::WaitingToStart) // 경기 시작 전 대기시간
+		if (MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown) // 경기 시작 전 대기시간 or 경기 끝난 후 대기시간
 		{
-			SetHUDAnnouncementCountdown(TimeLeft);
+			SetHUDAnnouncementCountdown(TimeLeft); // Announcement Countdown
 		}
 		if (MatchState == MatchState::InProgress) // 경기 시작 후 경기시간
 		{
-			SetHUDMatchCountdown(TimeLeft);
+			SetHUDMatchCountdown(TimeLeft); // 경기 Countdown
 		};
 	}
 
@@ -326,12 +350,20 @@ void AMainPlayerController::HandleMatchHasStarted() // 경기 시작 시 Announcement
 void AMainPlayerController::HandleCooldown() // 경기 끝난 후 Announcement 위젯 보이게 하기
 {
 	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+
 	if (IsValid(MainHUD))
 	{
-		MainHUD->CharacterOverlay->RemoveFromParent(); // CharacterOverlay 없애기
-		if (MainHUD->Announcement)
+		MainHUD->CharacterOverlay->RemoveFromParent();
+
+		bool bHUDValid = MainHUD->Announcement &&
+			MainHUD->Announcement->AnnouncementText &&
+			MainHUD->Announcement->InfoText;
+		if (bHUDValid)
 		{
 			MainHUD->Announcement->SetVisibility(ESlateVisibility::Visible); // Announcement 보이게하기
+			FString AnnouncementText("New Match Starts In:");
+			MainHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
+			MainHUD->Announcement->InfoText->SetText(FText()); // InfoText 빈칸으로 설정하여 안 보이게 하기
 		}
-	}
+	}	
 }

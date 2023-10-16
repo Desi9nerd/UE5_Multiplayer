@@ -56,14 +56,17 @@ protected:
 	void ServerCheckMatchState(); // 게임 관련 시간을 설정하는 함수. GameMode의 값을 넣어주고 Client RPC를 콜하는 함수
 
 	UFUNCTION(Client, Reliable) // Client RPC
-	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float StartingTime); // Client가 게임에 들어왔을때 Client에게 MatchState을 알리는 함수
+	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime); // Client가 게임에 들어왔을때 Client에게 MatchState을 알리는 함수
 
 private:
 	TObjectPtr<class AMainHUD> MainHUD;
+	UPROPERTY()
+	class AMultiplayerGameMode* MultiplayerGameMode;
 
 	float LevelStartingTime = 0.0f; // 게임레벨맵에 들어간 시간
 	float MatchTime = 0.0f;		// 경기 시간
 	float WarmupTime = 0.0f;	// 경기 시작 전 대기 시간
+	float CooldownTime = 0.0f;  // 경기 끝난 후 대기 시간
 	uint32 CountdownInt = 0;
 
 	UPROPERTY(ReplicatedUsing = OnRep_MatchState) // Client들에게 Replicated 되도록 설정.

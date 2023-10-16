@@ -24,6 +24,8 @@ public:
 	virtual void PlayerEliminated(class ABaseCharacter* ElimmedCharacter, class AMainPlayerController* VictimController, AMainPlayerController* AttackerController);
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 
+	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
+
 	UPROPERTY(EditDefaultsOnly)
 	float WarmupTime = 10.0f; // 게임 시작 전 대기시간
 
