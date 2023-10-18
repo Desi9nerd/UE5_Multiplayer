@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h" //UGameplayStatics::GetGameMode() 사용하기 위해 추가
 #include "Multiplayer/Components/CombatComponent.h"
 #include "Multiplayer/Weapon/Weapon.h"
+#include "Multiplayer/GameState/MultiplayerGameState.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -365,7 +366,37 @@ void AMainPlayerController::HandleCooldown() // 경기 끝난 후 Announcement 위젯 �
 			MainHUD->Announcement->SetVisibility(ESlateVisibility::Visible); // Announcement 보이게하기
 			FString AnnouncementText("New Match Starts In:"); // 기본 문구 띄우기(나중에 여기 수정하기)
 			MainHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
-			MainHUD->Announcement->InfoText->SetText(FText()); // InfoText 빈칸으로 설정하여 안 보이게 하기
+
+			AMultiplayerGameState* MultiplayerGameState = Cast<AMultiplayerGameState>(UGameplayStatics::GetGameState(this));
+			AMultiplayerPlayerState* MultiplayerPlayerState = GetPlayerState<AMultiplayerPlayerState>();
+			if (IsValid(MultiplayerGameState) && IsValid(MultiplayerPlayerState))
+			{
+				TArray<AMultiplayerPlayerState*> TopPlayers = MultiplayerGameState->TopScoringPlayers;
+				FString InfoTextString;
+				if (TopPlayers.Num() == 0) // 승자가 없는 경우
+				{
+					InfoTextString = FString("There is no winner.");
+				}
+				else if (TopPlayers.Num() == 1 && TopPlayers[0] == MultiplayerPlayerState) // 자신이 승자
+				{
+					InfoTextString = FString("You are the winner!");
+				}
+				else if (TopPlayers.Num() == 1) // 승자 이름 띄우기
+				{
+					InfoTextString = FString::Printf(TEXT("Winner: \n%s"), *TopPlayers[0]->GetPlayerName());
+				}
+				else if (TopPlayers.Num() > 1) // 승자가 여러명인 경우
+				{
+					// 최고 득점자들 띄우기
+					InfoTextString = FString("Players tied for the win:\n"); 
+					for (auto TiedPlayer : TopPlayers)
+					{
+						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+					}
+				}
+
+				MainHUD->Announcement->InfoText->SetText(FText::FromString(InfoTextString));
+			}
 		}
 	}
 

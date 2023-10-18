@@ -4,6 +4,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerStart.h"
 #include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
+#include "Multiplayer/GameState/MultiplayerGameState.h"
 
 namespace MatchState
 {
@@ -76,14 +77,17 @@ void AMultiplayerGameMode::PlayerEliminated(ABaseCharacter* ElimmedCharacter, AM
 	if (AttackerController == nullptr || AttackerController->PlayerState == nullptr) return;
 	if (VictimController == nullptr || VictimController->PlayerState == nullptr) return;
 
-	TWeakObjectPtr<AMultiplayerPlayerState> AttackerPlayerState = AttackerController ? Cast<AMultiplayerPlayerState>(AttackerController->PlayerState) : nullptr;
-	TWeakObjectPtr<AMultiplayerPlayerState> VictimPlayerState = VictimController ? Cast<AMultiplayerPlayerState>(VictimController->PlayerState) : nullptr;
+	TObjectPtr<AMultiplayerPlayerState> AttackerPlayerState = AttackerController ? Cast<AMultiplayerPlayerState>(AttackerController->PlayerState) : nullptr;
+	TObjectPtr<AMultiplayerPlayerState> VictimPlayerState = VictimController ? Cast<AMultiplayerPlayerState>(VictimController->PlayerState) : nullptr;
+	TObjectPtr<AMultiplayerGameState> MultiplayerGameState = GetGameState<AMultiplayerGameState>();
 
-	if (AttackerPlayerState.IsValid() && AttackerPlayerState != VictimPlayerState)
+	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState
+		&& MultiplayerGameState)
 	{
 		AttackerPlayerState->AddToScore(1.0f); // 점수 더하기
+		MultiplayerGameState->UpdateTopScore(AttackerPlayerState);
 	}
-	if (VictimPlayerState.IsValid())
+	if (VictimPlayerState)
 	{
 		VictimPlayerState->AddToDefeats(1); // 승리횟수 더하기
 	}

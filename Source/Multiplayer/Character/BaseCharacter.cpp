@@ -114,6 +114,10 @@ void ABaseCharacter::MulticastElim_Implementation() // RPC
 
 	//** 캐릭터 움직임 제한
 	bDisableGameplay = true; // true면 캐릭터 움직임 제한. 마우스 회전으로 시야 회전은 가능
+	if (IsValid(Combat))
+	{
+		Combat->FireButtonPressed(false); // 발사 버튼 방지
+	}
 
 	//** 충돌X. Disable Collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Capsule 충돌 꺼줌
@@ -157,7 +161,10 @@ void ABaseCharacter::Destroyed()
 	{
 		ElimBotComponent->DestroyComponent(); // Elim Bot 소멸
 	}
-	if (IsValid(Combat) && Combat->EquippedWeapon)
+
+	TWeakObjectPtr<AMultiplayerGameMode> MultiplayerGameMode = Cast<AMultiplayerGameMode>(UGameplayStatics::GetGameMode(this));
+	bool bMatchNotInProgress = MultiplayerGameMode.IsValid() && MultiplayerGameMode->GetMatchState() != MatchState::InProgress; // MultiplayerGameMode가 있고 MatchState이 경기 중이 아니라면 true
+	if (IsValid(Combat) && Combat->EquippedWeapon && bMatchNotInProgress)
 	{
 		Combat->EquippedWeapon->Destroy(); // 플레이어에 장착된 무기 소멸
 	}
