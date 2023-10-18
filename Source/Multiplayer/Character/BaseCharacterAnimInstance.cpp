@@ -87,6 +87,6 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	}
 
 	bUseFABRIK = BaseCharacter->GetCombatState() != ECombatState::ECS_Reloading; // 재장전 상태가 아닐 때는 FABRIK를 사용한다.
-	bUseAimOffsets = BaseCharacter->GetCombatState() != ECombatState::ECS_Reloading; // 재장전 상태가 아닐 때는 AimOffset 사용
-	bTransformRightHand = BaseCharacter->GetCombatState() != ECombatState::ECS_Reloading; // 재장전 상태가 아닐 때는 bTransformRightHand 사용
+	bUseAimOffsets = BaseCharacter->GetCombatState() != ECombatState::ECS_Reloading && BaseCharacter->GetDisableGameplay() == false; // 재장전 상태가 아닐 때 && bDisableGameplay 변수가 false면 AimOffset 사용
+	bTransformRightHand = BaseCharacter->GetCombatState() != ECombatState::ECS_Reloading && BaseCharacter->GetDisableGameplay() == false; // 재장전 상태가 아닐 때 && bDisableGameplay 변수가 false면 bTransformRightHand 사용
 }

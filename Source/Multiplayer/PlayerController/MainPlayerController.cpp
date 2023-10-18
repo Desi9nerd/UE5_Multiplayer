@@ -9,6 +9,8 @@
 #include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
 #include "Multiplayer/HUD/Announcement.h"
 #include "Kismet/GameplayStatics.h" //UGameplayStatics::GetGameMode() 사용하기 위해 추가
+#include "Multiplayer/Components/CombatComponent.h"
+#include "Multiplayer/Weapon/Weapon.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -365,5 +367,12 @@ void AMainPlayerController::HandleCooldown() // 경기 끝난 후 Announcement 위젯 �
 			MainHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
 			MainHUD->Announcement->InfoText->SetText(FText()); // InfoText 빈칸으로 설정하여 안 보이게 하기
 		}
-	}	
+	}
+
+	TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(GetPawn());
+	if(BaseCharacter.IsValid() && BaseCharacter->GetCombat())
+	{
+		BaseCharacter->bDisableGameplay = true; // true면 캐릭터 움직임 제한. 마우스 회전으로 시야 회전은 가능
+		BaseCharacter->GetCombat()->FireButtonPressed(false); // 발사 버튼 false
+	}
 }

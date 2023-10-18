@@ -45,6 +45,15 @@ void AMultiplayerGameMode::Tick(float DeltaTime)
 			SetMatchState(MatchState::Cooldown); // Cooldown 상태 변경 후 경기 후 대기시간
 		}
 	}
+	else if (MatchState == MatchState::Cooldown) // 경기 끝난 후 대기시간
+	{
+		// 게임 시작 전 대기시간 - 현재 시간 + 게임레벨맵에 들어간 시간 + 설정한 경기시간 + 설정한 경기 끝난 후 대기시간
+		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime + MatchTime + CooldownTime;
+		if (CountdownTime <= 0.0f) // 설정한 경기 끝난 후 대기시간이 지나 0 이하가 되었을때
+		{
+			RestartGame(); // 경기 재시작. GameMode 내장 클래스에 정의된 함수 콜.
+		}
+	}
 }
 
 void AMultiplayerGameMode::OnMatchStateSet()

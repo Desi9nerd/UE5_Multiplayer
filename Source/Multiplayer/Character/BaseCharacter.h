@@ -31,6 +31,9 @@ public:
 
 	virtual void Destroyed() override;
 
+	UPROPERTY(Replicated) // Client들에게도 알려줄 수 있도록 Replicated
+	bool bDisableGameplay = false; // Gameplay 관련 기능들을 불활성화시켜주려 만든 true/false 변수. true면 캐릭터 움직임 제한, but 마우스 회전가능
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -55,6 +58,7 @@ protected:
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);// 피격 데미지
 	void UpdateHUDHealth(); // 체력 Update
 	void PollInit(); // HUD와 점수/승리횟수 매기기 관련 클래스 초기화
+	void RotateInPlace(float DeltaTime);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -183,4 +187,6 @@ public:
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
 	ECombatState GetCombatState() const;
+	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 };

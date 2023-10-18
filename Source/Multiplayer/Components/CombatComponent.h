@@ -21,11 +21,12 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void FireButtonPressed(bool bPressed); // รั น฿ป็ น๖ฦฐ Pressed
 	void Reload();
 
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
-
+	
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -36,7 +37,6 @@ protected:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 
-	void FireButtonPressed(bool bPressed); // รั น฿ป็ น๖ฦฐ Pressed
 	void Fire();
 
 	UFUNCTION(Server, Reliable) // Server RPC รั น฿ป็

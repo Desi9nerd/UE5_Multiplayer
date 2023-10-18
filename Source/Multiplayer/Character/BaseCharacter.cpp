@@ -61,8 +61,10 @@ void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	// Client들도 아래의 변수들을 알 수 있도록 Replicated 해준다. Server에 세팅하면 Client들도 알 수 있게 된다.
 	DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingWeapon, COND_OwnerOnly);//OwnerOnly: 해당 캐릭터를 가지고 있는 Client만 적용
 	DOREPLIFETIME(ABaseCharacter, Health);
+	DOREPLIFETIME(ABaseCharacter, bDisableGameplay);
 }
 
 void ABaseCharacter::OnRep_ReplicatedMovement()
@@ -111,12 +113,7 @@ void ABaseCharacter::MulticastElim_Implementation() // RPC
 	StartDissolve();
 
 	//** 캐릭터 움직임 제한
-	GetCharacterMovement()->DisableMovement(); // 이동 움직임X
-	GetCharacterMovement()->StopMovementImmediately(); // 마우스 회전도 불가능하게 움직임 멈춰줌.
-	if (IsValid(MainPlayerController))
-	{
-		DisableInput(MainPlayerController); // PlayerController의 입력이 불가능하도록 제한
-	}
+	bDisableGameplay = true; // true면 캐릭터 움직임 제한. 마우스 회전으로 시야 회전은 가능
 
 	//** 충돌X. Disable Collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Capsule 충돌 꺼줌
@@ -160,6 +157,10 @@ void ABaseCharacter::Destroyed()
 	{
 		ElimBotComponent->DestroyComponent(); // Elim Bot 소멸
 	}
+	if (IsValid(Combat) && Combat->EquippedWeapon)
+	{
+		Combat->EquippedWeapon->Destroy(); // 플레이어에 장착된 무기 소멸
+	}
 }
 
 void ABaseCharacter::BeginPlay()
@@ -178,6 +179,20 @@ void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	RotateInPlace(DeltaTime);
+	HideCameraIfCharacterClose();
+	PollInit(); // HUD와 점수/승리횟수 매기기 관련 클래스 초기화
+}
+
+void ABaseCharacter::RotateInPlace(float DeltaTime)
+{
+	if (bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);
@@ -192,9 +207,6 @@ void ABaseCharacter::Tick(float DeltaTime)
 
 		CalculateAO_Pitch();
 	}
-	
-	HideCameraIfCharacterClose();
-	PollInit(); // HUD와 점수/승리횟수 매기기 관련 클래스 초기화
 }
 
 void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -307,6 +319,8 @@ void ABaseCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDa
 
 void ABaseCharacter::MoveForward(float Value)
 {
+	if (bDisableGameplay) return;
+
 	if (Controller != nullptr && Value != 0.0f)
 	{
 		const FRotator YawRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);//캐릭터의 Yaw값을 에디터에서 -90도로 돌렸기 때문에 Controller->GetControlRotation().Yaw로 바뀐 값 사용.
@@ -317,6 +331,8 @@ void ABaseCharacter::MoveForward(float Value)
 
 void ABaseCharacter::MoveRight(float Value)
 {
+	if (bDisableGameplay) return;
+
 	if (Controller != nullptr && Value != 0.0f)
 	{
 		const FRotator YawRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
@@ -337,6 +353,8 @@ void ABaseCharacter::LookUp(float Value)
 
 void ABaseCharacter::EquipButtonPressed()
 {
+	if (bDisableGameplay) return;
+
 	if (IsValid(Combat))
 	{
 		if (HasAuthority()) //서버 기준. Server에서 validate하는 HasAuthority()
@@ -361,6 +379,8 @@ void ABaseCharacter::ServerEquipButtonPressed_Implementation()
 
 void ABaseCharacter::CrouchButtonPressed()
 {
+	if (bDisableGameplay) return;
+
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -373,6 +393,8 @@ void ABaseCharacter::CrouchButtonPressed()
 
 void ABaseCharacter::ReloadButtonPressed()
 {
+	if (bDisableGameplay) return;
+
 	if (IsValid(Combat))
 	{
 		Combat->Reload();
@@ -381,6 +403,8 @@ void ABaseCharacter::ReloadButtonPressed()
 
 void ABaseCharacter::AimButtonPressed()
 {
+	if (bDisableGameplay) return;
+
 	if (IsValid(Combat))
 	{
 		Combat->SetAiming(true);
@@ -389,6 +413,8 @@ void ABaseCharacter::AimButtonPressed()
 
 void ABaseCharacter::AimButtonReleased()
 {
+	if (bDisableGameplay) return;
+
 	if (IsValid(Combat))
 	{
 		Combat->SetAiming(false);
@@ -487,6 +513,8 @@ void ABaseCharacter::SimProxiesTurn()
 
 void ABaseCharacter::Jump()
 {
+	if (bDisableGameplay) return;
+
 	if (bIsCrouched)
 	{
 		UnCrouch();
@@ -499,6 +527,8 @@ void ABaseCharacter::Jump()
 
 void ABaseCharacter::FireButtonPressed()
 {
+	if (bDisableGameplay) return;
+
 	if (Combat)
 	{
 		Combat->FireButtonPressed(true); 
@@ -507,6 +537,8 @@ void ABaseCharacter::FireButtonPressed()
 
 void ABaseCharacter::FireButtonReleased()
 {
+	if (bDisableGameplay) return;
+
 	if (Combat)
 	{
 		Combat->FireButtonPressed(false);
