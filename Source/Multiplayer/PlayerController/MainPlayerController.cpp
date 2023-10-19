@@ -1,14 +1,14 @@
-#include "MainPlayerController.h"
+ï»¿#include "MainPlayerController.h"
 #include "Multiplayer/HUD/MainHUD.h"
 #include "Multiplayer//HUD/CharacterOverlay.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "Multiplayer/Character/BaseCharacter.h"
 #include "Net/UnrealNetwork.h"
-#include "Multiplayer/GameMode/MultiplayerGameMode.h"// GameModeÀÇ MatchStateÀ» »ç¿ëÇÏ±â À§ÇØ Çì´õÃß°¡
+#include "Multiplayer/GameMode/MultiplayerGameMode.h"// GameModeì˜ MatchStateì„ ì‚¬ìš©í•˜ê¸° ìœ„í•´ í—¤ë”ì¶”ê°€
 #include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
 #include "Multiplayer/HUD/Announcement.h"
-#include "Kismet/GameplayStatics.h" //UGameplayStatics::GetGameMode() »ç¿ëÇÏ±â À§ÇØ Ãß°¡
+#include "Kismet/GameplayStatics.h" //UGameplayStatics::GetGameMode() ì‚¬ìš©í•˜ê¸° ìœ„í•´ ì¶”ê°€
 #include "Multiplayer/Components/CombatComponent.h"
 #include "Multiplayer/Weapon/Weapon.h"
 #include "Multiplayer/GameState/MultiplayerGameState.h"
@@ -26,27 +26,27 @@ void AMainPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(AMainPlayerController, MatchState); // replicated µÇµµ·Ï MatchState µî·Ï
+	DOREPLIFETIME(AMainPlayerController, MatchState); // replicated ë˜ë„ë¡ MatchState ë“±ë¡
 }
 
 void AMainPlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	SetHUDTime(); // HUD¿¡ Ç¥½ÃµÇ´Â ½Ã°£À» ¸Å Æ½ °»½ÅÇÑ´Ù.
-	CheckTimeSync(DeltaTime); // ¸Å TimeSyncFrequency ¸¶´Ù Server TimeÀ» SyncÇÑ´Ù.
-	PollInit(); // Ã¼·Â, Á¡¼ö, ½ÂÆĞ ÃÊ±âÈ­
+	SetHUDTime(); // HUDì— í‘œì‹œë˜ëŠ” ì‹œê°„ì„ ë§¤ í‹± ê°±ì‹ í•œë‹¤.
+	CheckTimeSync(DeltaTime); // ë§¤ TimeSyncFrequency ë§ˆë‹¤ Server Timeì„ Syncí•œë‹¤.
+	PollInit(); // ì²´ë ¥, ì ìˆ˜, ìŠ¹íŒ¨ ì´ˆê¸°í™”
 }
 
 void AMainPlayerController::CheckTimeSync(float DeltaTime)
 {
-	TimeSyncRunningTime += DeltaTime; // Tick¿¡¼­ÀÇ DeltaTimeÀ» TimeSyncRunningTime¿¡ ±â·ÏÇÑ´Ù.
+	TimeSyncRunningTime += DeltaTime; // Tickì—ì„œì˜ DeltaTimeì„ TimeSyncRunningTimeì— ê¸°ë¡í•œë‹¤.
 
-	// Client && TimeSyncRunningTime°¡  Server TimeÀ» SyncÇÏ´Â ÁÖ±âÀÎ TimeSyncFrequencyº¸´Ù Ä¿Áö¸é
+	// Client && TimeSyncRunningTimeê°€  Server Timeì„ Syncí•˜ëŠ” ì£¼ê¸°ì¸ TimeSyncFrequencyë³´ë‹¤ ì»¤ì§€ë©´
 	if (IsLocalController() && TimeSyncRunningTime > TimeSyncFrequency)
 	{
-		ServerRequestServerTime(GetWorld()->GetTimeSeconds()); // Server TimeÀ» ¿äÃ»
-		TimeSyncRunningTime = 0.0f; // ¸®¼Â
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds()); // Server Timeì„ ìš”ì²­
+		TimeSyncRunningTime = 0.0f; // ë¦¬ì…‹
 	}
 }
 
@@ -55,7 +55,7 @@ void AMainPlayerController::ServerCheckMatchState_Implementation() // Server RPC
 	TWeakObjectPtr<AMultiplayerGameMode> GameMode = Cast<AMultiplayerGameMode>(UGameplayStatics::GetGameMode(this));
 	if (GameMode.IsValid())
 	{
-		// MultiplayerGameMode.hÀÇ °ªÀ» °¡Á®´Ù°¡ ³Ö¾îÁØ´Ù.
+		// MultiplayerGameMode.hì˜ ê°’ì„ ê°€ì ¸ë‹¤ê°€ ë„£ì–´ì¤€ë‹¤.
 		MatchState = GameMode->GetMatchState();
 		WarmupTime = GameMode->WarmupTime;
 		MatchTime = GameMode->MatchTime;
@@ -67,7 +67,7 @@ void AMainPlayerController::ServerCheckMatchState_Implementation() // Server RPC
 
 void AMainPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime) // Client RPC
 {
-	// MultiplayerGameMode.hÀÇ °ªÀ» °¡Á®´Ù°¡ ³Ö¾îÁØ´Ù.
+	// MultiplayerGameMode.hì˜ ê°’ì„ ê°€ì ¸ë‹¤ê°€ ë„£ì–´ì¤€ë‹¤.
 	WarmupTime = Warmup;
 	MatchTime = Match;
 	CooldownTime = Cooldown;
@@ -75,7 +75,7 @@ void AMainPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch,
 	MatchState = StateOfMatch;
 	OnMatchStateSet(MatchState);
 
-	if (MainHUD && MatchState == MatchState::WaitingToStart) // MatchStateÀÌ WaitingToStart¶ó¸é
+	if (MainHUD && MatchState == MatchState::WaitingToStart) // MatchStateì´ WaitingToStartë¼ë©´
 	{
 		MainHUD->AddAnnouncement(); // Announcement
 	}
@@ -107,7 +107,7 @@ void AMainPlayerController::SetHUDHealth(float Health, float MaxHealth)
 		FString HealthText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Health), FMath::CeilToInt(MaxHealth));
 		MainHUD->CharacterOverlay->HealthText->SetText(FText::FromString(HealthText));
 	}
-	else // HUD°¡ ¾ø´Ù¸é
+	else // HUDê°€ ì—†ë‹¤ë©´
 	{	
 		bInitializeCharacterOverlay = true;
 		HUDHealth = Health;
@@ -115,7 +115,7 @@ void AMainPlayerController::SetHUDHealth(float Health, float MaxHealth)
 	}
 }
 
-void AMainPlayerController::SetHUDScore(float Score) // Á¡¼ö ¸Å±â±â
+void AMainPlayerController::SetHUDScore(float Score) // ì ìˆ˜ ë§¤ê¸°ê¸°
 {
 	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
 
@@ -124,17 +124,17 @@ void AMainPlayerController::SetHUDScore(float Score) // Á¡¼ö ¸Å±â±â
 		MainHUD->CharacterOverlay->ScoreAmount;
 	if (bHUDValid)
 	{
-		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score)); //Score floatº¯¼ö FloorToInt·Î intÈ­ ÈÄ Fstringº¯È¯
-		MainHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));//CharacterOverlay ¾ÈÀÇ ScoreAmount¶ó´Â UTextBlockº¯¼ö¸¦ ScoreText(=SetHUDScore¿¡ µé¾î¿Â float Score¸¦ stringÀ¸·Î º¯È¯ÇÑ °ª)·Î ¼³Á¤
+		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score)); //Score floatë³€ìˆ˜ FloorToIntë¡œ intí™” í›„ Fstringë³€í™˜
+		MainHUD->CharacterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));//CharacterOverlay ì•ˆì˜ ScoreAmountë¼ëŠ” UTextBlockë³€ìˆ˜ë¥¼ ScoreText(=SetHUDScoreì— ë“¤ì–´ì˜¨ float Scoreë¥¼ stringìœ¼ë¡œ ë³€í™˜í•œ ê°’)ë¡œ ì„¤ì •
 	}
-	else // HUD°¡ ¾ø´Ù¸é
+	else // HUDê°€ ì—†ë‹¤ë©´
 	{
 		bInitializeCharacterOverlay = true;
 		HUDScore = Score;
 	}
 }
 
-void AMainPlayerController::SetHUDDefeats(int32 Defeats) // ½Â¸®È½¼ö ¸Å±â±â
+void AMainPlayerController::SetHUDDefeats(int32 Defeats) // ìŠ¹ë¦¬íšŸìˆ˜ ë§¤ê¸°ê¸°
 {
 	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
 
@@ -146,7 +146,7 @@ void AMainPlayerController::SetHUDDefeats(int32 Defeats) // ½Â¸®È½¼ö ¸Å±â±â
 		FString DefeatsText = FString::Printf(TEXT("%d"), Defeats);
 		MainHUD->CharacterOverlay->DefeatsAmount->SetText(FText::FromString(DefeatsText));
 	}
-	else // HUD°¡ ¾ø´Ù¸é
+	else // HUDê°€ ì—†ë‹¤ë©´
 	{
 		bInitializeCharacterOverlay = true;
 		HUDDefeats = Defeats;
@@ -162,7 +162,7 @@ void AMainPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 		MainHUD->CharacterOverlay->WeaponAmmoAmount;
 	if (bHUDValid)
 	{
-		FString AmmoText = FString::Printf(TEXT("%d"), Ammo); // intÀÎ Ammo °ªÀ» FStringÀ¸·Î º¯È¯ ÈÄ AmmoText º¯¼ö¿¡ ´ãÀ½
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo); // intì¸ Ammo ê°’ì„ FStringìœ¼ë¡œ ë³€í™˜ í›„ AmmoText ë³€ìˆ˜ì— ë‹´ìŒ
 		MainHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
 }
@@ -181,7 +181,7 @@ void AMainPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	}
 }
 
-void AMainPlayerController::SetHUDMatchCountdown(float CountdownTime) // ³²Àº ½Ã°£ ¶ç¿ì±â
+void AMainPlayerController::SetHUDMatchCountdown(float CountdownTime) // ë‚¨ì€ ì‹œê°„ ë„ìš°ê¸°
 {
 	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
 
@@ -190,7 +190,7 @@ void AMainPlayerController::SetHUDMatchCountdown(float CountdownTime) // ³²Àº ½Ã
 		MainHUD->CharacterOverlay->MatchCountdownText;
 	if (bHUDValid)
 	{
-		if (CountdownTime < 0.0f) // CountdownTimeÀÌ À½¼ö¸é ÅØ½ºÆ®°¡ ¾È º¸ÀÌ°Ô ÇØÁØ´Ù. 
+		if (CountdownTime < 0.0f) // CountdownTimeì´ ìŒìˆ˜ë©´ í…ìŠ¤íŠ¸ê°€ ì•ˆ ë³´ì´ê²Œ í•´ì¤€ë‹¤. 
 		{
 			MainHUD->CharacterOverlay->MatchCountdownText->SetText(FText());
 			return;
@@ -199,12 +199,12 @@ void AMainPlayerController::SetHUDMatchCountdown(float CountdownTime) // ³²Àº ½Ã
 		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.f);
 		int32 Seconds = CountdownTime - Minutes * 60;
 
-		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);//%02d: µÎÀÚ¸®¼ıÀÚ·Î Ãâ·Â
+		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);//%02d: ë‘ìë¦¬ìˆ«ìë¡œ ì¶œë ¥
 		MainHUD->CharacterOverlay->MatchCountdownText->SetText(FText::FromString(CountdownText));
 	}
 }
 
-void AMainPlayerController::SetHUDAnnouncementCountdown(float CountdownTime) // °æ±â ½ÃÀÛ±îÁö ³²Àº ½Ã°£ ¶ç¿ì±â
+void AMainPlayerController::SetHUDAnnouncementCountdown(float CountdownTime) // ê²½ê¸° ì‹œì‘ê¹Œì§€ ë‚¨ì€ ì‹œê°„ ë„ìš°ê¸°
 {
 	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
 
@@ -213,7 +213,7 @@ void AMainPlayerController::SetHUDAnnouncementCountdown(float CountdownTime) // 
 		MainHUD->Announcement->WarmupTime;
 	if (bHUDValid)
 	{
-		if (CountdownTime < 0.0f) // CountdownTimeÀÌ À½¼ö¸é ÅØ½ºÆ®°¡ ¾È º¸ÀÌ°Ô ÇØÁØ´Ù. 
+		if (CountdownTime < 0.0f) // CountdownTimeì´ ìŒìˆ˜ë©´ í…ìŠ¤íŠ¸ê°€ ì•ˆ ë³´ì´ê²Œ í•´ì¤€ë‹¤. 
 		{
 			MainHUD->Announcement->WarmupTime->SetText(FText());
 			return;
@@ -227,14 +227,14 @@ void AMainPlayerController::SetHUDAnnouncementCountdown(float CountdownTime) // 
 	}
 }
 
-void AMainPlayerController::SetHUDTime() // HUD¿¡ ½Ã°£ ¶ç¿ì±â
+void AMainPlayerController::SetHUDTime() // HUDì— ì‹œê°„ ë„ìš°ê¸°
 {
 	float TimeLeft = 0.0f;
-	if (MatchState == MatchState::WaitingToStart) // °æ±â ½ÃÀÛ Àü ´ë±â½Ã°£
-		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime; // °æ±â ½ÃÀÛ Àü ´ë±â ½Ã°£ - Ã³À½ºÎÅÍ Áö±İ±îÁö ½Ã°£ + °ÔÀÓ·¹º§¸Ê¿¡ µé¾î°£ ½Ã°£
-	else if (MatchState == MatchState::InProgress) // °æ±â ½ÃÀÛ ÈÄ °æ±â½Ã°£
+	if (MatchState == MatchState::WaitingToStart) // ê²½ê¸° ì‹œì‘ ì „ ëŒ€ê¸°ì‹œê°„
+		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime; // ê²½ê¸° ì‹œì‘ ì „ ëŒ€ê¸° ì‹œê°„ - ì²˜ìŒë¶€í„° ì§€ê¸ˆê¹Œì§€ ì‹œê°„ + ê²Œì„ë ˆë²¨ë§µì— ë“¤ì–´ê°„ ì‹œê°„
+	else if (MatchState == MatchState::InProgress) // ê²½ê¸° ì‹œì‘ í›„ ê²½ê¸°ì‹œê°„
 		TimeLeft = WarmupTime - GetServerTime() + LevelStartingTime + MatchTime;
-	else if (MatchState == MatchState::Cooldown) // °æ±â ³¡³­ ÈÄ ´ë±â½Ã°£
+	else if (MatchState == MatchState::Cooldown) // ê²½ê¸° ëë‚œ í›„ ëŒ€ê¸°ì‹œê°„
 		TimeLeft = WarmupTime  - GetServerTime() + LevelStartingTime + MatchTime + CooldownTime;
 
 	uint32 SecondsLeft = FMath::CeilToInt(TimeLeft);
@@ -249,20 +249,20 @@ void AMainPlayerController::SetHUDTime() // HUD¿¡ ½Ã°£ ¶ç¿ì±â
 
 	if (CountdownInt != SecondsLeft)
 	{
-		if (MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown) // °æ±â ½ÃÀÛ Àü ´ë±â½Ã°£ or °æ±â ³¡³­ ÈÄ ´ë±â½Ã°£
+		if (MatchState == MatchState::WaitingToStart || MatchState == MatchState::Cooldown) // ê²½ê¸° ì‹œì‘ ì „ ëŒ€ê¸°ì‹œê°„ or ê²½ê¸° ëë‚œ í›„ ëŒ€ê¸°ì‹œê°„
 		{
 			SetHUDAnnouncementCountdown(TimeLeft); // Announcement Countdown
 		}
-		if (MatchState == MatchState::InProgress) // °æ±â ½ÃÀÛ ÈÄ °æ±â½Ã°£
+		if (MatchState == MatchState::InProgress) // ê²½ê¸° ì‹œì‘ í›„ ê²½ê¸°ì‹œê°„
 		{
-			SetHUDMatchCountdown(TimeLeft); // °æ±â Countdown
+			SetHUDMatchCountdown(TimeLeft); // ê²½ê¸° Countdown
 		};
 	}
 
 	CountdownInt = SecondsLeft;
 }
 
-void AMainPlayerController::PollInit() // Ã¼·Â, Á¡¼ö, ½ÂÆĞ ÃÊ±âÈ­
+void AMainPlayerController::PollInit() // ì²´ë ¥, ì ìˆ˜, ìŠ¹íŒ¨ ì´ˆê¸°í™”
 {
 	if (CharacterOverlay == nullptr)
 	{
@@ -271,7 +271,7 @@ void AMainPlayerController::PollInit() // Ã¼·Â, Á¡¼ö, ½ÂÆĞ ÃÊ±âÈ­
 			CharacterOverlay = MainHUD->CharacterOverlay;
 			if (IsValid(CharacterOverlay))
 			{
-				// Ã¼·Â, Á¡¼ö, ½ÂÆĞ ÃÊ±âÈ­
+				// ì²´ë ¥, ì ìˆ˜, ìŠ¹íŒ¨ ì´ˆê¸°í™”
 				SetHUDHealth(HUDHealth, HUDMaxHealth);
 				SetHUDScore(HUDScore);
 				SetHUDDefeats(HUDDefeats);
@@ -282,23 +282,23 @@ void AMainPlayerController::PollInit() // Ã¼·Â, Á¡¼ö, ½ÂÆĞ ÃÊ±âÈ­
 
 void AMainPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
 {
-	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds(); // ServerÀÇ ÇöÀç Time
-	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt); // ServerÀÇ ÇöÀç Time¸¦ º¸³½´Ù
+	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds(); // Serverì˜ í˜„ì¬ Time
+	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfReceipt); // Serverì˜ í˜„ì¬ Timeë¥¼ ë³´ë‚¸ë‹¤
 }
 
 void AMainPlayerController::ClientReportServerTime_Implementation(float TimeOfClientRequest, float TimeServerReceivedClientRequest)
 {
-	float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest; // Client°¡ Server¿¡ º¸³»°í ´Ù½Ã Client·Î µ¹¾Æ¿Ã ¶§±îÁö ¼Ò¿äµÈ ½Ã°£ = ClientÀÇ ÇöÀç Time - ClientÀÌ ¿äÃ»ÇÑ ´ç½Ã Time
-	float CurrentServerTime = TimeServerReceivedClientRequest + (0.5f * RoundTripTime); // ÇöÀç Server Time = Server°¡ Client·ÎºÎÅÍ Time ¿äÃ»À» ¹ŞÀº ½Ã°£ + (0.5f * RoundTripTime) // 0.5f * RoundTripTime °ªÀº ±Ù»ç°ªÀÌ´Ù. ±Ù»ç°ªÀ» »ç¿ëÇØµµ ÃæºĞÈ÷ ºñ½ÁÇÏ±â ¶§¹®¿¡ ¿©±â¼­´Â ±Ù»ç°ªÀ» »ç¿ëÇß´Ù.
-	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds(); // Client¿Í ServerÀÇ ½Ã°£Â÷ = (À§¿¡¼­ ±¸ÇÑ)ÇöÀç Server Time - ÇöÀç Client Time
+	float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest; // Clientê°€ Serverì— ë³´ë‚´ê³  ë‹¤ì‹œ Clientë¡œ ëŒì•„ì˜¬ ë•Œê¹Œì§€ ì†Œìš”ëœ ì‹œê°„ = Clientì˜ í˜„ì¬ Time - Clientì´ ìš”ì²­í•œ ë‹¹ì‹œ Time
+	float CurrentServerTime = TimeServerReceivedClientRequest + (0.5f * RoundTripTime); // í˜„ì¬ Server Time = Serverê°€ Clientë¡œë¶€í„° Time ìš”ì²­ì„ ë°›ì€ ì‹œê°„ + (0.5f * RoundTripTime) // 0.5f * RoundTripTime ê°’ì€ ê·¼ì‚¬ê°’ì´ë‹¤. ê·¼ì‚¬ê°’ì„ ì‚¬ìš©í•´ë„ ì¶©ë¶„íˆ ë¹„ìŠ·í•˜ê¸° ë•Œë¬¸ì— ì—¬ê¸°ì„œëŠ” ê·¼ì‚¬ê°’ì„ ì‚¬ìš©í–ˆë‹¤.
+	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds(); // Clientì™€ Serverì˜ ì‹œê°„ì°¨ = (ìœ„ì—ì„œ êµ¬í•œ)í˜„ì¬ Server Time - í˜„ì¬ Client Time
 }
 
-float AMainPlayerController::GetServerTime() // SyncedµÈ Server world clock¸¦ ¸®ÅÏÇÏ´Â ÇÔ¼ö
+float AMainPlayerController::GetServerTime() // Syncedëœ Server world clockë¥¼ ë¦¬í„´í•˜ëŠ” í•¨ìˆ˜
 {
-	if (HasAuthority()) // ¿äÃ»´ë»óÀÌ ServerÀÎ °æ¿ì
+	if (HasAuthority()) // ìš”ì²­ëŒ€ìƒì´ Serverì¸ ê²½ìš°
 		return GetWorld()->GetTimeSeconds();
-	else // ¿äÃ»´ë»óÀÌ ClientÀÎ °æ¿ì
-		return GetWorld()->GetTimeSeconds() + ClientServerDelta; //ÇöÀç ½Ã°£ + Client¿Í ServerÀÇ ½Ã°£Â÷
+	else // ìš”ì²­ëŒ€ìƒì´ Clientì¸ ê²½ìš°
+		return GetWorld()->GetTimeSeconds() + ClientServerDelta; //í˜„ì¬ ì‹œê°„ + Clientì™€ Serverì˜ ì‹œê°„ì°¨
 }
 
 void AMainPlayerController::ReceivedPlayer()
@@ -307,15 +307,15 @@ void AMainPlayerController::ReceivedPlayer()
 
 	if (IsLocalController())
 	{
-		ServerRequestServerTime(GetWorld()->GetTimeSeconds()); // Server TimeÀ» ¿äÃ»ÇÑ´Ù. ÇöÀç ClientÀÇ TimeÀ» º¯¼ö·Î ³Ñ±ä´Ù.
+		ServerRequestServerTime(GetWorld()->GetTimeSeconds()); // Server Timeì„ ìš”ì²­í•œë‹¤. í˜„ì¬ Clientì˜ Timeì„ ë³€ìˆ˜ë¡œ ë„˜ê¸´ë‹¤.
 	}
 }
 
 void AMainPlayerController::OnMatchStateSet(FName State)
 {
-	MatchState = State;  // GameMode¿¡¼­ °Ç³»¹Ş´Â FName StateÀ¸·Î MatchState ¼³Á¤
+	MatchState = State;  // GameModeì—ì„œ ê±´ë‚´ë°›ëŠ” FName Stateìœ¼ë¡œ MatchState ì„¤ì •
 
-	if (MatchState == MatchState::InProgress) //GameMode.h ³»ÀÇ MatchState::InProgress
+	if (MatchState == MatchState::InProgress) //GameMode.h ë‚´ì˜ MatchState::InProgress
 	{
 		HandleMatchHasStarted();
 	}
@@ -337,7 +337,7 @@ void AMainPlayerController::OnRep_MatchState()
 	}
 }
 
-void AMainPlayerController::HandleMatchHasStarted() // °æ±â ½ÃÀÛ ½Ã Announcement À§Á¬ ¾È º¸ÀÌ°Ô ÇÏ±â
+void AMainPlayerController::HandleMatchHasStarted() // ê²½ê¸° ì‹œì‘ ì‹œ Announcement ìœ„ì ¯ ì•ˆ ë³´ì´ê²Œ í•˜ê¸°
 {
 	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
 	if (IsValid(MainHUD))
@@ -350,7 +350,7 @@ void AMainPlayerController::HandleMatchHasStarted() // °æ±â ½ÃÀÛ ½Ã Announcement
 	}
 }
 
-void AMainPlayerController::HandleCooldown() // °æ±â ³¡³­ ÈÄ Announcement À§Á¬ º¸ÀÌ°Ô ÇÏ±â
+void AMainPlayerController::HandleCooldown() // ê²½ê¸° ëë‚œ í›„ Announcement ìœ„ì ¯ ë³´ì´ê²Œ í•˜ê¸°
 {
 	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
 
@@ -363,8 +363,8 @@ void AMainPlayerController::HandleCooldown() // °æ±â ³¡³­ ÈÄ Announcement À§Á¬ º
 			MainHUD->Announcement->InfoText;
 		if (bHUDValid)
 		{
-			MainHUD->Announcement->SetVisibility(ESlateVisibility::Visible); // Announcement º¸ÀÌ°ÔÇÏ±â
-			FString AnnouncementText("New Match Starts In:"); // ±âº» ¹®±¸ ¶ç¿ì±â(³ªÁß¿¡ ¿©±â ¼öÁ¤ÇÏ±â)
+			MainHUD->Announcement->SetVisibility(ESlateVisibility::Visible); // Announcement ë³´ì´ê²Œí•˜ê¸°
+			FString AnnouncementText("ë‹¤ìŒ ê²½ê¸°ê¹Œì§€ ë‚¨ì€ì‹œê°„:"); // ê¸°ë³¸ ë¬¸êµ¬ ë„ìš°ê¸°(ë‚˜ì¤‘ì— ì—¬ê¸° ìˆ˜ì •í•˜ê¸°)
 			MainHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
 
 			AMultiplayerGameState* MultiplayerGameState = Cast<AMultiplayerGameState>(UGameplayStatics::GetGameState(this));
@@ -373,22 +373,22 @@ void AMainPlayerController::HandleCooldown() // °æ±â ³¡³­ ÈÄ Announcement À§Á¬ º
 			{
 				TArray<AMultiplayerPlayerState*> TopPlayers = MultiplayerGameState->TopScoringPlayers;
 				FString InfoTextString;
-				if (TopPlayers.Num() == 0) // ½ÂÀÚ°¡ ¾ø´Â °æ¿ì
+				if (TopPlayers.Num() == 0) // ìŠ¹ìê°€ ì—†ëŠ” ê²½ìš°
 				{
-					InfoTextString = FString("There is no winner.");
+					InfoTextString = FString("ìŠ¹ì ì—†ìŒ");
 				}
-				else if (TopPlayers.Num() == 1 && TopPlayers[0] == MultiplayerPlayerState) // ÀÚ½ÅÀÌ ½ÂÀÚ
+				else if (TopPlayers.Num() == 1 && TopPlayers[0] == MultiplayerPlayerState) // ìì‹ ì´ ìŠ¹ì
 				{
-					InfoTextString = FString("You are the winner!");
+					InfoTextString = FString("ìŠ¹ë¦¬!");
 				}
-				else if (TopPlayers.Num() == 1) // ½ÂÀÚ ÀÌ¸§ ¶ç¿ì±â
+				else if (TopPlayers.Num() == 1) // ìŠ¹ì ì´ë¦„ ë„ìš°ê¸°
 				{
-					InfoTextString = FString::Printf(TEXT("Winner: \n%s"), *TopPlayers[0]->GetPlayerName());
+					InfoTextString = FString::Printf(TEXT("ìŠ¹ì: \n%s"), *TopPlayers[0]->GetPlayerName());
 				}
-				else if (TopPlayers.Num() > 1) // ½ÂÀÚ°¡ ¿©·¯¸íÀÎ °æ¿ì
+				else if (TopPlayers.Num() > 1) // ìŠ¹ìê°€ ì—¬ëŸ¬ëª…ì¸ ê²½ìš°ã„´
 				{
-					// ÃÖ°í µæÁ¡ÀÚµé ¶ç¿ì±â
-					InfoTextString = FString("Players tied for the win:\n"); 
+					// ìµœê³  ë“ì ìë“¤ ë„ìš°ê¸°
+					InfoTextString = FString("ë™ë°˜ ìŠ¹ë¦¬:\n"); 
 					for (auto TiedPlayer : TopPlayers)
 					{
 						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
@@ -403,7 +403,7 @@ void AMainPlayerController::HandleCooldown() // °æ±â ³¡³­ ÈÄ Announcement À§Á¬ º
 	TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(GetPawn());
 	if(BaseCharacter.IsValid() && BaseCharacter->GetCombat())
 	{
-		BaseCharacter->bDisableGameplay = true; // true¸é Ä³¸¯ÅÍ ¿òÁ÷ÀÓ Á¦ÇÑ. ¸¶¿ì½º È¸ÀüÀ¸·Î ½Ã¾ß È¸ÀüÀº °¡´É
-		BaseCharacter->GetCombat()->FireButtonPressed(false); // ¹ß»ç ¹öÆ° false
+		BaseCharacter->bDisableGameplay = true; // trueë©´ ìºë¦­í„° ì›€ì§ì„ ì œí•œ. ë§ˆìš°ìŠ¤ íšŒì „ìœ¼ë¡œ ì‹œì•¼ íšŒì „ì€ ê°€ëŠ¥
+		BaseCharacter->GetCombat()->FireButtonPressed(false); // ë°œì‚¬ ë²„íŠ¼ false
 	}
 }
