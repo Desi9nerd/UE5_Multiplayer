@@ -114,6 +114,7 @@ void ABaseCharacter::MulticastElim_Implementation() // RPC
 
 	//** 캐릭터 움직임 제한
 	bDisableGameplay = true; // true면 캐릭터 움직임 제한. 마우스 회전으로 시야 회전은 가능
+	GetCharacterMovement()->DisableMovement(); // 캐릭터 움직임 제한
 	if (IsValid(Combat))
 	{
 		Combat->FireButtonPressed(false); // 발사 버튼 방지

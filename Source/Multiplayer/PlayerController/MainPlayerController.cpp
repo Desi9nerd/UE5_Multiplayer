@@ -342,7 +342,11 @@ void AMainPlayerController::HandleMatchHasStarted() // 경기 시작 시 Announc
 	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
 	if (IsValid(MainHUD))
 	{
-		MainHUD->AddCharacterOverlay();
+		if (MainHUD->CharacterOverlay == nullptr)
+		{
+			MainHUD->AddCharacterOverlay();			
+		}
+
 		if (MainHUD->Announcement)
 		{
 			MainHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
