@@ -22,4 +22,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* ImpactParticles; // 충돌 시 파티클
 
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* BeamParticles; // 권총 Trail 궤적 파티클 이펙트
 };
