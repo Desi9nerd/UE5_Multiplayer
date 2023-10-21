@@ -7,6 +7,7 @@
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "RocketMovementComponent.h"
 
 AProjectileRocket::AProjectileRocket()
 {
@@ -14,7 +15,13 @@ AProjectileRocket::AProjectileRocket()
 	RocketMesh->SetupAttachment(RootComponent);
 	RocketMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	ProjectileMovementComponent->ProjectileGravityScale = 0.0f;
+	RocketMovementComponent = CreateDefaultSubobject<URocketMovementComponent>(TEXT("RocketMovementComponent"));
+	RocketMovementComponent->bRotationFollowsVelocity = true;
+	RocketMovementComponent->SetIsReplicated(true);
+
+	RocketMovementComponent->InitialSpeed = 1500.0f; // 로켓 속도. 변경 가능.
+	RocketMovementComponent->MaxSpeed = 1500.0f; // 로켓 최대 속도. 변경 가능.
+	RocketMovementComponent->ProjectileGravityScale = 0.2f; // 로켓 중력. 변경 가능.
 }
 
 void AProjectileRocket::BeginPlay()

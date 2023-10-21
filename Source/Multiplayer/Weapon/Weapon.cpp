@@ -13,6 +13,7 @@ AWeapon::AWeapon()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true; //만약 false라면 replicated되지 않아 모든 플레이어가 Authority를 가지게 된다. 예를 들어 플레이어1이 총을 발사하면 다른 플레이어들도 (각각의 독립된 서버가 존재하기 때문에) 총이 발사된다. 하지만 bReplicates=true라면 서버 하나만 Authority를 가지고 관리한다. 플레이어1이 총을 발사하면 서버에 정보를 알리고 모든 Client에 전파한다.
+	SetReplicateMovement(true); // 무기의 Movement를 Replicated 해준다.
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	SetRootComponent(WeaponMesh);

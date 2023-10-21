@@ -36,6 +36,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 	USoundAttenuation* LoopingSoundAttenuation; // 로켓이 날아가면서 사운드 멀어짐
 
+	UPROPERTY(VisibleAnywhere)// 로켓은 ProjectileMovementComponent 대신 이것을 사용.
+	class URocketMovementComponent* RocketMovementComponent;
+
 private:
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* RocketMesh;
