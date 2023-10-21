@@ -41,6 +41,7 @@ void AProjectile::BeginPlay()
 	if (HasAuthority()) // Server라면
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit); // Dynamic delegate 등록. UserObject는 발사체자신(this), 콜백함수는 &AProjectile::OnHit
+		CollisionBox->IgnoreActorWhenMoving(Owner, true); 
 	}
 }
 
