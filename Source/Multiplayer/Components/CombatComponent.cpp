@@ -136,11 +136,6 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
 		EquippedWeapon->Fire(TraceHitTarget); // 장착 무기 발사, HitTarget(=TraceHitResult.ImpactPoint <-- HitResult값)
 	}
-
-	if (bFireButtonPressed)
-	{
-		Fire();
-	}
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip) // Server
