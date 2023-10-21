@@ -70,6 +70,8 @@ void AProjectileRocket::DestroyTimerFinished()
 
 void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	if (OtherActor == GetOwner()) return; // 로켓에 자기 자신이 맞는 경우 예외 처리
+
 	TWeakObjectPtr<APawn> FiringPawn = GetInstigator(); // GetInstigator()는 로켓을 쏘는 무기를 가지고 있는 Pawn을 리턴한다.
 	if (FiringPawn.IsValid())
 	{
