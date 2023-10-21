@@ -119,6 +119,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingRocketAmmo = 3; // 게임 시작 시  기본값
 
+	UPROPERTY(EditAnywhere)
+	int32 StartingPistolAmmo = 0; // 게임 시작 시 권총 총알 기본값
+
 	void InitializeCarriedAmmo(); // 게임 시작 시 CarriedAmmo 설정
 
 	// Server에서 변경하면 Replicate 해준다. 모든 Client들은 CombatState을 알아야 한다.

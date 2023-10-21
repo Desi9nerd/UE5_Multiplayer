@@ -474,4 +474,5 @@ void UCombatComponent::InitializeCarriedAmmo()
 {
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo); // AssaultRifle과 StartingARAmmo 한쌍을 게임 시작 시 기본값으로 설정
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo); // RocketLauncher와 StartingRocketAmmo 한쌍을 게임 시작 시 기본값으로 설정
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
 }
