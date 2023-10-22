@@ -368,7 +368,7 @@ void AMainPlayerController::HandleCooldown() // 경기 끝난 후 Announcement �
 		if (bHUDValid)
 		{
 			MainHUD->Announcement->SetVisibility(ESlateVisibility::Visible); // Announcement 보이게하기
-			FString AnnouncementText("다음 경기까지 남은시간:"); // 기본 문구 띄우기(나중에 여기 수정하기)
+			FString AnnouncementText("NEXT GAME STARTS IN:"); // 기본 문구 띄우기(나중에 여기 수정하기)
 			MainHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
 
 			AMultiplayerGameState* MultiplayerGameState = Cast<AMultiplayerGameState>(UGameplayStatics::GetGameState(this));
@@ -379,20 +379,20 @@ void AMainPlayerController::HandleCooldown() // 경기 끝난 후 Announcement �
 				FString InfoTextString;
 				if (TopPlayers.Num() == 0) // 승자가 없는 경우
 				{
-					InfoTextString = FString("승자 없음");
+					InfoTextString = FString("DRAW");
 				}
 				else if (TopPlayers.Num() == 1 && TopPlayers[0] == MultiplayerPlayerState) // 자신이 승자
 				{
-					InfoTextString = FString("승리!");
+					InfoTextString = FString("YOU WIN!");
 				}
 				else if (TopPlayers.Num() == 1) // 승자 이름 띄우기
 				{
-					InfoTextString = FString::Printf(TEXT("승자: \n%s"), *TopPlayers[0]->GetPlayerName());
+					InfoTextString = FString::Printf(TEXT("WINNER: \n%s"), *TopPlayers[0]->GetPlayerName());
 				}
 				else if (TopPlayers.Num() > 1) // 승자가 여러명인 경우ㄴ
 				{
 					// 최고 득점자들 띄우기
-					InfoTextString = FString("동반 승리:\n"); 
+					InfoTextString = FString("WINNERS:\n"); 
 					for (auto TiedPlayer : TopPlayers)
 					{
 						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
