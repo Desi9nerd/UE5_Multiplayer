@@ -4,8 +4,8 @@
 #include "Weapon.h"
 #include "HitScanWeapon.generated.h"
 
-/**
- * 
+/** HitScan 방식의 무기
+ *  ProjectileWeapon과 달리 총알이나 로켓이 날아가지 않는다.
  */
 UCLASS()
 class MULTIPLAYER_API AHitScanWeapon : public AWeapon
