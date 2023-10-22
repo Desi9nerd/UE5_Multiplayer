@@ -16,15 +16,18 @@ public:
 	virtual void Fire(const FVector& HitTarget) override;
 
 protected:
-	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget);
-
-private:
+	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit);
+	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget); // 샷건 산탄분포를 위해 LineTrace의 End Loc 랜덤 변경하는 함수
 	UPROPERTY(EditAnywhere)
-	float Damage = 20.0f; 
+	float Damage = 20.0f;
 
 	UPROPERTY(EditAnywhere)
 	class UParticleSystem* ImpactParticles; // 충돌 시 파티클
 
+	UPROPERTY(EditAnywhere)
+	USoundCue* HitSound; // 피격 사운드
+
+private:
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* BeamParticles; // Trail 궤적 파티클 이펙트
 
@@ -33,9 +36,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* FireSound; // 발사 사운드
-
-	UPROPERTY(EditAnywhere)
-	USoundCue* HitSound; // 피격 사운드
 
 	//** Trace end with scatter
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")

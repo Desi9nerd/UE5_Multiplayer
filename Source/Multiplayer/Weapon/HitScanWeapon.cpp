@@ -23,66 +23,60 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	{
 		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		FVector Start = SocketTransform.GetLocation();	   // LineTrace 시작점
-		FVector End = Start + (HitTarget - Start) * 1.25f; // LineTrace 끝점. HitTraget 위치보다 좀 더 여유있게 준다.
 
 		FHitResult FireHit;
-		TObjectPtr<UWorld> World = GetWorld();
+		WeaponTraceHit(Start, HitTarget, FireHit);
 
-		if (IsValid(World))
+		TObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(FireHit.GetActor());
+		if (IsValid(BaseCharacter) && HasAuthority() && InstigatorController)
 		{
-			// LineTrace
-			World->LineTraceSingleByChannel(
-				FireHit,
-				Start,
-				End,
-				ECollisionChannel::ECC_Visibility
-			);
+			// 데미지 전달
+			UGameplayStatics::ApplyDamage(BaseCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+		} 
+		if (ImpactParticles) // 충돌 시 파티클 스폰 
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, FireHit.ImpactPoint, FireHit.ImpactNormal.Rotation());
+		} // if (ImpactParticles)
+		if (HitSound) // 충돌 시 사운드 재생
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, HitSound, FireHit.ImpactPoint);
+		}
+		if (MuzzleFlash) // Muzzle에서 이펙트 스폰
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SocketTransform);
+		} 
+		if (FireSound) // 발사 사운드 재생
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, FireSound, GetActorLocation());
+		} 
+	} 
+}
 
-			FVector BeamEnd = End; // BeamEnd 변수에 LineTrace의 마지막 위치를 담는다.
+void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit)
+{
+	TObjectPtr<UWorld> World = GetWorld();
 
-			if (FireHit.bBlockingHit) // LineTrace가 BlockingHit 되었다면
+	if (IsValid(World))
+	{
+		FVector End = bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f;
+
+		World->LineTraceSingleByChannel(OutHit, TraceStart, End, ECollisionChannel::ECC_Visibility);
+
+		FVector BeamEnd = End;
+
+		if (OutHit.bBlockingHit) // LineTrace가 BlockingHit 된다면
+		{
+			BeamEnd = OutHit.ImpactPoint; // 충돌위치(=ImpactPoint)를 BeamEnd 위치로 설정.
+		}
+		if (BeamParticles)
+		{
+			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(World, 	BeamParticles, TraceStart, FRotator::ZeroRotator,true);
+			if (Beam)
 			{
-				BeamEnd = FireHit.ImpactPoint; // BeamEnd를 업데이트
-				TObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(FireHit.GetActor());
-				if (IsValid(BaseCharacter) && HasAuthority() && InstigatorController)
-				{
-					// 데미지 전달
-					UGameplayStatics::ApplyDamage(BaseCharacter, Damage, InstigatorController, this, UDamageType::StaticClass()	);
-				} // if(IsValid(BaseCharacter) && HasAuthority() && InstigatorController)
-
-				if (ImpactParticles) // 충돌 시 파티클 스폰 
-				{
-					UGameplayStatics::SpawnEmitterAtLocation(World, ImpactParticles, FireHit.ImpactPoint, 	FireHit.ImpactNormal.Rotation());
-				} // if (ImpactParticles)
-				if (HitSound) // 충돌 시 사운드 재생
-				{
-					UGameplayStatics::PlaySoundAtLocation(this, HitSound, FireHit.ImpactPoint);
-				}
-			} // if(FireHit.bBlockingHit)
-
-			if (BeamParticles)
-			{
-				TWeakObjectPtr<UParticleSystemComponent> Beam = UGameplayStatics::SpawnEmitterAtLocation(
-					World,
-					BeamParticles,
-					SocketTransform
-				);
-				if (Beam.IsValid())
-				{
-					Beam->SetVectorParameter(FName("Target"), BeamEnd);
-				}
-			} // if(BeamParticles)
-		} // if(IsValid(World))
-
-		if (MuzzleFlash)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(World, MuzzleFlash, SocketTransform);
-		} // if(MuzzleFlash)
-		if (FireSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, 	FireSound, GetActorLocation());
-		} // if(FireSound)
-	} // if(IsValid(MuzzleFlashSocket) && IsValid(InstigatorController))
+				Beam->SetVectorParameter(FName("Target"), BeamEnd);
+			}
+		}
+	}
 }
 
 FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget)
@@ -94,9 +88,11 @@ FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVe
 	FVector EndLoc = SphereCenter + RandVec;
 	FVector ToEndLoc = EndLoc - TraceStart;
 
+	//** 디버깅용
 	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
 	DrawDebugSphere(GetWorld(), EndLoc, 4.0f, 12, FColor::Orange, true);
 	DrawDebugLine(GetWorld(), TraceStart, FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()), FColor::Cyan,true);
 
 	return FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()); // LineTrace의 end location을 리턴.
 }
+
