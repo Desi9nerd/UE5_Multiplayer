@@ -476,4 +476,5 @@ void UCombatComponent::InitializeCarriedAmmo() // 게임 시작 시 주어지는 각 무기 
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo); // RocketLauncher와 StartingRocketAmmo 한쌍을 게임 시작 시 기본값으로 설정
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
 }

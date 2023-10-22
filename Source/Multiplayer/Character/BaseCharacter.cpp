@@ -284,6 +284,9 @@ void ABaseCharacter::PlayReloadMontage() // 재장전 몽타주 재생
 		case EWeaponType::EWT_SubmachineGun:
 			SectionName = FName("Rifle");
 			break;
+		case EWeaponType::EWT_Shotgun:
+			SectionName = FName("Rifle");
+			break;
 		}
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}

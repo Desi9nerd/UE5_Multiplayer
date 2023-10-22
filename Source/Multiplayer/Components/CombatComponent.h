@@ -7,8 +7,6 @@
 #include "Multiplayer/EnumTypes/ECombatState.h"
 #include "CombatComponent.generated.h"
 
-#define TRACE_LENGTH 80000.0f
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MULTIPLAYER_API UCombatComponent : public UActorComponent
 {
@@ -112,18 +110,16 @@ private:
 	void OnRep_CarriedAmmo();
 
 	TMap<EWeaponType, int32> CarriedAmmoMap; // 무기별 탄창 최대 총알 수 Map
-
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 30; // 게임 시작 시 CarriedAmmo 기본값
-
 	UPROPERTY(EditAnywhere)
 	int32 StartingRocketAmmo = 3; // 게임 시작 시  기본값
-
 	UPROPERTY(EditAnywhere)
 	int32 StartingPistolAmmo = 0; // 게임 시작 시 권총 총알 기본값
-
 	UPROPERTY(EditAnywhere)
 	int32 StartingSMGAmmo = 0;
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo = 0;
 
 	void InitializeCarriedAmmo(); // 게임 시작 시 CarriedAmmo 설정
 
