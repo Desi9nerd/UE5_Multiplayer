@@ -33,6 +33,9 @@ public:
 
 	UPROPERTY(Replicated) // Client들에게도 알려줄 수 있도록 Replicated
 	bool bDisableGameplay = false; // Gameplay 관련 기능들을 불활성화시켜주려 만든 true/false 변수. true면 캐릭터 움직임 제한, but 마우스 회전가능
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScopeWidget(bool bShowScope);
+
 
 protected:
 	virtual void BeginPlay() override;
