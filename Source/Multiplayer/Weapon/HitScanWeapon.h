@@ -23,5 +23,14 @@ private:
 	class UParticleSystem* ImpactParticles; // 충돌 시 파티클
 
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* BeamParticles; // 권총 Trail 궤적 파티클 이펙트
+	UParticleSystem* BeamParticles; // Trail 궤적 파티클 이펙트
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* MuzzleFlash; // Muzzle 파티클 이펙트
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* FireSound; // 발사 사운드
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* HitSound; // 피격 사운드
 };

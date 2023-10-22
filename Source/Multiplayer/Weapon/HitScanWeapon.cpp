@@ -3,6 +3,7 @@
 #include "Multiplayer/Character/BaseCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "particles/ParticleSystemComponent.h"
+#include "Sound/SoundCue.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -45,10 +46,15 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					// 데미지 전달
 					UGameplayStatics::ApplyDamage(BaseCharacter, Damage, InstigatorController, this, UDamageType::StaticClass()	);
 				} // if(IsValid(BaseCharacter) && HasAuthority() && InstigatorController)
+
 				if (ImpactParticles) // 충돌 시 파티클 스폰 
 				{
 					UGameplayStatics::SpawnEmitterAtLocation(World, ImpactParticles, FireHit.ImpactPoint, 	FireHit.ImpactNormal.Rotation());
 				} // if (ImpactParticles)
+				if (HitSound) // 충돌 시 사운드 재생
+				{
+					UGameplayStatics::PlaySoundAtLocation(this, HitSound, FireHit.ImpactPoint);
+				}
 			} // if(FireHit.bBlockingHit)
 
 			if (BeamParticles)
@@ -64,5 +70,14 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				}
 			} // if(BeamParticles)
 		} // if(IsValid(World))
+
+		if (MuzzleFlash)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(World, MuzzleFlash, SocketTransform);
+		} // if(MuzzleFlash)
+		if (FireSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, 	FireSound, GetActorLocation());
+		} // if(FireSound)
 	} // if(IsValid(MuzzleFlashSocket) && IsValid(InstigatorController))
 }
