@@ -122,6 +122,8 @@ private:
 	int32 StartingShotgunAmmo = 0;
 	UPROPERTY(EditAnywhere)
 	int32 StartingSniperAmmo = 0;
+	UPROPERTY(EditAnywhere)
+	int32 StartingGrenadeLauncherAmmo = 0;
 
 	void InitializeCarriedAmmo(); // 게임 시작 시 CarriedAmmo 설정
 
