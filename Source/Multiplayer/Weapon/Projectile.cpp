@@ -6,6 +6,8 @@
 #include "Sound/SoundCue.h"
 #include "Multiplayer/Character/BaseCharacter.h"
 #include "Multiplayer/Multiplayer.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 AProjectile::AProjectile()
 {
@@ -46,15 +48,71 @@ void AProjectile::BeginPlay()
 }
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-	FVector NormalImpulse, const FHitResult& Hit)
+                        FVector NormalImpulse, const FHitResult& Hit)
 {
 	Destroy(); // 충돌 후 충돌체 소멸
+}
+
+void AProjectile::SpawnTrailSystem()
+{
+	if (IsValid(TrailSystem))
+	{
+		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			TrailSystem,
+			GetRootComponent(),
+			FName(),
+			GetActorLocation(),
+			GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			false
+		);
+	}
+}
+
+void AProjectile::ExplodeDamage()
+{
+	TWeakObjectPtr<APawn> FiringPawn = GetInstigator(); // GetInstigator()는 로켓을 쏘는 무기를 가지고 있는 Pawn을 리턴한다.
+	if (FiringPawn.IsValid())
+	{
+		TWeakObjectPtr<AController> FiringController = FiringPawn->GetController();
+		if (FiringController.IsValid() && HasAuthority())
+		{
+			//** 반경 데미지
+			UGameplayStatics::ApplyRadialDamageWithFalloff(
+				this, // World Context Object
+				Damage, // BaseDamage
+				10.0f, // MinimumDamage
+				GetActorLocation(), // Origin. 로켓의 위치로 설정.
+				DamageInnerRadius, // DamageInnerRadius
+				DamageOuterRadius, // DamageOuterRadius
+				1.0f, // DamageFalloff. InnerRadius->OuterRadius로 갈수록 데미지가 줄어드는 정도
+				UDamageType::StaticClass(), // DamageTypeClass
+				TArray<AActor*>(), // IgnoreActors
+				this, // DamageCauser. 여기서는 로켓(=ProjectileRocket)
+				FiringController.Get() // InstigatorController
+			);
+		}
+	}
 }
 
 void AProjectile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
 
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(
+		DestroyTimer,
+		this,
+		&AProjectile::DestroyTimerFinished,
+		DestroyTime
+	);
+}
+
+void AProjectile::DestroyTimerFinished()
+{
+	Destroy();
 }
 
 void AProjectile::Destroyed()
