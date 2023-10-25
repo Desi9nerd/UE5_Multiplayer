@@ -24,6 +24,11 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+
+	UFUNCTION(BlueprintCallable)
+	void ShotgunShellReload();
+
+	void JumpToShotgunEnd();
 	
 protected:
 	virtual void BeginPlay() override;
@@ -135,6 +140,7 @@ private:
 	void OnRep_CombatState();
 
 	void UpdateAmmoValues(); // 총알 수 업데이트
+	void UpdateShotgunAmmoValues();
 
 public:
 		

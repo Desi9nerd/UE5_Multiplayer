@@ -8,6 +8,7 @@
 #include "Casing.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Multiplayer/PlayerController/MainPlayerController.h"
+#include "Multiplayer/Components/CombatComponent.h"
 
 AWeapon::AWeapon()
 {
@@ -175,6 +176,12 @@ void AWeapon::SpendRound()
 void AWeapon::OnRep_Ammo() // Client
 {
 	BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(GetOwner()) : BaseCharcterOwnerCharacter;
+	// BaseCharcterOwnerCharacter와 CombatComponent가 있고 총알(=탄)이 최대 총알 수이면 
+	if (BaseCharcterOwnerCharacter && BaseCharcterOwnerCharacter->GetCombat() && IsFull())
+	{
+		BaseCharcterOwnerCharacter->GetCombat()->JumpToShotgunEnd();
+	}
+
 	SetHUDAmmo(); // HUD에 총알(Ammo) 수 업데이트
 }
 
@@ -244,4 +251,9 @@ void AWeapon::AddAmmo(int32 AmmoToAdd)
 bool AWeapon::IsEmpty()
 {
 	return Ammo <= 0;
+}
+
+bool AWeapon::IsFull()
+{
+	return Ammo == MagCapacity;
 }

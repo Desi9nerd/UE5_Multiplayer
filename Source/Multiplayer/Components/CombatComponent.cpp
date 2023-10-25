@@ -11,6 +11,7 @@
 #include "Camera/CameraComponent.h"
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
+#include "Multiplayer/Character/BaseCharacterAnimInstance.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -129,7 +130,15 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
-	if (EquippedWeapon == nullptr) return; //장착 무기가 없다면 return
+	if (EquippedWeapon == nullptr) return; // 예외처리. 장착 무기가 없다면 return
+
+	if (Character.IsValid() && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun) // Shotgun
+	{
+		Character->PlayFireMontage(bAiming);
+		EquippedWeapon->Fire(TraceHitTarget);
+		CombatState = ECombatState::ECS_Unoccupied;
+		return;
+	}
 
 	if (Character.IsValid() && CombatState == ECombatState::ECS_Unoccupied)
 	{
@@ -213,6 +222,24 @@ void UCombatComponent::FinishReloading()
 	}
 }
 
+void UCombatComponent::ShotgunShellReload()
+{
+	if (Character.IsValid() && Character->HasAuthority())
+	{
+		UpdateShotgunAmmoValues();
+	}
+}
+
+void UCombatComponent::JumpToShotgunEnd()
+{
+	// Reload 몽타주에서 ShotgunEnd 섹션으로 점프
+	TWeakObjectPtr<UAnimInstance> AnimInstance = Character->GetMesh()->GetAnimInstance();
+	if (AnimInstance.IsValid() && Character->GetReloadMontage())
+	{
+		AnimInstance->Montage_JumpToSection(FName("ShotgunEnd"));
+	}
+}
+
 void UCombatComponent::UpdateAmmoValues()
 {
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
@@ -231,6 +258,29 @@ void UCombatComponent::UpdateAmmoValues()
 	}
 
 	EquippedWeapon->AddAmmo(-ReloadAmount);
+}
+
+void UCombatComponent::UpdateShotgunAmmoValues() // Shotgun 총알 업데이트
+{
+	if (Character == nullptr || EquippedWeapon == nullptr) return; // 예외처리
+
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= 1;
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+	}
+
+	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;
+	if (Controller.IsValid())
+	{
+		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+	EquippedWeapon->AddAmmo(-1);
+	bCanFire = true;
+	if (EquippedWeapon->IsFull() || CarriedAmmo == 0) 
+	{
+		JumpToShotgunEnd(); // Reload 몽타주에서 ShotgunEnd 섹션으로 점프
+	}
 }
 
 void UCombatComponent::OnRep_CombatState() // Client
@@ -466,6 +516,8 @@ bool UCombatComponent::CanFire()
 {
 	if (EquippedWeapon == nullptr) return false; // 장착된 무기가 없다면 false 리턴
 
+	if (EquippedWeapon->IsEmpty() == false && bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun) return true;
+
 	return EquippedWeapon->IsEmpty() == false && bCanFire && CombatState == ECombatState::ECS_Unoccupied; // 총알이 비어있지 않았다면(=총알이 있다면) 
 }
 
@@ -475,6 +527,16 @@ void UCombatComponent::OnRep_CarriedAmmo()
 	if (Controller.IsValid())
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
+	}
+
+	bool bJumpToShotgunEnd =
+		CombatState == ECombatState::ECS_Reloading &&
+		EquippedWeapon != nullptr &&
+		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun &&
+		CarriedAmmo == 0;
+	if (bJumpToShotgunEnd)
+	{
+		JumpToShotgunEnd();
 	}
 }
 
