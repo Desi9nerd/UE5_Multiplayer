@@ -240,6 +240,7 @@ void ABaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ABaseCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ABaseCharacter::FireButtonReleased);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ABaseCharacter::ReloadButtonPressed);
+	PlayerInputComponent->BindAction("ThrowGrenade", IE_Pressed, this, &ABaseCharacter::GrenadeButtonPressed);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &ABaseCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ABaseCharacter::MoveRight);
@@ -318,6 +319,15 @@ void ABaseCharacter::PlayElimMontage()
 	}
 }
 
+void ABaseCharacter::PlayThrowGrenadeMontage()
+{
+	TWeakObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance.IsValid() && IsValid(ThrowGrenadeMontage))
+	{
+		AnimInstance->Montage_Play(ThrowGrenadeMontage);
+	}
+}
+
 void ABaseCharacter::PlayHitReactMontage()
 {
 	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return; //무기 안 들고 있을때는 return
@@ -332,8 +342,16 @@ void ABaseCharacter::PlayHitReactMontage()
 	}
 }
 
+void ABaseCharacter::GrenadeButtonPressed()
+{
+	if (IsValid(Combat))
+	{
+		Combat->ThrowGrenade();
+	}
+}
+
 void ABaseCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
-	AController* InstigatorController, AActor* DamageCauser)
+                                   AController* InstigatorController, AActor* DamageCauser)
 {
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth); // 체력 - 데미지
 

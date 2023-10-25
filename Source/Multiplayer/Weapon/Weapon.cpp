@@ -24,7 +24,7 @@ AWeapon::AWeapon()
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);//처음 무기가 나왔을때 No Collision
 
 	EnableCustomDepth(true); // Custom Depth가 가능한 상태를 초기값으로 설정
-	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_PURPLE);
 	WeaponMesh->MarkRenderStateDirty();
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));

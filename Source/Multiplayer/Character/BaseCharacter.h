@@ -23,6 +23,7 @@ public:
 	void PlayFireMontage(bool bAiming);
 	void PlayReloadMontage();
 	void PlayElimMontage();
+	void PlayThrowGrenadeMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 	void Elim(); // Server에서만 콜되는 Elim함수
 
@@ -56,6 +57,7 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 	void PlayHitReactMontage();
+	void GrenadeButtonPressed();
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);// 피격 데미지
@@ -98,15 +100,14 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage; // 발사 몽타주
-
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ReloadMontage; // 재장전 몽타주
-
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage; // 피격 몽타주
-
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ElimMontage; // 사망 몽타주
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ThrowGrenadeMontage; // 수류탄 투척 몽타주
 
 	void HideCameraIfCharacterClose(); //카메라와 캐릭터가 지나치게 가까워지면 캐릭터를 숨겨준다.
 

@@ -295,6 +295,12 @@ void UCombatComponent::OnRep_CombatState() // Client
 		{
 			Fire();
 		}
+	case ECombatState::ECS_ThrowingGrenade:
+		// LocallyControlled면 이미 몽타주 재생이 일어나니 중복으로 몽타주 재생을 시키면 안 되므로 if 체크 
+		if (Character.IsValid() && Character->IsLocallyControlled() == false)
+		{
+			Character->PlayThrowGrenadeMontage();
+		}
 		break;
 	}
 }
@@ -319,6 +325,35 @@ int32 UCombatComponent::AmountToReload()
 void UCombatComponent::HandleReload()
 {
 	Character->PlayReloadMontage(); // 재장전 몽타주 재생
+}
+
+void UCombatComponent::ThrowGrenade() // Client
+{
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if (Character.IsValid())
+	{
+		Character->PlayThrowGrenadeMontage(); // 수류탄 투척 몽타주 재생
+	}
+	if (Character.IsValid() && Character->HasAuthority() == false)
+	{
+		ServerThrowGrenade(); // Client에서 몽타주가 재생된 걸 Server에 알림
+	}
+}
+
+void UCombatComponent::ServerThrowGrenade_Implementation() // Server
+{
+	CombatState = ECombatState::ECS_ThrowingGrenade;
+	if (Character.IsValid())
+	{
+		Character->PlayThrowGrenadeMontage();
+	}
+}
+
+void UCombatComponent::ThrowGrenadeFinished()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
 }
 
 void UCombatComponent::OnRep_EquippedWeapon() // Client

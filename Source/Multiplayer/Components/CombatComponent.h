@@ -29,7 +29,10 @@ public:
 	void ShotgunShellReload();
 
 	void JumpToShotgunEnd();
-	
+
+	UFUNCTION(BlueprintCallable)
+	void ThrowGrenadeFinished();
+
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -57,6 +60,11 @@ protected:
 
 	void HandleReload(); // Server와 Client들 모두에서 실행되는 재장전 몽타주 재생 함수
 	int32 AmountToReload(); // 재장전하는 총알 수를 리턴하는 함수
+
+	void ThrowGrenade(); // 수류탄 투척. Client
+
+	UFUNCTION(Server, Reliable) // Server RPC
+	void ServerThrowGrenade();
 
 private:
 	TWeakObjectPtr<class ABaseCharacter> Character;
