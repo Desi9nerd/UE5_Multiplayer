@@ -63,6 +63,8 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* EquipSound; // 무기장착 사운드
+	
+	void EnableCustomDepth(bool bEnable); // Custom Depth 적용 true/false
 
 protected:
 	virtual void BeginPlay() override;
