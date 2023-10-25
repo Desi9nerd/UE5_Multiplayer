@@ -62,9 +62,15 @@ protected:
 	int32 AmountToReload(); // 재장전하는 총알 수를 리턴하는 함수
 
 	void ThrowGrenade(); // 수류탄 투척. Client
-
 	UFUNCTION(Server, Reliable) // Server RPC
 	void ServerThrowGrenade();
+
+	void DropEquippedWeapon(); // 장착중인 무기 떨어뜨리기
+	void AttachActorToRightHand(AActor* ActorToAttach); // 무기 오른손 소켓에 붙이기
+	void AttachActorToLeftHand(AActor* ActorToAttach); // 무기 왼손 소켓에 붙이기
+	void UpdateCarriedAmmo(); // 현재 장착무기 탄창의 최대 총알 수 업데이트
+	void PlayEquipWeaponSound(); // 무기 장착 사운드 재생
+	void ReloadEmptyWeapon(); // 총알이 비었는지 확인하고 만약 비었을 시 재장전
 
 private:
 	TWeakObjectPtr<class ABaseCharacter> Character;

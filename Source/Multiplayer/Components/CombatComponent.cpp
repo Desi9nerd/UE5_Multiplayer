@@ -117,10 +117,8 @@ void UCombatComponent::FireTimerFinished()
 	{
 		Fire();
 	}
-	if (EquippedWeapon->IsEmpty()) // 발사할 수 있는 총알이 다 떨어져서 0 이하라면
-	{
-		Reload(); // 재장전
-	}
+
+	ReloadEmptyWeapon(); // 총알이 비었는지 확인하고 만약 비었을 시 재장전
 }
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget) // Server RPC 총 발사 함수
@@ -150,20 +148,63 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip) // Server
 {
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+
+
+	DropEquippedWeapon(); // 무기를 장착중이면 장착중인 무기 떨어뜨리기
+	EquippedWeapon = WeaponToEquip; // WeaponToEquip를 현재 장착무기로 설정
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);//무기 상태를 Equipped(=장착)으로 변경
+
+	AttachActorToRightHand(EquippedWeapon); // Actor(= 무기) 오른손 소켓에 붙이기
+	EquippedWeapon->SetOwner(Character.Get()); // 무기의 Owner을 Character로 설정
+	EquippedWeapon->SetHUDAmmo(); // HUD에 총알 수 업데이트
+
+	UpdateCarriedAmmo(); // 현재 장착무기 탄창의 최대 총알 수 업데이트
+	PlayEquipWeaponSound(); // 무기 장착 사운드 재생
+	ReloadEmptyWeapon(); // 총알이 비었는지 확인하고 만약 비었을 시 재장전	
+
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
+	Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
+}
+
+void UCombatComponent::DropEquippedWeapon() // 장착중인 무기 떨어뜨리기 함수
+{
 	if (IsValid(EquippedWeapon)) // 이미 무기 장착 중이라면
 	{
 		EquippedWeapon->Dropped(); // 장착 중인 무기를 떨어뜨린다.
 	}
+}
 
-	EquippedWeapon = WeaponToEquip;
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);//무기 상태를 Equipped(=장착)으로 변경
-	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));//소켓을 변수로 저장
+void UCombatComponent::AttachActorToRightHand(AActor* ActorToAttach) // Actor(=무기) 오른손 소켓에 붙이기
+{
+	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
+
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));// 소켓을 변수로 저장
 	if (IsValid(HandSocket)) // 해당 소켓이 존재하면
 	{
-		HandSocket->AttachActor(EquippedWeapon, Character->GetMesh()); //무기를 해당 소켓에 붙여준다.
+		HandSocket->AttachActor(ActorToAttach, Character->GetMesh()); // 무기를 해당 소켓에 붙여준다.
 	}
-	EquippedWeapon->SetOwner(Character.Get()); // 무기의 Owner을 Character로 설정
-	EquippedWeapon->SetHUDAmmo(); // HUD에 총알 수 업데이트
+}
+
+void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
+{
+	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr || EquippedWeapon == nullptr) return;
+
+	bool bUsePistolSocket =
+		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Pistol ||
+		EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SubmachineGun;
+
+	FName SocketName = bUsePistolSocket ? FName("PistolSocket") : FName("LeftHandSocket");
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(SocketName);// 소켓을 변수로 저장
+	if (IsValid(HandSocket)) // 해당 소켓이 존재하면
+	{
+		HandSocket->AttachActor(ActorToAttach, Character->GetMesh()); // 무기를 해당 소켓에 붙여준다.
+	}
+}
+
+void UCombatComponent::UpdateCarriedAmmo()
+{
+	if (EquippedWeapon == nullptr) return; // 예외처리. 장착 무기가 없다면 return
 
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType())) // CarriedAmmoMap에 변경된 무기타입이 있다면
 	{
@@ -175,19 +216,22 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip) // Server
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo); // HUD에 최대 총알 수 업데이트
 	}
+}
 
+void UCombatComponent::PlayEquipWeaponSound() // 무기 장착 사운드 재생
+{
 	if (EquippedWeapon->EquipSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, 	EquippedWeapon->EquipSound, Character->GetActorLocation()); // 무기장착 사운드를 캐릭터 위치에서 재생
+		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation()); // 무기장착 사운드를 캐릭터 위치에서 재생
 	}
+}
 
+void UCombatComponent::ReloadEmptyWeapon() // 총알이 비었는지 확인하고 만약 비었을 시 재장전
+{
 	if (EquippedWeapon->IsEmpty()) // 발사할 수 있는 총알이 다 떨어져서 0 이하라면
 	{
 		Reload(); // 재장전
 	}
-
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
-	Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
 }
 
 void UCombatComponent::Reload()
@@ -335,6 +379,7 @@ void UCombatComponent::ThrowGrenade() // Client
 	if (Character.IsValid())
 	{
 		Character->PlayThrowGrenadeMontage(); // 수류탄 투척 몽타주 재생
+		AttachActorToLeftHand(EquippedWeapon); // 무기 왼손 소켓에 붙이기
 	}
 	if (Character.IsValid() && Character->HasAuthority() == false)
 	{
@@ -348,31 +393,25 @@ void UCombatComponent::ServerThrowGrenade_Implementation() // Server
 	if (Character.IsValid())
 	{
 		Character->PlayThrowGrenadeMontage();
+		AttachActorToLeftHand(EquippedWeapon); // 무기 왼손 소켓에 붙이기
 	}
 }
 
 void UCombatComponent::ThrowGrenadeFinished()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
+	AttachActorToRightHand(EquippedWeapon); // 무기 오른손 소켓에 붙이기
 }
 
 void UCombatComponent::OnRep_EquippedWeapon() // Client
 {
-	if (EquippedWeapon && Character.IsValid()) //무기장착 시
+	if (EquippedWeapon && Character.IsValid()) // 무기장착 시
 	{
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);//무기 상태를 Equipped(=장착)으로 변경
-		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("RightHandSocket"));//소켓을 변수로 저장
-		if (IsValid(HandSocket)) // 해당 소켓이 존재하면
-		{
-			HandSocket->AttachActor(EquippedWeapon, Character->GetMesh()); //무기를 해당 소켓에 붙여준다.
-		}
+		AttachActorToRightHand(EquippedWeapon); // 무기 오른손 소켓에 붙이기
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
 		Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
-
-		if (EquippedWeapon->EquipSound) 
-		{	// 무기장착 사운드 캐릭터 위치에서 재생하기
-			UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation());
-		}
+		PlayEquipWeaponSound(); // 무기 장착 사운드 재생
 	}
 }
 
