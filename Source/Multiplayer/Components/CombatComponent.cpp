@@ -413,10 +413,19 @@ void UCombatComponent::LaunchGrenade()
 {
 	ShowAttachedGrenade(false); // 수류탄이 투척되면 캐릭터 손에 붙은 수류탄은 안 보이도록 꺼준다.
 
-	if (Character.IsValid() && Character->HasAuthority() && GrenadeClass && Character->GetAttachedGrenade()) // Server일 때만
+	if (Character.IsValid() && Character->IsLocallyControlled()) // Client라면
+	{
+		ServerLaunchGrenade(HitTarget);
+	}
+}
+
+// Target 위치를 매개변수로 넘겨받아 던지는 방향에 사용한다. 
+void UCombatComponent::ServerLaunchGrenade_Implementation(const FVector_NetQuantize& Target) // Server RPC
+{
+	if (Character.IsValid() && GrenadeClass && Character->GetAttachedGrenade()) // Server일 때만
 	{
 		const FVector StartingLocation = Character->GetAttachedGrenade()->GetComponentLocation(); // 캐릭터에 붙은 수류탄 위치
-		FVector ToTarget = HitTarget - StartingLocation; // Target을 향하는 벡터
+		FVector ToTarget = Target - StartingLocation; // Target을 향하는 벡터
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = Character.Get();
 		SpawnParams.Instigator = Character.Get(); // Projetile.h.cpp의 ExplodeDamage()에서 GetInstigator()를 한다. 여기서 Instigator를 설정하지 않으면 정보를 주지않아 문제가 된다.
