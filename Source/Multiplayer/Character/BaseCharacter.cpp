@@ -196,6 +196,10 @@ void ABaseCharacter::BeginPlay()
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABaseCharacter::ReceiveDamage); // Delegate 등록
 	}
+	if (IsValid(AttachedGrenade))
+	{
+		AttachedGrenade->SetVisibility(false); // 게임 시작 시 수류탄 안 보이게 설정.
+	}
 }
 
 void ABaseCharacter::Tick(float DeltaTime)

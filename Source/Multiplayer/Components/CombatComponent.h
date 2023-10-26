@@ -22,16 +22,16 @@ public:
 	void FireButtonPressed(bool bPressed); // 총 발사 버튼 Pressed
 	void Reload();
 
+	//** ABP_BaseCharacter의 Event Graph에서 BP로 쓰임
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
-
 	UFUNCTION(BlueprintCallable)
 	void ShotgunShellReload();
-
 	void JumpToShotgunEnd();
-
 	UFUNCTION(BlueprintCallable)
 	void ThrowGrenadeFinished();
+	UFUNCTION(BlueprintCallable)
+	void LaunchGrenade();
 
 protected:
 	virtual void BeginPlay() override;
@@ -71,6 +71,7 @@ protected:
 	void UpdateCarriedAmmo(); // 현재 장착무기 탄창의 최대 총알 수 업데이트
 	void PlayEquipWeaponSound(); // 무기 장착 사운드 재생
 	void ReloadEmptyWeapon(); // 총알이 비었는지 확인하고 만약 비었을 시 재장전
+	void ShowAttachedGrenade(bool bShowGrenade);
 
 private:
 	TWeakObjectPtr<class ABaseCharacter> Character;

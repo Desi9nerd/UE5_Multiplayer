@@ -381,6 +381,7 @@ void UCombatComponent::ThrowGrenade() // Client
 	{
 		Character->PlayThrowGrenadeMontage(); // 수류탄 투척 몽타주 재생
 		AttachActorToLeftHand(EquippedWeapon); // 무기 왼손 소켓에 붙이기
+		ShowAttachedGrenade(true); // 수류탄 매쉬 보이게 하기
 	}
 	if (Character.IsValid() && Character->HasAuthority() == false)
 	{
@@ -395,7 +396,21 @@ void UCombatComponent::ServerThrowGrenade_Implementation() // Server
 	{
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon); // 무기 왼손 소켓에 붙이기
+		ShowAttachedGrenade(true); // 수류탄 매쉬 보이게 하기
 	}
+}
+
+void UCombatComponent::ShowAttachedGrenade(bool bShowGrenade)
+{
+	if (Character.IsValid() && Character->GetAttachedGrenade())
+	{
+		Character->GetAttachedGrenade()->SetVisibility(bShowGrenade); // bShowGrenade의 변수값을 기준으로 수류탄이 보일지 말지 결정
+	}
+}
+
+void UCombatComponent::LaunchGrenade()
+{
+	ShowAttachedGrenade(false); // 수류탄이 투척되면 캐릭터 손에 붙은 수류탄은 안 보이도록 꺼준다.
 }
 
 void UCombatComponent::ThrowGrenadeFinished()
