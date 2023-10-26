@@ -236,7 +236,8 @@ void UCombatComponent::ReloadEmptyWeapon() // 총알이 비었는지 확인하고 만약 비었
 
 void UCombatComponent::Reload()
 {
-	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading) // 0보다 큰지 확인. 0보다 작은면 재장전 할 필요X
+	// CarriedAmmo가 0보다 큰지 확인. 0보다 작은면 재장전 할 필요X. CarriedAmmo가 꽉 차지 않았는지 확인
+	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading && EquippedWeapon && EquippedWeapon->IsFull() == false) 
 	{
 		ServerReload(); // Server RPC 호출.
 	}

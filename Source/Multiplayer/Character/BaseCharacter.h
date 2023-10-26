@@ -175,6 +175,9 @@ private:
 
 	TWeakObjectPtr<class AMultiplayerPlayerState> MultiplayerPlayerState;
 
+	UPROPERTY(VisibleAnywhere)
+	UStaticMeshComponent* AttachedGrenade; // ¼ö·ùÅº ¸Å½¬
+
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
 	bool IsWeaponEquipped();
