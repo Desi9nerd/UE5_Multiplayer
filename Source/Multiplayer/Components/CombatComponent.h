@@ -163,6 +163,17 @@ private:
 	void UpdateAmmoValues(); // 총알 수 업데이트
 	void UpdateShotgunAmmoValues();
 
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades) // Replicated 되는 변수로 설정
+	int32 Grenades = 4;
+
+	UFUNCTION() // Rep Notify
+	void OnRep_Grenades(); 
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxGrenades = 4;
+
+	void UpdateHUDGrenades();
+
 public:
-		
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 };

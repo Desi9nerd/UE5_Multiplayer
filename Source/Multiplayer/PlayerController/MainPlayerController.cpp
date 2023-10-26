@@ -227,6 +227,24 @@ void AMainPlayerController::SetHUDAnnouncementCountdown(float CountdownTime) // 
 	}
 }
 
+void AMainPlayerController::SetHUDGrenades(int32 Grenades)
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+
+	bool bHUDValid = MainHUD &&
+		MainHUD->CharacterOverlay &&
+		MainHUD->CharacterOverlay->GrenadesText;
+	if (bHUDValid)
+	{
+		FString GrenadesText = FString::Printf(TEXT("%d"), Grenades);
+		MainHUD->CharacterOverlay->GrenadesText->SetText(FText::FromString(GrenadesText));
+	}
+	else
+	{
+		HUDGrenades = Grenades;
+	}
+}
+
 void AMainPlayerController::SetHUDTime() // HUD에 시간 띄우기
 {
 	float TimeLeft = 0.0f;
@@ -275,6 +293,13 @@ void AMainPlayerController::PollInit() // 체력, 점수, 승패 초기화
 				SetHUDHealth(HUDHealth, HUDMaxHealth);
 				SetHUDScore(HUDScore);
 				SetHUDDefeats(HUDDefeats);
+
+				// 수류탄 수 초기화
+				TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(GetPawn());
+				if (BaseCharacter.IsValid() && BaseCharacter->GetCombat())
+				{
+					SetHUDGrenades(BaseCharacter->GetCombat()->GetGrenades());
+				}
 			}
 		}
 	}

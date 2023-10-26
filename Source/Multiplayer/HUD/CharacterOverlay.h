@@ -34,4 +34,6 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* MatchCountdownText; // 남은 시간
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* GrenadesText; // 수류탄 수
 };

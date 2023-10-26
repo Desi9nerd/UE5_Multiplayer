@@ -22,6 +22,7 @@ public:
 	void SetHUDCarriedAmmo(int32 Ammo);// 최대 총알 수 띄우기
 	void SetHUDMatchCountdown(float CountdownTime); // 남은시간 띄우기
 	void SetHUDAnnouncementCountdown(float CountdownTime);
+	void SetHUDGrenades(int32 Grenades); // 수류탄 수 띄우기
 	virtual void OnPossess(APawn* InPawn) override; // possed된 Pawn에 접근하는 함수
 	virtual float GetServerTime(); // Synced된 Server world clock를 리턴하는 함수
 	virtual void ReceivedPlayer() override; // 가능한 빨리 server clock을 Sync
@@ -32,7 +33,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
-	void PollInit(); // 체력, 점수, 승패 초기화
+	void PollInit(); // 체력, 점수, 승패, 수류탄 초기화
 
 	//** Server와 Client 사이의 Sync Time
 	
@@ -84,4 +85,5 @@ private:
 	float HUDMaxHealth;
 	float HUDScore;
 	int32 HUDDefeats;
+	int32 HUDGrenades;
 };

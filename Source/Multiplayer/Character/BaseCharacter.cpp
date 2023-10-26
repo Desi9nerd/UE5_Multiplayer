@@ -358,9 +358,10 @@ void ABaseCharacter::GrenadeButtonPressed()
 	}
 }
 
-void ABaseCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
-                                   AController* InstigatorController, AActor* DamageCauser)
+void ABaseCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
+	if (bElimmed) return; // 예외 처리. 죽은 상태면 데미지X 
+
 	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth); // 체력 - 데미지
 
 	UpdateHUDHealth();

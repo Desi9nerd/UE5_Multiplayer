@@ -30,6 +30,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, bAiming);//replicated 되도록 bAiming을 등록
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly); //replicated 되도록 CarriedAmmo을 등록. CarriedAmmo를 가지고 있는 Client만 적용되기 때문에 COND_OwnerOnly 컨디션으로 설정한다. 이렇게 하면 Owning Client에만 적용이 되고 다른 Client들에게는 적용이 되지 않는다.
 	DOREPLIFETIME(UCombatComponent, CombatState); //replicated 되도록 CombatState을 등록
+	DOREPLIFETIME(UCombatComponent, Grenades); //replicated 되도록 Grenades을 등록
 }
 
 void UCombatComponent::BeginPlay()
@@ -329,6 +330,11 @@ void UCombatComponent::UpdateShotgunAmmoValues() // Shotgun 총알 업데이트
 	}
 }
 
+void UCombatComponent::OnRep_Grenades()
+{
+	UpdateHUDGrenades(); // 수류탄 수 HUD에 업데이트 하기
+}
+
 void UCombatComponent::OnRep_CombatState() // Client
 {
 	switch (CombatState)
@@ -375,6 +381,7 @@ void UCombatComponent::HandleReload()
 
 void UCombatComponent::ThrowGrenade() // Client
 {
+	if (Grenades == 0) return; // 예외처리. 수류탄 수가 0이면 던질 수 없으므로 리턴.
 	if (CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr) return;
 
 	CombatState = ECombatState::ECS_ThrowingGrenade;
@@ -384,20 +391,39 @@ void UCombatComponent::ThrowGrenade() // Client
 		AttachActorToLeftHand(EquippedWeapon); // 무기 왼손 소켓에 붙이기
 		ShowAttachedGrenade(true); // 수류탄 매쉬 보이게 하기
 	}
-	if (Character.IsValid() && Character->HasAuthority() == false)
+	if (Character.IsValid() && Character->HasAuthority() == false) // Client
 	{
 		ServerThrowGrenade(); // Client에서 몽타주가 재생된 걸 Server에 알림
+	}
+	if (Character.IsValid() && Character->HasAuthority()) // Server
+	{
+		Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades);
+		UpdateHUDGrenades();
 	}
 }
 
 void UCombatComponent::ServerThrowGrenade_Implementation() // Server
 {
+	if (Grenades == 0) return; // 예외처리. 수류탄 수가 0이면 던질 수 없으므로 리턴.
+
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character.IsValid())
 	{
 		Character->PlayThrowGrenadeMontage();
 		AttachActorToLeftHand(EquippedWeapon); // 무기 왼손 소켓에 붙이기
 		ShowAttachedGrenade(true); // 수류탄 매쉬 보이게 하기
+	}
+
+	Grenades = FMath::Clamp(Grenades - 1, 0, MaxGrenades); // 던진 후 수류탄 수 -1 해주기
+	UpdateHUDGrenades(); // 수류탄 수 HUD 업데이트
+}
+
+void UCombatComponent::UpdateHUDGrenades()
+{
+	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;
+	if (Controller.IsValid())
+	{
+		Controller->SetHUDGrenades(Grenades); // 현재 수류탄 수를 매개변수로 넘기고 HUD 업데이트
 	}
 }
 
