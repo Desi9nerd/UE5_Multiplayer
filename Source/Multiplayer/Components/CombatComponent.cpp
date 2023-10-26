@@ -12,6 +12,7 @@
 #include "TimerManager.h"
 #include "Sound/SoundCue.h"
 #include "Multiplayer/Character/BaseCharacterAnimInstance.h"
+#include "Multiplayer/Weapon/Projectile.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -374,7 +375,7 @@ void UCombatComponent::HandleReload()
 
 void UCombatComponent::ThrowGrenade() // Client
 {
-	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	if (CombatState != ECombatState::ECS_Unoccupied || EquippedWeapon == nullptr) return;
 
 	CombatState = ECombatState::ECS_ThrowingGrenade;
 	if (Character.IsValid())
@@ -411,6 +412,21 @@ void UCombatComponent::ShowAttachedGrenade(bool bShowGrenade)
 void UCombatComponent::LaunchGrenade()
 {
 	ShowAttachedGrenade(false); // 수류탄이 투척되면 캐릭터 손에 붙은 수류탄은 안 보이도록 꺼준다.
+
+	if (Character.IsValid() && Character->HasAuthority() && GrenadeClass && Character->GetAttachedGrenade()) // Server일 때만
+	{
+		const FVector StartingLocation = Character->GetAttachedGrenade()->GetComponentLocation(); // 캐릭터에 붙은 수류탄 위치
+		FVector ToTarget = HitTarget - StartingLocation; // Target을 향하는 벡터
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.Owner = Character.Get();
+		SpawnParams.Instigator = Character.Get(); // Projetile.h.cpp의 ExplodeDamage()에서 GetInstigator()를 한다. 여기서 Instigator를 설정하지 않으면 정보를 주지않아 문제가 된다.
+		TWeakObjectPtr<UWorld> World = GetWorld();
+
+		if (World.IsValid())
+		{
+			World->SpawnActor<AProjectile>(GrenadeClass, StartingLocation, ToTarget.Rotation(), SpawnParams);
+		}
+	}
 }
 
 void UCombatComponent::ThrowGrenadeFinished()
