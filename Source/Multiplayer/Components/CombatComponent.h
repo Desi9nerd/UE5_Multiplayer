@@ -36,6 +36,8 @@ public:
 	UFUNCTION(Server, Reliable) // Server RPC
 	void ServerLaunchGrenade(const FVector_NetQuantize& Target);
 
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount); // 무기 줍기
+
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
@@ -136,6 +138,8 @@ private:
 	void OnRep_CarriedAmmo();
 
 	TMap<EWeaponType, int32> CarriedAmmoMap; // 무기별 탄창 최대 총알 수 Map
+	UPROPERTY(EditAnywhere)
+	int32 MaxCarriedAmmo = 500; // 모든 무기의 최대 Ammo 개수
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo = 30; // 게임 시작 시 CarriedAmmo 기본값
 	UPROPERTY(EditAnywhere)

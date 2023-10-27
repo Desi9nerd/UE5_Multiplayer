@@ -33,6 +33,21 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME(UCombatComponent, Grenades); //replicated 되도록 Grenades을 등록
 }
 
+void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount) // 무기 줍기
+{
+	if (CarriedAmmoMap.Contains(WeaponType))
+	{
+		// 무기를 주으면 해당 종류의 무기의 Ammo에 주은 Ammo 개수를 더한다. 그 후 UpdateCarriedAmmo()로 업데이트 한다.
+		CarriedAmmoMap[WeaponType] = FMath::Clamp(CarriedAmmoMap[WeaponType] + AmmoAmount, 0, MaxCarriedAmmo);
+		UpdateCarriedAmmo();
+	}
+	if (EquippedWeapon && EquippedWeapon->IsEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
+	{
+		// 무기 장착이 안된 상태 && 해당 무기 총알이 없는 경우 && 주은 무기가 장착무기인 경우
+		Reload(); // 재장전
+	}
+}
+
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
