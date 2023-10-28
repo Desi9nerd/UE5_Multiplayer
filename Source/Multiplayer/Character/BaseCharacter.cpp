@@ -664,10 +664,13 @@ void ABaseCharacter::HideCameraIfCharacterClose()
 	}
 }
 
-void ABaseCharacter::OnRep_Health()
+void ABaseCharacter::OnRep_Health(float LastHealth) // 캐릭터 체력 변화
 {
 	UpdateHUDHealth();
-	PlayHitReactMontage();
+	if (Health < LastHealth) // 체력이 깎이는 상황이면
+	{
+		PlayHitReactMontage(); // 피격 몽타주 재생
+	}
 }
 
 void ABaseCharacter::UpdateHUDHealth()

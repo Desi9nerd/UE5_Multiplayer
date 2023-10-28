@@ -19,7 +19,11 @@ void AHealthPickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AA
 	TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(OtherActor);
 	if (BaseCharacter.IsValid())
 	{
-
+		TWeakObjectPtr<UBuffComponent> Buff = BaseCharacter->GetBuff();
+		if (Buff.IsValid())
+		{
+			Buff->Heal(HealAmount, HealingTime);
+		}
 	}
 
 	Destroy();

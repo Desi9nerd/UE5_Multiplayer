@@ -37,10 +37,10 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void ShowSniperScopeWidget(bool bShowScope);
 
+	void UpdateHUDHealth(); // 체력 Update
 
 protected:
 	virtual void BeginPlay() override;
-
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	void Turn(float Value);
@@ -61,7 +61,6 @@ protected:
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);// 피격 데미지
-	void UpdateHUDHealth(); // 체력 Update
 	void PollInit(); // HUD와 점수/승리횟수 매기기 관련 클래스 초기화
 	void RotateInPlace(float DeltaTime);
 
@@ -134,7 +133,7 @@ private:
 	float Health = 100.0f; 
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth); // 캐릭터 체력 변화
 	
 	UPROPERTY()
 	class AMainPlayerController* MainPlayerController;
@@ -196,9 +195,11 @@ public:
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
 	FORCEINLINE float GetHealth() const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
 	ECombatState GetCombatState() const;
 	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
 	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
 	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
 	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
+	FORCEINLINE UBuffComponent* GetBuff() const { return Buff; }
 };
