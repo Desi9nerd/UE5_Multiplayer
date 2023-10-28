@@ -115,6 +115,30 @@ void AMainPlayerController::SetHUDHealth(float Health, float MaxHealth)
 	}
 }
 
+void AMainPlayerController::SetHUDShield(float Shield, float MaxShield)
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+
+	bool bHUDValid = MainHUD &&
+		MainHUD->CharacterOverlay &&
+		MainHUD->CharacterOverlay->ShieldBar &&
+		MainHUD->CharacterOverlay->ShieldText;
+	if (bHUDValid)
+	{
+		const float ShieldPercent = Shield / MaxShield;
+		MainHUD->CharacterOverlay->ShieldBar->SetPercent(ShieldPercent);
+
+		FString ShieldText = FString::Printf(TEXT("%d/%d"), FMath::CeilToInt(Shield), FMath::CeilToInt(MaxShield));
+		MainHUD->CharacterOverlay->HealthText->SetText(FText::FromString(ShieldText));
+	}
+	else // HUD가 없다면
+	{
+		bInitializeCharacterOverlay = true;
+		HUDShield = Shield;
+		HUDMaxShield = MaxShield;
+	}
+}
+
 void AMainPlayerController::SetHUDScore(float Score) // 점수 매기기
 {
 	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
@@ -289,8 +313,9 @@ void AMainPlayerController::PollInit() // 체력, 점수, 승패 초기화
 			CharacterOverlay = MainHUD->CharacterOverlay;
 			if (IsValid(CharacterOverlay))
 			{
-				// 체력, 점수, 승패 초기화
+				// 체력, 실드, 점수, 승패 초기화
 				SetHUDHealth(HUDHealth, HUDMaxHealth);
+				SetHUDShield(HUDShield, HUDMaxShield);
 				SetHUDScore(HUDScore);
 				SetHUDDefeats(HUDDefeats);
 

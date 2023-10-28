@@ -20,6 +20,12 @@ public:
 	class UTextBlock* HealthText; // 체력 숫자
 
 	UPROPERTY(meta = (BindWidget))
+	UProgressBar* ShieldBar; // 실드 바
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ShieldText; // 실드 숫자
+
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ScoreAmount; // 점수
 
 	UPROPERTY(meta = (BindWidget))

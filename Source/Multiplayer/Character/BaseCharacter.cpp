@@ -72,6 +72,7 @@ void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLi
 	// Client들도 아래의 변수들을 알 수 있도록 Replicated 해준다. Server에 세팅하면 Client들도 알 수 있게 된다.
 	DOREPLIFETIME_CONDITION(ABaseCharacter, OverlappingWeapon, COND_OwnerOnly);//OwnerOnly: 해당 캐릭터를 가지고 있는 Client만 적용
 	DOREPLIFETIME(ABaseCharacter, Health);
+	DOREPLIFETIME(ABaseCharacter, Shield);
 	DOREPLIFETIME(ABaseCharacter, bDisableGameplay);
 }
 
@@ -677,12 +678,30 @@ void ABaseCharacter::OnRep_Health(float LastHealth) // 캐릭터 체력 변화
 	}
 }
 
+void ABaseCharacter::OnRep_Shield(float LastShield) // 캐릭터 실드 변화
+{
+	UpdateHUDShield();
+	if (Shield < LastShield) // 실드가 깎이는 상황이면
+	{
+		PlayHitReactMontage(); // 피격 몽타주 재생
+	}
+}
+
 void ABaseCharacter::UpdateHUDHealth()
 {
 	MainPlayerController = MainPlayerController == nullptr ? Cast<AMainPlayerController>(Controller) : MainPlayerController;
 	if (IsValid(MainPlayerController))
 	{
 		MainPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
+}
+
+void ABaseCharacter::UpdateHUDShield()
+{
+	MainPlayerController = MainPlayerController == nullptr ? Cast<AMainPlayerController>(Controller) : MainPlayerController;
+	if (IsValid(MainPlayerController))
+	{
+		MainPlayerController->SetHUDShield(Shield, MaxShield);
 	}
 }
 

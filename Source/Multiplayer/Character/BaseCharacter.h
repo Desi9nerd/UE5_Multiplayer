@@ -38,6 +38,7 @@ public:
 	void ShowSniperScopeWidget(bool bShowScope);
 
 	void UpdateHUDHealth(); // 체력 Update
+	void UpdateHUDShield(); // 실드 Update
 
 protected:
 	virtual void BeginPlay() override;
@@ -127,14 +128,20 @@ private:
 	//** 체력 Health
 	UPROPERTY(EditAnywhere, Category = "Player Attributes")
 	float MaxHealth = 100.0f;
-
 	//ReplicatedUsing으로 사용하려면 GetLifetimeReplicatedProps에 등록해야 한다. 
-	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Attribute")
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Attributes")
 	float Health = 100.0f; 
-
 	UFUNCTION()
 	void OnRep_Health(float LastHealth); // 캐릭터 체력 변화
-	
+
+	//** 실드 Shield
+	UPROPERTY(EditAnywhere, Category = "Player Attributes")
+	float MaxShield = 100.0f;
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Attributes")
+	float Shield = 100.0f;
+	UFUNCTION()
+	void OnRep_Shield(float LastShield);
+
 	UPROPERTY()
 	class AMainPlayerController* MainPlayerController;
 
