@@ -1,5 +1,6 @@
 #include "BuffComponent.h"
 #include "Multiplayer/Character/BaseCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UBuffComponent::UBuffComponent()
 {
@@ -41,4 +42,40 @@ void UBuffComponent::HealRampUp(float DeltaTime)
 		bHealing = false;
 		AmountToHeal = 0.0f;
 	}
+}
+
+void UBuffComponent::SetInitialSpeeds(float BaseSpeed, float CrouchSpeed)
+{
+	InitialBaseSpeed = BaseSpeed;
+	InitialCrouchSpeed = CrouchSpeed;
+}
+
+void UBuffComponent::BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffTime)
+{
+	if (Character == nullptr) return;
+
+	// Speed Buff 지속시간 설정.
+	Character->GetWorldTimerManager().SetTimer(SpeedBuffTimer, this, &UBuffComponent::ResetSpeeds, BuffTime);
+
+	if (Character->GetCharacterMovement())
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = BuffBaseSpeed; // 걷기 최대속도 BuffBaseSpeed로 변경
+		Character->GetCharacterMovement()->MaxWalkSpeedCrouched = BuffCrouchSpeed;
+	}
+	MulticastSpeedBuff(BuffBaseSpeed, BuffCrouchSpeed); // Client에 알려줌
+}
+
+void UBuffComponent::ResetSpeeds() // Speed를 원래대로 되돌리는 함수
+{
+	if (Character == nullptr || Character->GetCharacterMovement() == nullptr) return;
+
+	Character->GetCharacterMovement()->MaxWalkSpeed = InitialBaseSpeed;
+	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = InitialCrouchSpeed;
+	MulticastSpeedBuff(InitialBaseSpeed, InitialCrouchSpeed); // Client에 알려줌
+}
+
+void UBuffComponent::MulticastSpeedBuff_Implementation(float BaseSpeed, float CrouchSpeed) // Client RPC
+{
+	Character->GetCharacterMovement()->MaxWalkSpeed = BaseSpeed;
+	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchSpeed;
 }

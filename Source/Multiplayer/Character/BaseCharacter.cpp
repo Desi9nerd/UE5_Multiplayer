@@ -271,6 +271,9 @@ void ABaseCharacter::PostInitializeComponents()
 	if (IsValid(Buff))
 	{
 		Buff->Character = this;
+		Buff->SetInitialSpeeds(
+			GetCharacterMovement()->MaxWalkSpeed,
+			GetCharacterMovement()->MaxWalkSpeedCrouched);
 	}
 }
 
