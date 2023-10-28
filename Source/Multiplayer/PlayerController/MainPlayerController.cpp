@@ -109,7 +109,7 @@ void AMainPlayerController::SetHUDHealth(float Health, float MaxHealth)
 	}
 	else // HUD가 없다면
 	{	
-		bInitializeCharacterOverlay = true;
+		bInitializeHealth = true;
 		HUDHealth = Health;
 		HUDMaxHealth = MaxHealth;
 	}
@@ -133,7 +133,7 @@ void AMainPlayerController::SetHUDShield(float Shield, float MaxShield)
 	}
 	else // HUD가 없다면
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeShield = true;
 		HUDShield = Shield;
 		HUDMaxShield = MaxShield;
 	}
@@ -153,7 +153,7 @@ void AMainPlayerController::SetHUDScore(float Score) // 점수 매기기
 	}
 	else // HUD가 없다면
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeScore = true;
 		HUDScore = Score;
 	}
 }
@@ -172,7 +172,7 @@ void AMainPlayerController::SetHUDDefeats(int32 Defeats) // 승리횟수 매기�
 	}
 	else // HUD가 없다면
 	{
-		bInitializeCharacterOverlay = true;
+		bInitializeDefeats = true;
 		HUDDefeats = Defeats;
 	}
 }
@@ -265,6 +265,7 @@ void AMainPlayerController::SetHUDGrenades(int32 Grenades)
 	}
 	else
 	{
+		bInitializeGrenades = true;
 		HUDGrenades = Grenades;
 	}
 }
@@ -314,16 +315,16 @@ void AMainPlayerController::PollInit() // 체력, 점수, 승패 초기화
 			if (IsValid(CharacterOverlay))
 			{
 				// 체력, 실드, 점수, 승패 초기화
-				SetHUDHealth(HUDHealth, HUDMaxHealth);
-				SetHUDShield(HUDShield, HUDMaxShield);
-				SetHUDScore(HUDScore);
-				SetHUDDefeats(HUDDefeats);
+				if (bInitializeHealth)	SetHUDHealth(HUDHealth, HUDMaxHealth);
+				if (bInitializeShield)	SetHUDShield(HUDShield, HUDMaxShield);
+				if (bInitializeScore)	SetHUDScore(HUDScore);
+				if (bInitializeDefeats)	SetHUDDefeats(HUDDefeats);
 
 				// 수류탄 수 초기화
 				TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(GetPawn());
 				if (BaseCharacter.IsValid() && BaseCharacter->GetCombat())
 				{
-					SetHUDGrenades(BaseCharacter->GetCombat()->GetGrenades());
+					if (bInitializeGrenades) SetHUDGrenades(BaseCharacter->GetCombat()->GetGrenades());
 				}
 			}
 		}

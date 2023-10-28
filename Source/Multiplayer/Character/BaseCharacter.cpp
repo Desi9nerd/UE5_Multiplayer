@@ -196,6 +196,7 @@ void ABaseCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	UpdateHUDHealth();
+	UpdateHUDShield();
 
 	if (HasAuthority())
 	{
@@ -375,9 +376,25 @@ void ABaseCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDa
 {
 	if (bElimmed) return; // 예외 처리. 죽은 상태면 데미지X 
 
-	Health = FMath::Clamp(Health - Damage, 0.0f, MaxHealth); // 체력 - 데미지
+	float DamageToHealth = Damage;
+	if (Shield > 0.0f) // 실드가 0이상이면 체력을 깍기 전에 실드를 먼저 깐다. 
+	{
+		if (Shield >= Damage)
+		{
+			Shield = FMath::Clamp(Shield - Damage, 0.0f, MaxShield);
+			DamageToHealth = 0.0f;
+		}
+		else // 데미지가 남은 실드수치 보다 높은 경우
+		{
+			Shield = 0.0f;
+			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.0f, Damage); // 실드를 깍고 남은 데미지
+		}
+	}
+
+	Health = FMath::Clamp(Health - DamageToHealth, 0.0f, MaxHealth); // 체력 - 데미지
 
 	UpdateHUDHealth();
+	UpdateHUDShield();
 	PlayHitReactMontage();
 
 	if (Health == 0.0f)
