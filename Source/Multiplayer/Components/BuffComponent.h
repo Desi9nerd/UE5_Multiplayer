@@ -16,8 +16,10 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void Heal(float HealAmount, float HealingTime);
-	void SetInitialSpeeds(float BaseSpeed, float CrouchSpeed); // Speed 초기값 
+	void SetInitialSpeeds(float BaseSpeed, float CrouchSpeed); // Speed 초기값
+	void SetInitialJumpVelocity(float Velocity); // Jump속도 초기값
 	void BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffTime); // Speed Buff 적용
+	void BuffJump(float BuffJumpVelocity, float BuffTime);  // Jump Buff 적용
 
 protected:
 	virtual void BeginPlay() override;
@@ -38,5 +40,12 @@ private:
 	float InitialCrouchSpeed;
 	UFUNCTION(NetMulticast, Reliable) // Client RPC
 	void MulticastSpeedBuff(float BaseSpeed, float CrouchSpeed); // Speed 변경을 알라주는 함수
+
+	//** Jump Buff
+	FTimerHandle JumpBuffTimer;
+	void ResetJump(); // Jump속도값을 원래대로 되돌리는 함수
+	float InitialJumpVelocity;
+	UFUNCTION(NetMulticast, Reliable) // Client RPC
+	void MulticastJumpBuff(float JumpVelocity);// Jump속도값 변경을 알라주는 함수
 
 };
