@@ -16,6 +16,7 @@ public:
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void Heal(float HealAmount, float HealingTime);
+	void ReplenishShield(float ShieldAmount, float ReplenishTime);
 	void SetInitialSpeeds(float BaseSpeed, float CrouchSpeed); // Speed 초기값
 	void SetInitialJumpVelocity(float Velocity); // Jump속도 초기값
 	void BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffTime); // Speed Buff 적용
@@ -24,13 +25,14 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	void HealRampUp(float DeltaTime);
+	void ShieldRampUp(float DeltaTime);
 
 private:
 	TWeakObjectPtr<class ABaseCharacter> Character;
 
 	//** Health Buff
 	bool bHealing = false; // 회복 true/false
-	float HealingRate = 0; // 회복되는 속도
+	float HealingRate = 0.0f; // 회복되는 속도
 	float AmountToHeal = 0.0f; // 체력 회복수치
 
 	//** Speed Buff
@@ -47,5 +49,10 @@ private:
 	float InitialJumpVelocity;
 	UFUNCTION(NetMulticast, Reliable) // Client RPC
 	void MulticastJumpBuff(float JumpVelocity);// Jump속도값 변경을 알라주는 함수
+
+	//** Shield Buff
+	bool bReplenishingShield = false;
+	float ShieldReplenishRate = 0.0f; // Shield 채우기 속도
+	float ShieldReplenishAmount = 0.0f; // Shield 채우는 정도
 
 };
