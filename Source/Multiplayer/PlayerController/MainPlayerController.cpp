@@ -189,6 +189,11 @@ void AMainPlayerController::SetHUDWeaponAmmo(int32 Ammo)
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo); // int인 Ammo 값을 FString으로 변환 후 AmmoText 변수에 담음
 		MainHUD->CharacterOverlay->WeaponAmmoAmount->SetText(FText::FromString(AmmoText));
 	}
+	else
+	{
+		bInitializeWeaponAmmo = true;
+		HUDWeaponAmmo = Ammo;
+	}
 }
 
 void AMainPlayerController::SetHUDCarriedAmmo(int32 Ammo)
@@ -202,6 +207,11 @@ void AMainPlayerController::SetHUDCarriedAmmo(int32 Ammo)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		MainHUD->CharacterOverlay->CarriedAmmoAmount->SetText(FText::FromString(AmmoText));
+	}
+	else
+	{
+		bInitializeCarriedAmmo = true;
+		HUDCarriedAmmo = Ammo;
 	}
 }
 
@@ -314,11 +324,13 @@ void AMainPlayerController::PollInit() // 체력, 점수, 승패 초기화
 			CharacterOverlay = MainHUD->CharacterOverlay;
 			if (IsValid(CharacterOverlay))
 			{
-				// 체력, 실드, 점수, 승패 초기화
+				// 체력, 실드, 점수, 승패, 소유한 탄창, 장착무기 총알 초기화
 				if (bInitializeHealth)	SetHUDHealth(HUDHealth, HUDMaxHealth);
 				if (bInitializeShield)	SetHUDShield(HUDShield, HUDMaxShield);
 				if (bInitializeScore)	SetHUDScore(HUDScore);
 				if (bInitializeDefeats)	SetHUDDefeats(HUDDefeats);
+				if (bInitializeCarriedAmmo) SetHUDCarriedAmmo(HUDCarriedAmmo);
+				if (bInitializeWeaponAmmo) SetHUDWeaponAmmo(HUDWeaponAmmo);
 
 				// 수류탄 수 초기화
 				TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(GetPawn());

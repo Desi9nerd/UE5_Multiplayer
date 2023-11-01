@@ -86,9 +86,18 @@ void ABaseCharacter::OnRep_ReplicatedMovement()
 
 void ABaseCharacter::Elim() // Server Only
 {
-	if (Combat && Combat->EquippedWeapon)
+	if (Combat && Combat->EquippedWeapon) // 장착된 무기가 있으면
 	{
-		Combat->EquippedWeapon->Dropped();
+		Combat->EquippedWeapon->Dropped(); 
+
+		if (Combat->EquippedWeapon->bDestroyWeapon) 
+		{
+			Combat->EquippedWeapon->Destroy(); // 시작 시 가지고 있던 기본무기를 소멸시킴. 시작무기는 바닥에 떨어뜨리지 않고 소멸시킴.
+		}
+		else
+		{
+			Combat->EquippedWeapon->Dropped(); 
+		}
 	}
 
 	MulticastElim();
@@ -195,6 +204,8 @@ void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SpawnDefaultWeapon();
+	UpdateHUDAmmo();
 	UpdateHUDHealth();
 	UpdateHUDShield();
 
@@ -719,6 +730,32 @@ void ABaseCharacter::UpdateHUDShield()
 	if (IsValid(MainPlayerController))
 	{
 		MainPlayerController->SetHUDShield(Shield, MaxShield);
+	}
+}
+
+void ABaseCharacter::UpdateHUDAmmo()
+{
+	MainPlayerController = MainPlayerController == nullptr ? Cast<AMainPlayerController>(Controller) : MainPlayerController;
+	if (IsValid(MainPlayerController) && IsValid(Combat) && Combat->EquippedWeapon)
+	{
+		MainPlayerController->SetHUDCarriedAmmo(Combat->CarriedAmmo); // 가진 탄창 HUD 업데이트
+		MainPlayerController->SetHUDWeaponAmmo(Combat->EquippedWeapon->GetAmmo()); // 장착무기에 장전된 총알 HUD 업데이ㅡ
+	}
+}
+
+void ABaseCharacter::SpawnDefaultWeapon() // 게임시작 시 기본무기 생성
+{
+	TWeakObjectPtr<AMultiplayerGameMode> MultiplayerGameMode = Cast<AMultiplayerGameMode>(UGameplayStatics::GetGameMode(this));
+	TWeakObjectPtr<UWorld> World = GetWorld();
+
+	if (MultiplayerGameMode.IsValid() && World.IsValid() && bElimmed == false && IsValid(DefaultWeaponClass))
+	{
+		TWeakObjectPtr<AWeapon> StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		StartingWeapon->bDestroyWeapon = true; // 기본무기 생성 true. 캐릭터가 죽으면(=Elim) 해당 무기 소멸.
+		if (IsValid(Combat))
+		{
+			Combat->EquipWeapon(StartingWeapon.Get());
+		}
 	}
 }
 

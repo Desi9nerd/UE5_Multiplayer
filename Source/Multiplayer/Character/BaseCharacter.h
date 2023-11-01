@@ -39,6 +39,8 @@ public:
 
 	void UpdateHUDHealth(); // 체력 Update
 	void UpdateHUDShield(); // 실드 Update
+	void UpdateHUDAmmo();	// 총알 Update
+	void SpawnDefaultWeapon(); // 게임시작 시 기본무기 Spawn
 
 protected:
 	virtual void BeginPlay() override;
@@ -186,6 +188,10 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* AttachedGrenade; // 수류탄 매쉬
+
+	//** 게임시작 시 지급되는 기본 무기
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
