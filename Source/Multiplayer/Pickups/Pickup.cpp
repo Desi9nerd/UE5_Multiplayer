@@ -38,13 +38,19 @@ void APickup::BeginPlay()
 
 	if (HasAuthority()) // Server
 	{
-		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap); // Delegate 등록
+		// 같은 위치에서 계속 서있어도 계속해서 Spawn되도록 아래와 같이 수정.
+		GetWorldTimerManager().SetTimer(BindOverlapTimer,this, &APickup::BindOverlapTimerFinished, BindOverlapTime); 
 	}
 }
 
 void APickup::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
+}
+
+void APickup::BindOverlapTimerFinished()
+{
+	OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap); // Delegate 등록
 }
 
 void APickup::Tick(float DeltaTime)
