@@ -180,12 +180,12 @@ void AWeapon::OnEquippedSecondary() // Secondary 무기로 장착된 상태
 		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	}
 	//** Secondary 무기에는 윤곽선 효과 적용. 테스트 후 원하지 않을시 삭제해도됨
-	EnableCustomDepth(true);
-	if (IsValid(WeaponMesh))
-	{
-		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
-		WeaponMesh->MarkRenderStateDirty();
-	}	
+	//EnableCustomDepth(true);
+	//if (IsValid(WeaponMesh))
+	//{
+	//	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+	//	WeaponMesh->MarkRenderStateDirty();
+	//}	
 }
 
 void AWeapon::SetHUDAmmo()
