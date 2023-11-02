@@ -90,28 +90,11 @@ void ABaseCharacter::OnRep_ReplicatedMovement()
 
 void ABaseCharacter::Elim() // Server Only
 {
-	if (Combat && Combat->EquippedWeapon) // 장착된 무기가 있으면
-	{
-		Combat->EquippedWeapon->Dropped(); 
-
-		if (Combat->EquippedWeapon->bDestroyWeapon) 
-		{
-			Combat->EquippedWeapon->Destroy(); // 시작 시 가지고 있던 기본무기를 소멸시킴. 시작무기는 바닥에 떨어뜨리지 않고 소멸시킴.
-		}
-		else
-		{
-			Combat->EquippedWeapon->Dropped(); 
-		}
-	}
+	DropOrDestroyWeapons(); // 장착된 무기와 Secondary 무기를 떨어뜨리거나 소멸시킴
 
 	MulticastElim();
 
-	GetWorldTimerManager().SetTimer(
-		ElimTimer,
-		this,
-		&ABaseCharacter::ElimTimerFinished,
-		ElimDelay
-	); // SetTimer 후 ElimTimerFinished() 함수 호출
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABaseCharacter::ElimTimerFinished, ElimDelay); // SetTimer 후 ElimTimerFinished() 함수 호출
 }
 
 void ABaseCharacter::MulticastElim_Implementation() // RPC
@@ -184,6 +167,35 @@ void ABaseCharacter::ElimTimerFinished()
 	if (MultiplayerGameMode.IsValid())
 	{
 		MultiplayerGameMode->RequestRespawn(this, Controller); // 리스폰
+	}
+}
+
+void ABaseCharacter::DropOrDestroyWeapon(AWeapon* Weapon) // 무기를 떨어뜨리거나 소멸시킴
+{
+	if (Weapon == nullptr) return;
+
+	if (Weapon->bDestroyWeapon)
+	{
+		Weapon->Destroy(); // 무기 소멸
+	}
+	else
+	{
+		Weapon->Dropped(); // 무기 떨어뜨리기
+	}
+}
+
+void ABaseCharacter::DropOrDestroyWeapons() // 장착된 무기와 Secondary 무기를 떨어뜨리거나 소멸시킴
+{
+	if (IsValid(Combat))
+	{
+		if (Combat->EquippedWeapon) // 장착된 무기가 있으면
+		{
+			DropOrDestroyWeapon(Combat->EquippedWeapon); // 장착된 무기를 떨어뜨리거나 소멸시킴
+		}
+		if (Combat->SecondaryWeapon) // Secondary 무기가 있으면
+		{
+			DropOrDestroyWeapon(Combat->SecondaryWeapon); // Secondary 무기를 떨어뜨리거나 소멸시킴
+		}
 	}
 }
 

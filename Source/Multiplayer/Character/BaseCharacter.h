@@ -8,6 +8,8 @@
 #include "Multiplayer/EnumTypes/ECombatState.h"
 #include "BaseCharacter.generated.h"
 
+class AWeapon;
+
 UCLASS()
 class MULTIPLAYER_API ABaseCharacter
 	: public ACharacter, public IICrosshair
@@ -61,7 +63,9 @@ protected:
 	void FireButtonReleased();
 	void PlayHitReactMontage();
 	void GrenadeButtonPressed();
-	
+	void DropOrDestroyWeapon(AWeapon* Weapon);
+	void DropOrDestroyWeapons();
+
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);// 피격 데미지
 	void PollInit(); // HUD와 점수/승리횟수 매기기 관련 클래스 초기화
