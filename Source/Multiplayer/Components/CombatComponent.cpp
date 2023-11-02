@@ -267,9 +267,36 @@ void UCombatComponent::AttachActorToBackpack(AActor* ActorToAttach)
 	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
 
 	const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));
-	if (IsValid(BackpackSocket))
+	const USkeletalMeshSocket* RifleSocket = Character->GetMesh()->GetSocketByName(FName("Rifle_AR4_Holster"));
+	const USkeletalMeshSocket* RocketLauncherSocket = Character->GetMesh()->GetSocketByName(FName("Rifle_AK47_Holster"));
+
+	AWeapon* WeaponToEquipAtBack = Cast<AWeapon>(ActorToAttach);
+	if(IsValid(WeaponToEquipAtBack))
 	{
-		BackpackSocket->AttachActor(ActorToAttach, Character->GetMesh()); // AcotrToAttach(=무기)를 해당 소켓에 붙여준다.
+		switch (WeaponToEquipAtBack->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			RifleSocket->AttachActor(ActorToAttach, Character->GetMesh()); // AcotrToAttach(=무기)를 해당 소켓에 붙여준다.
+			break;
+		case EWeaponType::EWT_RocketLauncher:
+			RocketLauncherSocket->AttachActor(ActorToAttach, Character->GetMesh());
+			break;
+		case EWeaponType::EWT_Pistol:
+			RifleSocket->AttachActor(ActorToAttach, Character->GetMesh());
+			break;
+		case EWeaponType::EWT_SubmachineGun:
+			RifleSocket->AttachActor(ActorToAttach, Character->GetMesh());
+			break;
+		case EWeaponType::EWT_Shotgun:
+			RocketLauncherSocket->AttachActor(ActorToAttach, Character->GetMesh());
+			break;
+		case EWeaponType::EWT_SniperRifle:
+			RocketLauncherSocket->AttachActor(ActorToAttach, Character->GetMesh());
+			break;
+		case EWeaponType::EWT_GrenadeLauncher:
+			RifleSocket->AttachActor(ActorToAttach, Character->GetMesh());
+			break;
+		}
 	}
 }
 
