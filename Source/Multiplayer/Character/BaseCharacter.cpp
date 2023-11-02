@@ -26,6 +26,10 @@ ABaseCharacter::ABaseCharacter()
 
 	SpawnCollisionHandlingMethod = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;// 스폰 시 위치가 겹쳐있으면 겹치지않게 조금 이동하여 스폰 시킨다.
 
+	Backpack = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BackpactMesh"));
+	Backpack->SetupAttachment(GetMesh(), FName("BackpackSocket"));
+	Backpack->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	CameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraSpringArm"));
 	CameraSpringArm->SetupAttachment(GetMesh());//Mesh 아래 항목으로 붙인다.
 	CameraSpringArm->TargetArmLength = 600.0f;
