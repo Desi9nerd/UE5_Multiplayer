@@ -85,7 +85,7 @@ void AWeapon::BeginPlay()
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	//ABaseCharacter* BaseCharacter = Cast<ABaseCharacter>(OtherActor);
 	TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(OtherActor);
@@ -108,70 +108,84 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 void AWeapon::SetWeaponState(EWeaponState State)
 {
 	WeaponState = State; //무기상태 변경
+	OnWeaponStateSet();
 
+}
+
+void AWeapon::OnWeaponStateSet()
+{
 	switch (WeaponState)
 	{
-	case EWeaponState::EWS_Equipped: //무기 장착상태 시
-		ShowPickupWidget(false); //PickupWidget 꺼줌
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision); // AreaSphere 충돌X
-		WeaponMesh->SetSimulatePhysics(false);
-		WeaponMesh->SetEnableGravity(false);
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);// WeaponMesh. 충돌X.
-		if (WeaponType == EWeaponType::EWT_SubmachineGun)
-		{
-			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 끈 부분 Physics 적용
-			WeaponMesh->SetEnableGravity(true); // 중력을 켜준다.
-			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		}
+	case EWeaponState::EWS_Equipped: // Primary 무기로 장착된 상태
+		OnEquipped();
 		break;
-	case EWeaponState::EWS_Dropped: // 무기가 떨어져 있을 시
-		if (HasAuthority())
-		{
-			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // AreaSphere 충돌O
-		}
-		WeaponMesh->SetSimulatePhysics(true); // 물리법칙O, 만약 false면 Gravity와 같은 물리법칙들이 적용X
-		WeaponMesh->SetEnableGravity(true); // 중력O
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 충돌O
-		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
-		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-		// Custom Depth 적용O
-		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
-		WeaponMesh->MarkRenderStateDirty();
-		EnableCustomDepth(true);
+	case EWeaponState::EWS_EquippedSecondary: // Secondary 무기로 장착된 상태
+		OnEquippedSecondary();
 		break;
-	}	
+	case EWeaponState::EWS_Dropped: // 무기가 바닥에 떨어져 있는 상태
+		OnDropped();
+		break;
+	}
 }
 
 void AWeapon::OnRep_WeaponState()
 {
-	switch (WeaponState)
+	OnWeaponStateSet();
+}
+
+void AWeapon::OnEquipped() //무기 장착상태
+{
+	ShowPickupWidget(false); // PickupWidget 꺼줌
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision); // AreaSphere 충돌X
+	WeaponMesh->SetSimulatePhysics(false);
+	WeaponMesh->SetEnableGravity(false);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);// WeaponMesh. 충돌X.
+	if (WeaponType == EWeaponType::EWT_SubmachineGun)
 	{
-	case EWeaponState::EWS_Equipped: //무기 장착상태 시
-		ShowPickupWidget(false); //PickupWidget 꺼줌
-		WeaponMesh->SetSimulatePhysics(false);
-		WeaponMesh->SetEnableGravity(false);
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 충돌X
-		if (WeaponType == EWeaponType::EWT_SubmachineGun)
-		{
-			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 끈 부분 Physics 적용
-			WeaponMesh->SetEnableGravity(true); // 중력을 켜준다.
-			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		}
-		break;
-	case EWeaponState::EWS_Dropped: // 무기가 떨어져 있을 시
-		WeaponMesh->SetSimulatePhysics(true); // 물리법칙O, 만약 false면 Gravity와 같은 물리법칙들이 적용X
-		WeaponMesh->SetEnableGravity(true); // 중력O
-		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 충돌O
-		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
-		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
-		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-		// Custom Depth 적용O
-		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
-		WeaponMesh->MarkRenderStateDirty();
-		EnableCustomDepth(true);
-		break;
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 끈 부분 Physics 적용
+		WeaponMesh->SetEnableGravity(true); // 중력을 켜준다.
+		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	}
+}
+
+void AWeapon::OnDropped() // 무기가 바닥에 떨어져 있는 상태
+{
+	if (HasAuthority()) // Server
+	{	
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // AreaSphere 충돌O
+	}
+	WeaponMesh->SetSimulatePhysics(true); // 물리법칙O, 만약 false면 Gravity와 같은 물리법칙들이 적용X
+	WeaponMesh->SetEnableGravity(true); // 중력O
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 충돌O
+	WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	//** Custom Depth 적용O
+	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
+	WeaponMesh->MarkRenderStateDirty();
+	EnableCustomDepth(true);
+}
+
+void AWeapon::OnEquippedSecondary() // Secondary 무기로 장착된 상태
+{
+	ShowPickupWidget(false);
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetSimulatePhysics(false);
+	WeaponMesh->SetEnableGravity(false);
+	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	if (WeaponType == EWeaponType::EWT_SubmachineGun)
+	{
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics); // 끈 부분 Physics 적용
+		WeaponMesh->SetEnableGravity(true); // 중력을 켜준다.
+		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	}
+	//** Secondary 무기에는 윤곽선 효과 적용. 테스트 후 원하지 않을시 삭제해도됨
+	EnableCustomDepth(true);
+	if (IsValid(WeaponMesh))
+	{
+		WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+		WeaponMesh->MarkRenderStateDirty();
+	}	
 }
 
 void AWeapon::SetHUDAmmo()

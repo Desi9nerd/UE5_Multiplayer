@@ -482,12 +482,20 @@ void ABaseCharacter::EquipButtonPressed()
 	}
 }
 
-void ABaseCharacter::ServerEquipButtonPressed_Implementation()
+void ABaseCharacter::ServerEquipButtonPressed_Implementation() // E 버튼을 누렀을 때 함수
 {
 	// 서버를 통해 무기 장착하는 경우
 	if (IsValid(Combat))
 	{
-		Combat->EquipWeapon(OverlappingWeapon);//무기를 줍고 캐릭터에 장착시킨다
+		if (IsValid(OverlappingWeapon)) // (AreaSphere에 겹치는)무기가 있다면
+		{
+			Combat->EquipWeapon(OverlappingWeapon); //무기를 줍고 캐릭터에 장착시킨다
+		}
+		// 무기가 겹치는 상태가 아닌데 Primary와 Secondary 무기 모두 있는 경우
+		else if (Combat->ShouldSwapWeapons()) 
+		{
+			Combat->SwapWeapons(); // Primary 무기와 Secondary 무기를 교체한다
+		}
 	}
 }
 

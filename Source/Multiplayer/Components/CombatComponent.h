@@ -19,6 +19,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void SwapWeapons(); // 무기 교체
 	void FireButtonPressed(bool bPressed); // 총 발사 버튼 Pressed
 	void Reload();
 
@@ -189,5 +190,6 @@ private:
 	void UpdateHUDGrenades();
 
 public:
+	bool ShouldSwapWeapons() { return (EquippedWeapon != nullptr && SecondaryWeapon != nullptr); };
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 };
