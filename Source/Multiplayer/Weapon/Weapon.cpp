@@ -123,7 +123,6 @@ void AWeapon::SetWeaponState(EWeaponState State)
 			WeaponMesh->SetEnableGravity(true); // 중력을 켜준다.
 			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		}
-		EnableCustomDepth(false); // Custom Depth 적용X
 		break;
 	case EWeaponState::EWS_Dropped: // 무기가 떨어져 있을 시
 		if (HasAuthority())
@@ -159,7 +158,6 @@ void AWeapon::OnRep_WeaponState()
 			WeaponMesh->SetEnableGravity(true); // 중력을 켜준다.
 			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		}
-		EnableCustomDepth(false); // Custom Depth 적용X
 		break;
 	case EWeaponState::EWS_Dropped: // 무기가 떨어져 있을 시
 		WeaponMesh->SetSimulatePhysics(true); // 물리법칙O, 만약 false면 Gravity와 같은 물리법칙들이 적용X
@@ -218,7 +216,12 @@ void AWeapon::OnRep_Owner() // Client
 	}
 	else
 	{
-		SetHUDAmmo(); // HUD에 총알(Ammo) 수 업데이트
+		BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(Owner) : BaseCharcterOwnerCharacter;
+		// BaseCharcterOwnerCharacter와 장착된 무기가 있고 장착된 무기가 현재무기(=this)라면 
+		if (BaseCharcterOwnerCharacter && BaseCharcterOwnerCharacter->GetEquippedWeapon() && BaseCharcterOwnerCharacter->GetEquippedWeapon() == this)
+		{
+			SetHUDAmmo(); // HUD에 총알(Ammo) 수 업데이트
+		}
 	}
 }
 

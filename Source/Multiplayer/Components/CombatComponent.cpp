@@ -27,6 +27,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);//replicated된 EquippedWeapon. EquippedWeapon이 변경되면 모든 client에 반영된다.
+	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);//replicated 되도록 bAiming을 등록
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly); //replicated 되도록 CarriedAmmo을 등록. CarriedAmmo를 가지고 있는 Client만 적용되기 때문에 COND_OwnerOnly 컨디션으로 설정한다. 이렇게 하면 Owning Client에만 적용이 되고 다른 Client들에게는 적용이 되지 않는다.
 	DOREPLIFETIME(UCombatComponent, CombatState); //replicated 되도록 CombatState을 등록
@@ -167,6 +168,23 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip) // Server
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 
+	// Primary 무기는 있고, Secondary 무기는 없는 경우
+	if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr) 
+	{	
+		EquipSecondaryWeapon(WeaponToEquip); // Secondary 무기 장착
+	}
+	else // Primary 무기가 없는 경우
+	{	
+		EquipPrimaryWeapon(WeaponToEquip); // Primary 무기 장착
+	}
+
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
+	Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
+}
+
+void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
+{
+	if (WeaponToEquip == nullptr) return;
 
 	DropEquippedWeapon(); // 무기를 장착중이면 장착중인 무기 떨어뜨리기
 	EquippedWeapon = WeaponToEquip; // WeaponToEquip를 현재 장착무기로 설정
@@ -177,11 +195,31 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip) // Server
 	EquippedWeapon->SetHUDAmmo(); // HUD에 총알 수 업데이트
 
 	UpdateCarriedAmmo(); // 현재 장착무기 탄창의 최대 총알 수 업데이트
-	PlayEquipWeaponSound(); // 무기 장착 사운드 재생
-	ReloadEmptyWeapon(); // 총알이 비었는지 확인하고 만약 비었을 시 재장전	
+	PlayEquipWeaponSound(WeaponToEquip); // 무기 장착 사운드 재생
+	ReloadEmptyWeapon(); // 총알이 비었는지 확인하고 만약 비었을 시 재장전
+	EquippedWeapon->EnableCustomDepth(false); // Primary 무기의 윤곽선 효과 false
+}
 
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
-	Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
+void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
+{
+	if (WeaponToEquip == nullptr) return;
+
+	SecondaryWeapon = WeaponToEquip;
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+	AttachActorToBackpack(WeaponToEquip); // 무기를 배낭위치에 붙인다.
+	PlayEquipWeaponSound(WeaponToEquip); // 무기 장착 사운드 재생
+
+	//** Secondary 무기에는 윤곽선 효과 적용. 테스트 후 원하지 않을시 삭제해도됨
+	if (SecondaryWeapon->GetWeaponMesh())
+	{
+		SecondaryWeapon->GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+		SecondaryWeapon->GetWeaponMesh()->MarkRenderStateDirty();
+	}
+
+
+	if (EquippedWeapon == nullptr) return;
+
+	EquippedWeapon->SetOwner(Character.Get());
 }
 
 void UCombatComponent::DropEquippedWeapon() // 장착중인 무기 떨어뜨리기 함수
@@ -219,6 +257,17 @@ void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
 	}
 }
 
+void UCombatComponent::AttachActorToBackpack(AActor* ActorToAttach)
+{
+	if (Character == nullptr || Character->GetMesh() == nullptr || ActorToAttach == nullptr) return;
+
+	const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));
+	if (IsValid(BackpackSocket))
+	{
+		BackpackSocket->AttachActor(ActorToAttach, Character->GetMesh()); // AcotrToAttach(=무기)를 해당 소켓에 붙여준다.
+	}
+}
+
 void UCombatComponent::UpdateCarriedAmmo()
 {
 	if (EquippedWeapon == nullptr) return; // 예외처리. 장착 무기가 없다면 return
@@ -235,11 +284,11 @@ void UCombatComponent::UpdateCarriedAmmo()
 	}
 }
 
-void UCombatComponent::PlayEquipWeaponSound() // 무기 장착 사운드 재생
+void UCombatComponent::PlayEquipWeaponSound(AWeapon* WeaponToEquip) // 무기 장착 사운드 재생
 {
 	if (EquippedWeapon->EquipSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->EquipSound, Character->GetActorLocation()); // 무기장착 사운드를 캐릭터 위치에서 재생
+		UGameplayStatics::PlaySoundAtLocation(this, WeaponToEquip->EquipSound, Character->GetActorLocation()); // 무기장착 사운드를 캐릭터 위치에서 재생
 	}
 }
 
@@ -493,7 +542,25 @@ void UCombatComponent::OnRep_EquippedWeapon() // Client
 		AttachActorToRightHand(EquippedWeapon); // 무기 오른손 소켓에 붙이기
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
 		Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
-		PlayEquipWeaponSound(); // 무기 장착 사운드 재생
+		PlayEquipWeaponSound(EquippedWeapon); // 무기 장착 사운드 재생
+		EquippedWeapon->EnableCustomDepth(false); // 무기 외곽선 효과 false
+	}
+}
+
+void UCombatComponent::OnRep_SecondaryWeapon()
+{
+	if (IsValid(SecondaryWeapon) && Character.IsValid())
+	{
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
+
+		AttachActorToBackpack(SecondaryWeapon); // 가방에 붙인다.
+		PlayEquipWeaponSound(EquippedWeapon); // 장착 사운드 재생
+
+		if (SecondaryWeapon->GetWeaponMesh())
+		{
+			SecondaryWeapon->GetWeaponMesh()->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+			SecondaryWeapon->GetWeaponMesh()->MarkRenderStateDirty();
+		}
 	}
 }
 

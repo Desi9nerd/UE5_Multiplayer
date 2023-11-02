@@ -48,6 +48,9 @@ protected:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 
+	UFUNCTION()
+	void OnRep_SecondaryWeapon();
+
 	void Fire();
 
 	UFUNCTION(Server, Reliable) // Server RPC 총 발사
@@ -76,18 +79,25 @@ protected:
 	void DropEquippedWeapon(); // 장착중인 무기 떨어뜨리기
 	void AttachActorToRightHand(AActor* ActorToAttach); // 무기 오른손 소켓에 붙이기
 	void AttachActorToLeftHand(AActor* ActorToAttach); // 무기 왼손 소켓에 붙이기
+	void AttachActorToBackpack(AActor* ActorToAttach); // 무기 배낭위치에 붙이기
 	void UpdateCarriedAmmo(); // 현재 장착무기 탄창의 최대 총알 수 업데이트
-	void PlayEquipWeaponSound(); // 무기 장착 사운드 재생
+	void PlayEquipWeaponSound(AWeapon* WeaponToEquip); // 무기 장착 사운드 재생
 	void ReloadEmptyWeapon(); // 총알이 비었는지 확인하고 만약 비었을 시 재장전
 	void ShowAttachedGrenade(bool bShowGrenade); // 캐릭터 손에 수류탄이 보일지 말지 결정
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 
 private:
 	TWeakObjectPtr<class ABaseCharacter> Character;
 	TWeakObjectPtr<class AMainPlayerController> Controller;
 	TWeakObjectPtr<class AMainHUD> HUD;
 
-	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon) //서버에 알린다
+	//서버에 알린다. 그 후 모든 Client에 알린다.
+	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon) 
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
+	AWeapon* SecondaryWeapon;
 
 	UPROPERTY(Replicated)
 	bool bAiming;

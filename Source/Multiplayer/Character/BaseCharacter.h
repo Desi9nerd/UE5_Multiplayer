@@ -90,8 +90,8 @@ private:
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
-	//Reliable RPC는 무조건 실행, Unreliable RPC는 패킷 Drop 가능
-	UFUNCTION(Server, Reliable)
+	// Reliable RPC는 무조건 실행, Unreliable RPC는 패킷 Drop 가능
+	UFUNCTION(Server, Reliable) // Server를 붙여 함수가 Client에서 호출되지만 Server에서 실행되는 RPC 로 선언
 	void ServerEquipButtonPressed();
 
 	float AO_Yaw; // AO에 사용할 Yaw값
