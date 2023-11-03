@@ -9,6 +9,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "Multiplayer/PlayerController/MainPlayerController.h"
 #include "Multiplayer/Components/CombatComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AWeapon::AWeapon()
 {
@@ -295,4 +296,27 @@ bool AWeapon::IsEmpty()
 bool AWeapon::IsFull()
 {
 	return Ammo == MagCapacity;
+}
+
+FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget) // 샷건 산탄분포를 위해 LineTrace의 End Loc 랜덤 변경하는 함수
+{
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	if (MuzzleFlashSocket == nullptr) return FVector(); // MuzzleFlash 소켓이 없으면 빈 FVector 리턴
+
+	FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	FVector TraceStart = SocketTransform.GetLocation(); // LineTrace 시작점(=MuzzleFlash 소켓위치)
+
+	//** LineTrace의 시작위치(=TraceStart)와 끝위치(=HitTarget) 사용. Shotgun의 산탄을 구현하기 위해 LineTrace를 일정범위 내에서 랜덤으로 end location이 변경되도록 한 뒤 리턴한다. 
+	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
+	FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.0f, SphereRadius);
+	FVector EndLoc = SphereCenter + RandVec;
+	FVector ToEndLoc = EndLoc - TraceStart;
+
+	//** LineTrace 디버깅용
+	//DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
+	//DrawDebugSphere(GetWorld(), EndLoc, 4.0f, 12, FColor::Orange, true);
+	//DrawDebugLine(GetWorld(), TraceStart, FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()), FColor::Cyan,true);
+
+	return FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()); // LineTrace의 end location을 리턴.
 }

@@ -102,16 +102,47 @@ void UCombatComponent::Fire()
 		bCanFire = false;
 		// TickComponent()함수 내의 TraceUnderCrosshairs()함수를 사용하여 Crosshair으로 나가서 충돌위치를 매 틱 갱신한다.
 		// ServerFire()에 충돌위치(=HitResult.ImpactPoint=HitTarget)를 보내준다. MulticastFire_Implementation() 내의 EquippedWeapon->Fire(TraceHitTarget)를 실행할 때 TraceHitTarget은 아래의 HitResult.ImpactPoint 값이다. 
-		ServerFire(HitTarget); // Server RPC 총 발사 함수
-		LocalFire(HitTarget);
 
 		if (IsValid(EquippedWeapon))
 		{
 			CrosshairShootingFactor = 0.75f; // 발사 시에는 Crosshair의 퍼짐정도가 특정값으로 돌아오도록 설정
+
+			switch (EquippedWeapon->FireType) // 발사 종류
+			{
+			case EFireType::EFT_Projectile: // Projectile 방식
+				FireProjectileWeapon();
+				break;
+			case EFireType::EFT_HitScan: // HitScan 방식
+				FireHitScanWeapon();
+				break;
+			case EFireType::EFT_Shotgun: // 샷건
+				FireShotgun();
+				break;
+			}
 		}
 
 		StartFireTimer(); // Automatic Fire 타이머 핸들러 시작
 	}
+}
+
+void UCombatComponent::FireProjectileWeapon()
+{
+	LocalFire(HitTarget);
+	ServerFire(HitTarget);
+}
+
+void UCombatComponent::FireHitScanWeapon()
+{
+	if (IsValid(EquippedWeapon))
+	{
+		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget; // 산탄분포를 가진다면(bUseScatter이 true) TraceEndWithScatter(HitTarget)으로 End Loc 랜덤으로 변경하는 함수 콜. 아니면 직선으로 나가도록 HitTarget 사용.
+		LocalFire(HitTarget);
+		ServerFire(HitTarget);
+	}
+}
+
+void UCombatComponent::FireShotgun()
+{
 }
 
 void UCombatComponent::StartFireTimer()

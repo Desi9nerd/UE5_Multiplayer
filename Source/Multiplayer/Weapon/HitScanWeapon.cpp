@@ -4,7 +4,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "Multiplayer/EnumTypes/EWeaponTypes.h"
 #include "DrawDebugHelpers.h"
 
@@ -58,7 +57,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 
 	if (IsValid(World))
 	{
-		FVector End = bUseScatter ? TraceEndWithScatter(TraceStart, HitTarget) : TraceStart + (HitTarget - TraceStart) * 1.25f;
+		FVector End = TraceStart + (HitTarget - TraceStart) * 1.25f;
 
 		World->LineTraceSingleByChannel(OutHit, TraceStart, End, ECollisionChannel::ECC_Visibility);
 
@@ -68,6 +67,9 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		{
 			BeamEnd = OutHit.ImpactPoint; // 충돌위치(=ImpactPoint)를 BeamEnd 위치로 설정.
 		}
+
+		DrawDebugSphere(GetWorld(), BeamEnd, 16.0f, 12, FColor::Orange, true);
+
 		if (BeamParticles)
 		{
 			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(World, 	BeamParticles, TraceStart, FRotator::ZeroRotator,true);
@@ -78,21 +80,3 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 		}
 	}
 }
-
-FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget)
-{
-	//** LineTrace의 시작위치(=TraceStart)와 끝위치(=HitTarget)을 매개변수로 받는다. Shotgun의 산탄을 구현하기 위해 LineTrace를 일정범위 내에서 랜덤으로 end location이 변경되도록 한 뒤 리턴한다. 
-	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
-	FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
-	FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.0f, SphereRadius); 
-	FVector EndLoc = SphereCenter + RandVec;
-	FVector ToEndLoc = EndLoc - TraceStart;
-
-	//** LineTrace 디버깅용
-	//DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
-	//DrawDebugSphere(GetWorld(), EndLoc, 4.0f, 12, FColor::Orange, true);
-	//DrawDebugLine(GetWorld(), TraceStart, FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()), FColor::Cyan,true);
-
-	return FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()); // LineTrace의 end location을 리턴.
-}
-

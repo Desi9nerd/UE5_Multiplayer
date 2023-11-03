@@ -16,6 +16,16 @@ enum class EWeaponState : uint8 //무기 상태 Enum
 	EWS_MAX UMETA(DisplayName = "DefaultMAX")
 };
 
+UENUM(BlueprintType)
+enum class EFireType : uint8 // 발사 종류
+{
+	EFT_HitScan UMETA(DisplayName = "Hit Scan Weapon"),
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+
+	EFT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class MULTIPLAYER_API AWeapon : public AActor
 {
@@ -31,6 +41,7 @@ public:
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped(); // 소멸 후 무기 떨어뜨리기
 	void AddAmmo(int32 AmmoToAdd);
+	FVector TraceEndWithScatter(const FVector& HitTarget); // 산탄분포를 위해 LineTrace의 End Loc 랜덤 변경하는 함수
 
 	//** Crosshair Texture
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
@@ -68,6 +79,12 @@ public:
 	void EnableCustomDepth(bool bEnable); // Custom Depth 적용 true/false
 
 	bool bDestroyWeapon = false;
+
+	UPROPERTY(EditAnywhere)
+	EFireType FireType; // 발사 종류
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter = false; // 샷건의 산탄분포 true/false
 
 protected:
 	virtual void BeginPlay() override;
@@ -121,6 +138,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType; // 무기 종류
+
+	//** Trace end with scatter
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere = 800.0f; // 샷건의 SphereRadius까지의 거리
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius = 75.0f; // 샷건의 산탄분포에 이용될 SphereRadius
 
 public:
 	void SetWeaponState(EWeaponState State);
