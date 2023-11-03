@@ -265,7 +265,10 @@ void AWeapon::Fire(const FVector& HitTarget)
 					); 
 			}
 		}
+	}
 
+	if (HasAuthority()) 
+	{
 		SpendRound(); // ÃÑ¾Ë ¼Ò¸ð -1
 	}
 }

@@ -103,6 +103,7 @@ void UCombatComponent::Fire()
 		// TickComponent()함수 내의 TraceUnderCrosshairs()함수를 사용하여 Crosshair으로 나가서 충돌위치를 매 틱 갱신한다.
 		// ServerFire()에 충돌위치(=HitResult.ImpactPoint=HitTarget)를 보내준다. MulticastFire_Implementation() 내의 EquippedWeapon->Fire(TraceHitTarget)를 실행할 때 TraceHitTarget은 아래의 HitResult.ImpactPoint 값이다. 
 		ServerFire(HitTarget); // Server RPC 총 발사 함수
+		LocalFire(HitTarget);
 
 		if (IsValid(EquippedWeapon))
 		{
@@ -146,6 +147,13 @@ void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& Trac
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
+	if (Character.IsValid() && Character->IsLocallyControlled() && Character->HasAuthority() == false) return;
+
+	LocalFire(TraceHitTarget);
+}
+
+void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
+{
 	if (EquippedWeapon == nullptr) return; // 예외처리. 장착 무기가 없다면 return
 
 	if (Character.IsValid() && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun) // Shotgun
@@ -184,6 +192,8 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip) // Server
 
 void UCombatComponent::SwapWeapons() // 무기 교체
 {
+	if (CombatState != ECombatState::ECS_Unoccupied) return; // 재장전이나 수류탄 던질 때는 무기교체 안 되도록 예외처리
+
 	TWeakObjectPtr<AWeapon> TempWeapon = EquippedWeapon;
 	EquippedWeapon = SecondaryWeapon;
 	SecondaryWeapon = TempWeapon.Get();
