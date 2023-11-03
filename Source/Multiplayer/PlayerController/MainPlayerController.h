@@ -60,6 +60,10 @@ protected:
 	UFUNCTION(Client, Reliable) // Client RPC
 	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime); // Client가 게임에 들어왔을때 Client에게 MatchState을 알리는 함수
 
+	void CheckPing(float DeltaTime); // Ping 체크
+	void HighPingWarning(); // High Ping 경고(이미지 띄우기)
+	void StopHighPingWarning(); // High Ping 경고 멈추기(이미지 안 띄우기)
+
 private:
 	TObjectPtr<class AMainHUD> MainHUD;
 	UPROPERTY()
@@ -96,4 +100,14 @@ private:
 	float HUDWeaponAmmo;
 	int32 HUDDefeats;
 	int32 HUDGrenades;
+
+	//** Ping 관련 변수들
+	float HighPingRunningTime = 0.0f;
+	UPROPERTY(EditAnywhere)
+	float HighPingDuration = 5.0f;
+	float PingAnimationRunningTime = 0.0f;
+	UPROPERTY(EditAnywhere)
+	float CheckPingFrequency = 20.0f;
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold = 50.0f;
 };

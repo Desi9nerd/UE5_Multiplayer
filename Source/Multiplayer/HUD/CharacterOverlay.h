@@ -42,4 +42,10 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* GrenadesText; // 수류탄 수
+
+	UPROPERTY(meta = (BindWidget))
+	class UImage* HighPingImage; // Ping이 높을때 나오는 이미지
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient) // Transient는 직렬화 과정에서 무시되는 변수를 정의할 때 사용
+	UWidgetAnimation* HighPingAnimation;
 };

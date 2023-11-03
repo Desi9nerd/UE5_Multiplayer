@@ -12,6 +12,7 @@
 #include "Multiplayer/Components/CombatComponent.h"
 #include "Multiplayer/Weapon/Weapon.h"
 #include "Multiplayer/GameState/MultiplayerGameState.h"
+#include "Components/Image.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -36,6 +37,7 @@ void AMainPlayerController::Tick(float DeltaTime)
 	SetHUDTime(); // HUD에 표시되는 시간을 매 틱 갱신한다.
 	CheckTimeSync(DeltaTime); // 매 TimeSyncFrequency 마다 Server Time을 Sync한다.
 	PollInit(); // 체력, 점수, 승패 초기화
+	CheckPing(DeltaTime); // Ping 체크
 }
 
 void AMainPlayerController::CheckTimeSync(float DeltaTime)
@@ -472,5 +474,72 @@ void AMainPlayerController::HandleCooldown() // 경기 끝난 후 Announcement �
 	{
 		BaseCharacter->bDisableGameplay = true; // true면 캐릭터 움직임 제한. 마우스 회전으로 시야 회전은 가능
 		BaseCharacter->GetCombat()->FireButtonPressed(false); // 발사 버튼 false
+	}
+}
+
+void AMainPlayerController::CheckPing(float DeltaTime) // Ping 체크
+{
+	HighPingRunningTime += DeltaTime; // Tick의 DeltaTime을 변수로 받아 더한다
+
+	if (HighPingRunningTime > CheckPingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if (IsValid(PlayerState))
+		{
+			if (PlayerState->GetPing() * 4 > HighPingThreshold) // ping is compressed; it's actually ping / 4
+			{
+				HighPingWarning(); // High Ping 경고(이미지 띄우기)
+				PingAnimationRunningTime = 0.0f;
+			}
+		}
+
+		HighPingRunningTime = 0.0f;
+	}
+
+	bool bHighPingAnimationPlaying =
+		MainHUD && MainHUD->CharacterOverlay &&
+		MainHUD->CharacterOverlay->HighPingAnimation &&
+		MainHUD->CharacterOverlay->IsAnimationPlaying(MainHUD->CharacterOverlay->HighPingAnimation);
+	if (bHighPingAnimationPlaying) // High Ping 애니메이션이 재생중이면
+	{
+		PingAnimationRunningTime += DeltaTime;
+		// High Ping 애니메이션을 재생 한 시간이 HighPingDuration로 설정한 시간보다 길어지면
+		if (PingAnimationRunningTime > HighPingDuration)
+		{
+			StopHighPingWarning(); // High Ping 경고 멈추기(이미지 안 띄우기)
+		}
+	}
+}
+
+void AMainPlayerController::HighPingWarning() // High Ping 경고(이미지 띄우기)
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+	bool bHUDValid = MainHUD &&
+		MainHUD->CharacterOverlay &&
+		MainHUD->CharacterOverlay->HighPingImage &&
+		MainHUD->CharacterOverlay->HighPingAnimation;
+	if (bHUDValid)
+	{
+		// High Ping 이미지를 Opacity를 1로 만들어 보이게 하고, 깜박깜박하는 애니메이션 재생하기
+		MainHUD->CharacterOverlay->HighPingImage->SetOpacity(1.0f); 
+		MainHUD->CharacterOverlay->PlayAnimation(MainHUD->CharacterOverlay->HighPingAnimation, 0.0f, 5); // 0초부터 재생. 5번 반복 재생
+	}
+}
+
+void AMainPlayerController::StopHighPingWarning()  // High Ping 경고 멈추기(이미지 안 띄우기)
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+	bool bHUDValid = MainHUD &&
+		MainHUD->CharacterOverlay &&
+		MainHUD->CharacterOverlay->HighPingImage &&
+		MainHUD->CharacterOverlay->HighPingAnimation;
+	if (bHUDValid)
+	{
+		// High Ping 이미지를 Opacity를 0으로 만들어 안 보이게 하고, 애니메이션 재생하고 있으면 멈춰주기
+		MainHUD->CharacterOverlay->HighPingImage->SetOpacity(0.0f);
+		if (MainHUD->CharacterOverlay->IsAnimationPlaying(MainHUD->CharacterOverlay->HighPingAnimation))
+		{
+			MainHUD->CharacterOverlay->StopAnimation(MainHUD->CharacterOverlay->HighPingAnimation);
+		}
 	}
 }
