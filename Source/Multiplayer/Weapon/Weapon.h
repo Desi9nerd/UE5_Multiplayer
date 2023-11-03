@@ -84,7 +84,7 @@ public:
 	EFireType FireType; // 발사 종류
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	bool bUseScatter = false; // 샷건의 산탄분포 true/false
+	bool bUseScatter = false; // 산탄분포 true/false
 
 protected:
 	virtual void BeginPlay() override;
@@ -97,6 +97,12 @@ protected:
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,	const FHitResult& SweepResult);
 	UFUNCTION()
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex);
+
+	//** Trace end with scatter
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere = 800.0f; // 샷건의 SphereRadius까지의 거리
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius = 75.0f; // 샷건의 산탄분포에 이용될 SphereRadius
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
@@ -138,12 +144,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType; // 무기 종류
-
-	//** Trace end with scatter
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float DistanceToSphere = 800.0f; // 샷건의 SphereRadius까지의 거리
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float SphereRadius = 75.0f; // 샷건의 산탄분포에 이용될 SphereRadius
 
 public:
 	void SetWeaponState(EWeaponState State);

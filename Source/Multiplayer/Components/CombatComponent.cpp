@@ -13,6 +13,7 @@
 #include "Sound/SoundCue.h"
 #include "Multiplayer/Character/BaseCharacterAnimInstance.h"
 #include "Multiplayer/Weapon/Projectile.h"
+#include "Multiplayer/Weapon/Shotgun.h"
 
 UCombatComponent::UCombatComponent()
 {
@@ -127,8 +128,12 @@ void UCombatComponent::Fire()
 
 void UCombatComponent::FireProjectileWeapon()
 {
-	LocalFire(HitTarget);
-	ServerFire(HitTarget);
+	if (IsValid(EquippedWeapon))
+	{
+		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
+		LocalFire(HitTarget);
+		ServerFire(HitTarget);
+	}
 }
 
 void UCombatComponent::FireHitScanWeapon()
@@ -143,6 +148,13 @@ void UCombatComponent::FireHitScanWeapon()
 
 void UCombatComponent::FireShotgun()
 {
+	TWeakObjectPtr<AShotgun> Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if (Shotgun.IsValid())
+	{
+		TArray<FVector> HitTargets;
+		Shotgun->ShotgunTraceEndWithScatter(HitTarget, HitTargets); // HitTarget 값을 넣어 HitTargets의 결과값을 구한다
+
+	}
 }
 
 void UCombatComponent::StartFireTimer()
