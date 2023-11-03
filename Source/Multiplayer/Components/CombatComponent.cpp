@@ -128,20 +128,26 @@ void UCombatComponent::Fire()
 
 void UCombatComponent::FireProjectileWeapon()
 {
-	if (IsValid(EquippedWeapon))
+	if (IsValid(EquippedWeapon) && Character.IsValid())
 	{
 		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
-		LocalFire(HitTarget);
+		if (Character->HasAuthority() == false)
+		{
+			LocalFire(HitTarget);
+		}
 		ServerFire(HitTarget);
 	}
 }
 
 void UCombatComponent::FireHitScanWeapon()
 {
-	if (IsValid(EquippedWeapon))
+	if (IsValid(EquippedWeapon) && Character.IsValid())
 	{
 		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget; // 산탄분포를 가진다면(bUseScatter이 true) TraceEndWithScatter(HitTarget)으로 End Loc 랜덤으로 변경하는 함수 콜. 아니면 직선으로 나가도록 HitTarget 사용.
-		LocalFire(HitTarget);
+		if(Character->HasAuthority() == false)
+		{
+			LocalFire(HitTarget);
+		}
 		ServerFire(HitTarget);
 	}
 }
@@ -149,11 +155,16 @@ void UCombatComponent::FireHitScanWeapon()
 void UCombatComponent::FireShotgun()
 {
 	TWeakObjectPtr<AShotgun> Shotgun = Cast<AShotgun>(EquippedWeapon);
-	if (Shotgun.IsValid())
+	if (Shotgun.IsValid() && Character.IsValid())
 	{
-		TArray<FVector> HitTargets;
+		TArray<FVector_NetQuantize> HitTargets;
 		Shotgun->ShotgunTraceEndWithScatter(HitTarget, HitTargets); // HitTarget 값을 넣어 HitTargets의 결과값을 구한다
 
+		if (Character->HasAuthority() == false) 
+		{
+			ShotgunLocalFire(HitTargets);
+		}
+		ServerShotgunFire(HitTargets);
 	}
 }
 
@@ -195,22 +206,39 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 	LocalFire(TraceHitTarget);
 }
 
+void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	MulticastShotgunFire(TraceHitTargets);
+}
+
+void UCombatComponent::MulticastShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	if (Character.IsValid() && Character->IsLocallyControlled() && Character->HasAuthority() == false) return;
+
+	ShotgunLocalFire(TraceHitTargets);
+}
+
 void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
 	if (EquippedWeapon == nullptr) return; // 예외처리. 장착 무기가 없다면 return
-
-	if (Character.IsValid() && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun) // Shotgun
-	{
-		Character->PlayFireMontage(bAiming);
-		EquippedWeapon->Fire(TraceHitTarget);
-		CombatState = ECombatState::ECS_Unoccupied;
-		return;
-	}
-
+	
 	if (Character.IsValid() && CombatState == ECombatState::ECS_Unoccupied)
 	{
 		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
 		EquippedWeapon->Fire(TraceHitTarget); // 장착 무기 발사, HitTarget(=TraceHitResult.ImpactPoint <-- HitResult값)
+	}
+}
+
+void UCombatComponent::ShotgunLocalFire(const TArray<FVector_NetQuantize>& TraceHitTargets)
+{
+	TWeakObjectPtr<AShotgun> Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if (Shotgun == nullptr || Character == nullptr) return;
+
+	if (CombatState == ECombatState::ECS_Reloading || CombatState == ECombatState::ECS_Unoccupied)
+	{
+		Character->PlayFireMontage(bAiming); // 발사 몽타주 Play
+		Shotgun->FireShotgun(TraceHitTargets);
+		CombatState = ECombatState::ECS_Unoccupied;
 	}
 }
 

@@ -6,9 +6,9 @@
 #include "Sound/SoundCue.h"
 #include "Kismet/KismetMathLibrary.h"
 
-void AShotgun::Fire(const FVector& HitTarget)
+void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 {
-	AWeapon::Fire(HitTarget); // Super로 부모인 HitScanWeapon의 Fire()함수를 부르지 않고 부모의 부모인 Weapon클래스의 Fire()함수를 콜한다.
+	AWeapon::Fire(FVector()); // Super로 부모인 HitScanWeapon의 Fire()함수를 부르지 않고 부모의 부모인 Weapon클래스의 Fire()함수를 콜한다.
 
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (OwnerPawn == nullptr) return; // OwnerPawn이 없는 경우 예외 처리
@@ -18,18 +18,18 @@ void AShotgun::Fire(const FVector& HitTarget)
 
 	if (IsValid(MuzzleFlashSocket))
 	{
-		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-		FVector Start = SocketTransform.GetLocation();
+		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+		const FVector Start = SocketTransform.GetLocation();
 
-		TMap<ABaseCharacter*, uint32> HitMap;
+		TMap<ABaseCharacter*, uint32> HitMap; // 캐릭터가 여러번 피격(=Hit)처리 되도록 HitMap변수에 담는다
 
-		for (uint32 i = 0; i < NumberOfPellets; i++)
+		for (FVector_NetQuantize HitTarget : HitTargets)
 		{
-			FHitResult FireHit;
-			WeaponTraceHit(Start, HitTarget, FireHit);
+			FHitResult FireHit; // 피격위치
+			WeaponTraceHit(Start, HitTarget, FireHit); // 피격위치(=FireHit)를 계산해서 업데이트
 
 			ABaseCharacter* BaseCharacter = Cast<ABaseCharacter>(FireHit.GetActor());
-			if (BaseCharacter && HasAuthority() && InstigatorController)
+			if (BaseCharacter)
 			{
 				if (HitMap.Contains(BaseCharacter))
 				{
@@ -37,31 +37,39 @@ void AShotgun::Fire(const FVector& HitTarget)
 				}
 				else
 				{
-					HitMap.Emplace(BaseCharacter, 1);//첫 피격 시 TMap<ABaseCharacter*, uint32> HitMap에 등록
+					HitMap.Emplace(BaseCharacter, 1); //첫 피격 시 TMap<ABaseCharacter*, uint32> HitMap에 등록
+				}
+
+				if (ImpactParticles)
+				{
+					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, FireHit.ImpactPoint, FireHit.ImpactNormal.Rotation());
+				}
+				if (HitSound)
+				{
+					UGameplayStatics::PlaySoundAtLocation(this, HitSound, FireHit.ImpactPoint, 0.5f, FMath::FRandRange(-0.5f, 0.5f));
 				}
 			}
-			if (ImpactParticles)
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, FireHit.ImpactPoint, FireHit.ImpactNormal.Rotation());
-			}
-			if (HitSound)
-			{
-				UGameplayStatics::PlaySoundAtLocation(this, HitSound, FireHit.ImpactPoint, 0.5f,FMath::FRandRange(-0.5f, 0.5f));
-			}
-		} // for
+		}
 
+		//** HitMap에 등록된 캐릭터들에게 데미지 입히기
 		for (auto HitPair : HitMap)
 		{
 			if (HitPair.Key && HasAuthority() && InstigatorController) // HitMap에 등록 && Server && Controller (O)
 			{
 				// 데미지 전달: Damage * HitPair.Value 만큼 데미지
-				UGameplayStatics::ApplyDamage(HitPair.Key, Damage * HitPair.Value, InstigatorController, this, UDamageType::StaticClass());
-			} // if
-		} // for
-	} // if(IsValid(MuzzleFlashSocket))
+				UGameplayStatics::ApplyDamage(
+					HitPair.Key, // Character that was hit
+					Damage * HitPair.Value, // Multiply Damage by number of times hit
+					InstigatorController,
+					this,
+					UDamageType::StaticClass()
+				);
+			}
+		} 
+	}
 }
 
-void AShotgun::ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector>& HitTargets) // 샷건 산탄분포를 위해 LineTrace의 End Loc 랜덤 변경하는 함수
+void AShotgun::ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector_NetQuantize>& HitTargets) // 샷건 산탄분포를 위해 LineTrace의 End Loc 랜덤 변경하는 함수
 {
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
 	if (MuzzleFlashSocket == nullptr) return; // MuzzleFlash 소켓이 없으면 빈 FVector 리턴
