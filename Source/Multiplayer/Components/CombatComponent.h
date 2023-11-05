@@ -107,12 +107,14 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
 	AWeapon* SecondaryWeapon;
 
-	UPROPERTY(Replicated)
-	bool bAiming;
+	UPROPERTY(ReplicatedUsing = OnRep_Aiming)
+	bool bAiming = false; // 조준 
+	bool bAimButtonPressed = false; // 조준버튼눌림 
+	UFUNCTION()
+	void OnRep_Aiming();
 
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed; // Aiming(X) 캐릭터 Walk이동속도 
-
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed; // Aiming(O) 캐릭터 Walk이동속도
 

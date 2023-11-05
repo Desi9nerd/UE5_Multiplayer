@@ -126,16 +126,22 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass; //총알 탄피 class
 
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere) // 총알은 더 이상 Replicate 하지 않는다.
 	int32 Ammo; // 현재 총알 수
 
-	void SpendRound();
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
 
-	UFUNCTION()
-	void OnRep_Ammo();
+	void SpendRound(); // 총알(=Ammo) 소모 후 HUD 업데이트
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity; // 무기 탄알집에 들어갈 수 있는 총알 최대값
+
+	// The number of unprocessed server requests for Ammo.
+	// Incremented in SpendRound, decremented in ClientUpdateAmmo.
+	int32 Sequence = 0;
 
 	UPROPERTY()
 	class ABaseCharacter* BaseCharcterOwnerCharacter;

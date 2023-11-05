@@ -48,7 +48,6 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState); // WeaponState를 모든 Client들에게 Replicate 해준다.
-	DOREPLIFETIME(AWeapon, Ammo); // Ammo를 모든 Client들에게 Replicate 해준다.
 }
 
 void AWeapon::ShowPickupWidget(bool bShowWidget)
@@ -199,22 +198,53 @@ void AWeapon::SetHUDAmmo()
 	}
 }
 
-void AWeapon::SpendRound() 
+void AWeapon::SpendRound() // 총알(=Ammo) 소모 후 HUD 업데이트
 {
 	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity); // 총알 소모 -1, 0~MagCapcity 값을 벗어나지 않도록 설정.
 	SetHUDAmmo(); // HUD에 총알(Ammo) 수 업데이트
+
+	if (HasAuthority()) // Server
+	{
+		// Client-side prediction을 사용하기 때문에 Server->Client로 정보를 내린 후 Ammo를 locally 설정.
+		ClientUpdateAmmo(Ammo);
+	}
+	else
+	{
+		++Sequence;
+	}
 }
 
-void AWeapon::OnRep_Ammo() // Client
+void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
 {
+	if (HasAuthority()) return;
+
+	Ammo = ServerAmmo;
+	--Sequence;
+	Ammo -= Sequence;
+
+	SetHUDAmmo();
+}
+
+void AWeapon::AddAmmo(int32 AmmoToAdd) // 총알(=Ammo) 더하고 HUD 업데이트
+{
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity); // 최소값 0, 최대값 MagCapcity
+
+	SetHUDAmmo();
+	ClientAddAmmo(AmmoToAdd);
+}
+
+void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
+{
+	if (HasAuthority()) return; // Server인 경우 예외처리
+
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
 	BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(GetOwner()) : BaseCharcterOwnerCharacter;
-	// BaseCharcterOwnerCharacter와 CombatComponent가 있고 총알(=탄)이 최대 총알 수이면 
 	if (BaseCharcterOwnerCharacter && BaseCharcterOwnerCharacter->GetCombat() && IsFull())
 	{
 		BaseCharcterOwnerCharacter->GetCombat()->JumpToShotgunEnd();
 	}
 
-	SetHUDAmmo(); // HUD에 총알(Ammo) 수 업데이트
+	SetHUDAmmo();
 }
 
 void AWeapon::OnRep_Owner() // Client
@@ -265,10 +295,8 @@ void AWeapon::Fire(const FVector& HitTarget)
 		}
 	}
 
-	if (HasAuthority()) 
-	{
-		SpendRound(); // 총알 소모 -1
-	}
+	//** Client-side prediction 사용. 모든 머신에서 SpendRound()를 콜할 수 있게 한다.
+	SpendRound(); // 총알 소모 -1	
 }
 
 void AWeapon::Dropped()
@@ -280,12 +308,6 @@ void AWeapon::Dropped()
 
 	BaseCharcterOwnerCharacter = nullptr; // 무기소유 캐릭터가 없도록 nullptr
 	MainPlayerOwnerController = nullptr; // 무기소유 controller가 없도록 nullptr
-}
-
-void AWeapon::AddAmmo(int32 AmmoToAdd)
-{
-	Ammo = FMath::Clamp(Ammo - AmmoToAdd, 0, MagCapacity); // 최소값 0, 최대값 MagCapcity
-	SetHUDAmmo();
 }
 
 bool AWeapon::IsEmpty()

@@ -308,6 +308,14 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 	SecondaryWeapon->SetOwner(Character.Get()); // Secondary 무기의 Owner를 캐릭터로 설정
 }
 
+void UCombatComponent::OnRep_Aiming()
+{
+	if (Character.IsValid() && Character->IsLocallyControlled()) // Client-side
+	{
+		bAiming = bAimButtonPressed;
+	}
+}
+
 void UCombatComponent::DropEquippedWeapon() // 장착중인 무기 떨어뜨리기 함수
 {
 	if (IsValid(EquippedWeapon)) // 이미 무기 장착 중이라면
@@ -481,7 +489,7 @@ void UCombatComponent::UpdateAmmoValues()
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
 
-	EquippedWeapon->AddAmmo(-ReloadAmount);
+	EquippedWeapon->AddAmmo(ReloadAmount);
 }
 
 void UCombatComponent::UpdateShotgunAmmoValues() // Shotgun 총알 업데이트
@@ -499,7 +507,7 @@ void UCombatComponent::UpdateShotgunAmmoValues() // Shotgun 총알 업데이트
 	{
 		Controller->SetHUDCarriedAmmo(CarriedAmmo);
 	}
-	EquippedWeapon->AddAmmo(-1);
+	EquippedWeapon->AddAmmo(1);
 	bCanFire = true;
 	if (EquippedWeapon->IsFull() || CarriedAmmo == 0) 
 	{
@@ -832,6 +840,11 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	if (Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
 		Character->ShowSniperScopeWidget(bIsAiming); // SniperScope 위젯을 보이게 한다.
+	}
+
+	if (Character->IsLocallyControlled())
+	{
+		bAimButtonPressed = bIsAiming; // 조준버튼눌림 
 	}
 }
 
