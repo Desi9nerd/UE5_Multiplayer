@@ -44,6 +44,9 @@ public:
 	void UpdateHUDAmmo();	// 총알 Update
 	void SpawnDefaultWeapon(); // 게임시작 시 기본무기 Spawn
 
+	UPROPERTY()
+	TMap<FName, class UBoxComponent*> HitCollisionBoxes;
+
 protected:
 	virtual void BeginPlay() override;
 	void MoveForward(float Value);
@@ -91,6 +94,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	class UBuffComponent* Buff;
+
+	UPROPERTY(VisibleAnywhere)
+	class ULagCompensationComponent* LagCompensation;
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
