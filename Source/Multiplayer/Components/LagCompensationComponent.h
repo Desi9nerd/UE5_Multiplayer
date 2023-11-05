@@ -51,4 +51,10 @@ private:
 	ABaseCharacter* Character;
 	UPROPERTY()
 	class AMainPlayerController* Controller;
+
+	TDoubleLinkedList<FFramePackage> FrameHistory;
+
+	UPROPERTY(EditAnywhere)
+	float MaxRecordTime = 4.0f;
+
 };
