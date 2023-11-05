@@ -424,9 +424,11 @@ void UCombatComponent::ReloadEmptyWeapon() // 총알이 비었는지 확인하고 만약 비었
 void UCombatComponent::Reload()
 {
 	// CarriedAmmo가 0보다 큰지 확인. 0보다 작은면 재장전 할 필요X. CarriedAmmo가 꽉 차지 않았는지 확인
-	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading && EquippedWeapon && EquippedWeapon->IsFull() == false) 
+	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading && EquippedWeapon && EquippedWeapon->IsFull() == false && bLocallyReloading == false)
 	{
 		ServerReload(); // Server RPC 호출.
+		HandleReload();
+		bLocallyReloading = true;
 	}
 }
 
@@ -435,13 +437,18 @@ void UCombatComponent::ServerReload_Implementation() // Server RPC, 이 함수가 호
 	if (Character == nullptr || EquippedWeapon == nullptr) return;
 
 	CombatState = ECombatState::ECS_Reloading; // CombatState을 재장전 상태로 변경
-	HandleReload();
+
+	if (Character->IsLocallyControlled() == false) // Server
+	{
+		HandleReload();
+	}
 }
 
 void UCombatComponent::FinishReloading()
 {
 	if (Character == nullptr) return;
 
+	bLocallyReloading = false;
 	if (Character->HasAuthority()) // Server
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
@@ -525,7 +532,7 @@ void UCombatComponent::OnRep_CombatState() // Client
 	switch (CombatState)
 	{
 	case ECombatState::ECS_Reloading:
-		HandleReload();
+		if (Character.IsValid() && Character->IsLocallyControlled() == false) HandleReload();
 		break;
 	case ECombatState::ECS_Unoccupied:
 		if (bFireButtonPressed)
@@ -562,7 +569,10 @@ int32 UCombatComponent::AmountToReload()
 
 void UCombatComponent::HandleReload()
 {
-	Character->PlayReloadMontage(); // 재장전 몽타주 재생
+	if(Character.IsValid())
+	{
+		Character->PlayReloadMontage(); // 재장전 몽타주 재생
+	}
 }
 
 void UCombatComponent::ThrowGrenade() // Client
@@ -860,6 +870,7 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)//RPC들은 _
 bool UCombatComponent::CanFire()
 {
 	if (EquippedWeapon == nullptr) return false; // 장착된 무기가 없다면 false 리턴
+	if (bLocallyReloading) return false; // 재장전이면 false 리턴
 
 	if (EquippedWeapon->IsEmpty() == false && bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun) return true;
 

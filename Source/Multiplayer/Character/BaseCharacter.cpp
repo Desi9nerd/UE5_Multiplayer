@@ -881,3 +881,10 @@ ECombatState ABaseCharacter::GetCombatState() const
 
 	return Combat->CombatState;
 }
+
+bool ABaseCharacter::IsLocallyReloading()
+{
+	if (Combat == nullptr) return false;
+
+	return Combat->bLocallyReloading;
+}

@@ -87,6 +87,10 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	}
 
 	bUseFABRIK = BaseCharacter->GetCombatState() == ECombatState::ECS_Unoccupied; // Unoccupied 상태일 때 FABRIK를 사용한다.
+	if (BaseCharacter->IsLocallyControlled() && BaseCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade)
+	{
+		bUseFABRIK = (BaseCharacter->IsLocallyReloading() == false); 
+	}
 	// Unoccupied 상태일 때 && bDisableGameplay 변수가 false면 AimOffset와 bTransformRightHand 사용
 	bUseAimOffsets = BaseCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && BaseCharacter->GetDisableGameplay() == false; 
 	bTransformRightHand = BaseCharacter->GetCombatState() == ECombatState::ECS_Unoccupied && BaseCharacter->GetDisableGameplay() == false;

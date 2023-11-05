@@ -39,6 +39,8 @@ public:
 
 	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount); // 무기 줍기
 
+	bool bLocallyReloading = false;
+
 protected:
 	virtual void BeginPlay() override;
 	void SetAiming(bool bIsAiming);
