@@ -31,6 +31,17 @@ struct FFramePackage
 	TMap<FName, FBoxInformation> HitBoxInfo;
 };
 
+USTRUCT(BlueprintType)
+struct FServerSideRewindResult
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	bool bHitConfirmed;
+	UPROPERTY()
+	bool bHeadShot; 
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MULTIPLAYER_API ULagCompensationComponent : public UActorComponent
 {
@@ -41,12 +52,17 @@ public:
 	friend class ABaseCharacter;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ShowFramePackage(const FFramePackage& Package, const FColor& Color);
-	void ServerSideRewind(class ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);  // Server-side Rewinding Time 알고리즘
+	FServerSideRewindResult ServerSideRewind(class ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);  // Server-side Rewinding Time 알고리즘
 
 protected:
 	virtual void BeginPlay() override;
 	void SaveFramePackage(FFramePackage& Package);
 	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
+	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation);
+	void CacheBoxPositions(ABaseCharacter* HitCharacter, FFramePackage& OutFramePackage);
+	void MoveBoxes(ABaseCharacter* HitCharacter, const FFramePackage& Package);
+	void ResetHitBoxes(ABaseCharacter* HitCharacter, const FFramePackage& Package);
+	void EnableCharacterMeshCollision(ABaseCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled);
 
 private:
 	UPROPERTY()

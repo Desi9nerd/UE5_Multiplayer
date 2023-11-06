@@ -89,6 +89,126 @@ FFramePackage ULagCompensationComponent::InterpBetweenFrames(const FFramePackage
 	return InterpFramePackage;
 }
 
+FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackage& Package,
+	ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation)
+{
+	if (HitCharacter == nullptr) return FServerSideRewindResult();
+
+	FFramePackage CurrentFrame;
+	CacheBoxPositions(HitCharacter, CurrentFrame); // HitCollisionBoxes 기록
+	MoveBoxes(HitCharacter, Package);  // HitCollisionBoxes 이동
+	EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::NoCollision);
+
+	// 머리 HitCollisionBox를 먼저 충돌처리 할 수 있도록 해준다.
+	UBoxComponent* HeadBox = HitCharacter->HitCollisionBoxes[FName("head")];
+	HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	HeadBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+
+	FHitResult ConfirmHitResult;
+	const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
+
+	TWeakObjectPtr<UWorld> World = GetWorld();
+	if (World.IsValid())
+	{
+		World->LineTraceSingleByChannel(ConfirmHitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility); // LineTrace로 헤드샷 충돌 검사
+
+		if (ConfirmHitResult.bBlockingHit) // 헤드샷이 나온 경우, 바로 return 
+		{
+			ResetHitBoxes(HitCharacter, CurrentFrame); // HitCollisionBoxes 초기화
+			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+
+			return FServerSideRewindResult{ true, true };
+		}
+		else // 헤드샷이 아닌 경우, 나머지 HitCollsionBoxes들을 LineTrace로 충돌 검사
+		{
+			for (auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
+			{
+				if (HitBoxPair.Value != nullptr)
+				{
+					HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+					HitBoxPair.Value->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+				}
+			}
+
+			World->LineTraceSingleByChannel(ConfirmHitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility);
+
+			if (ConfirmHitResult.bBlockingHit) // 충돌 O
+			{
+				ResetHitBoxes(HitCharacter, CurrentFrame); // HitCollisionBoxes 초기화
+				EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+
+				return FServerSideRewindResult{ true, false };
+			}
+		}
+	}
+
+	//** 충돌처리가 안 된 경우. 헤드샷X. 몸샷X
+	ResetHitBoxes(HitCharacter, CurrentFrame);
+	EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+
+	return FServerSideRewindResult{ false, false };
+}
+
+void ULagCompensationComponent::CacheBoxPositions(ABaseCharacter* HitCharacter, FFramePackage& OutFramePackage)
+{
+	if (HitCharacter == nullptr) return;
+
+	// HitCharacter의 HitCollisionBoxes 정보 업데이트 후 넣기
+	for (auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
+	{
+		if (HitBoxPair.Value != nullptr) // 값이 있다면
+		{
+			// BoxInfo 변수에 HitCollisionBoxes의 위치,회전,박스Extent 값을 담고
+			// OutFramePackage의 HitBoxInfo에 Key, Value로 넣어 추가한다
+			FBoxInformation BoxInfo;
+			BoxInfo.Location = HitBoxPair.Value->GetComponentLocation();
+			BoxInfo.Rotation = HitBoxPair.Value->GetComponentRotation();
+			BoxInfo.BoxExtent = HitBoxPair.Value->GetScaledBoxExtent();
+			OutFramePackage.HitBoxInfo.Add(HitBoxPair.Key, BoxInfo);
+		}
+	}
+}
+
+void ULagCompensationComponent::MoveBoxes(ABaseCharacter* HitCharacter, const FFramePackage& Package)
+{
+	if (HitCharacter == nullptr) return;
+
+	for (auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
+	{
+		if (HitBoxPair.Value != nullptr) // 값이 있다면
+		{
+			// 위치, 회전, 박스Extent 값 설정하여 업데이트
+			HitBoxPair.Value->SetWorldLocation(Package.HitBoxInfo[HitBoxPair.Key].Location);
+			HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
+			HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
+		}
+	}
+}
+
+void ULagCompensationComponent::ResetHitBoxes(ABaseCharacter* HitCharacter, const FFramePackage& Package)
+{
+	if (HitCharacter == nullptr) return;
+
+	for (auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
+	{
+		if (HitBoxPair.Value != nullptr)
+		{
+			HitBoxPair.Value->SetWorldLocation(Package.HitBoxInfo[HitBoxPair.Key].Location);
+			HitBoxPair.Value->SetWorldRotation(Package.HitBoxInfo[HitBoxPair.Key].Rotation);
+			HitBoxPair.Value->SetBoxExtent(Package.HitBoxInfo[HitBoxPair.Key].BoxExtent);
+			HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+	}
+}
+
+void ULagCompensationComponent::EnableCharacterMeshCollision(ABaseCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled)
+{
+	if (HitCharacter && HitCharacter->GetMesh())
+	{
+		HitCharacter->GetMesh()->SetCollisionEnabled(CollisionEnabled);
+	}
+}
+
 void ULagCompensationComponent::ShowFramePackage(const FFramePackage& Package, const FColor& Color) // Package 내의 HitBoxInfo 사용
 {
 	// SaveFramePackage에서 갱신된 정보 사용
@@ -99,13 +219,14 @@ void ULagCompensationComponent::ShowFramePackage(const FFramePackage& Package, c
 }
 
 // HitCharacter: 피격시키는 캐릭터. LineTrace를 재생산하기 위해 TraceStart와 HitLocation 사용. HitTime: Server Rewind를 위한 시간
-void ULagCompensationComponent::ServerSideRewind(ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime) // Server-side Rewinding Time 알고리즘
+FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime) // Server-side Rewinding Time 알고리즘
 {
 	bool bReturn =
 		HitCharacter == nullptr ||
 		HitCharacter->GetLagCompensation() == nullptr ||
 		HitCharacter->GetLagCompensation()->FrameHistory.GetHead() == nullptr ||
 		HitCharacter->GetLagCompensation()->FrameHistory.GetTail() == nullptr;
+	if (bReturn) return FServerSideRewindResult();
 
 	// Frame package that we check to verify a hit. 피격 확인을 위한 Frame package. 
 	FFramePackage FrameToCheck;
@@ -118,7 +239,7 @@ void ULagCompensationComponent::ServerSideRewind(ABaseCharacter* HitCharacter, c
 	if (OldestHistoryTime > HitTime)
 	{
 		// 너무 오래됨. too far back: too laggy to do Server-side Rewind
-		return;
+		return FServerSideRewindResult();
 	}
 	if (OldestHistoryTime == HitTime)
 	{
@@ -153,8 +274,9 @@ void ULagCompensationComponent::ServerSideRewind(ABaseCharacter* HitCharacter, c
 
 	if (bShouldInterpolate)
 	{
-		// Interpolate between Younger and Older
+		// OlderFrame과 YoungerFrame 사이 보간
+		FrameToCheck = InterpBetweenFrames(Older->GetValue(), Younger->GetValue(), HitTime);
 	}
 
-	if (bReturn) return;
+	return ConfirmHit(FrameToCheck, HitCharacter, TraceStart, HitLocation);
 }
