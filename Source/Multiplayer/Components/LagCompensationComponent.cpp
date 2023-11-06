@@ -61,6 +61,34 @@ void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
 	}
 }
 
+FFramePackage ULagCompensationComponent::InterpBetweenFrames(const FFramePackage& OlderFrame,
+	const FFramePackage& YoungerFrame, float HitTime)
+{
+	const float Distance = YoungerFrame.Time - OlderFrame.Time;
+	const float InterpFraction = FMath::Clamp((HitTime - OlderFrame.Time) / Distance, 0.0f, 1.0f);
+
+	FFramePackage InterpFramePackage;
+	InterpFramePackage.Time = HitTime;
+
+	for (auto& YoungerPair : YoungerFrame.HitBoxInfo)
+	{
+		const FName& BoxInfoName = YoungerPair.Key;
+
+		const FBoxInformation& OlderBox = OlderFrame.HitBoxInfo[BoxInfoName];
+		const FBoxInformation& YoungerBox = YoungerFrame.HitBoxInfo[BoxInfoName];
+
+		FBoxInformation InterpBoxInfo;
+
+		InterpBoxInfo.Location = FMath::VInterpTo(OlderBox.Location, YoungerBox.Location, 1.0f, InterpFraction);
+		InterpBoxInfo.Rotation = FMath::RInterpTo(OlderBox.Rotation, YoungerBox.Rotation, 1.0f, InterpFraction);
+		InterpBoxInfo.BoxExtent = YoungerBox.BoxExtent; // BoxExtent는 변경되지 않는다
+
+		InterpFramePackage.HitBoxInfo.Add(BoxInfoName, InterpBoxInfo); // InterpBoxInfo 정보를 갱신하여 HitBoxInfo에 넣는다
+	}
+
+	return InterpFramePackage;
+}
+
 void ULagCompensationComponent::ShowFramePackage(const FFramePackage& Package, const FColor& Color) // Package 내의 HitBoxInfo 사용
 {
 	// SaveFramePackage에서 갱신된 정보 사용
