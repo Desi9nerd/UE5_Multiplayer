@@ -41,6 +41,7 @@ public:
 	friend class ABaseCharacter;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ShowFramePackage(const FFramePackage& Package, const FColor& Color);
+	void ServerSideRewind(class ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);  // Server-side Rewinding Time 알고리즘
 
 protected:
 	virtual void BeginPlay() override;
