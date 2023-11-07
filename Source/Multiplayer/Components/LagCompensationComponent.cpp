@@ -126,15 +126,16 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 		CurrentFrames.Add(CurrentFrame);
 	}
 
+	//** 머리 HitCollisionBox를 먼저 충돌처리 체크 할 수 있도록 해준다.
 	for (auto& Frame : FramePackages)
 	{
-		// 머리 HitCollisionBox를 먼저 충돌처리 체크 할 수 있도록 해준다.
 		UBoxComponent* HeadBox = Frame.Character->HitCollisionBoxes[FName("head")];
 		HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		HeadBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	}
 
 	TWeakObjectPtr<UWorld> World = GetWorld();
+
 	//** 충돌체크: 헤드샷 
 	for (auto& HitLocation : HitLocations)
 	{
@@ -175,7 +176,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 		HeadBox->SetCollisionEnabled(ECollisionEnabled::NoCollision); // head의 HitCollisionBox는 비활성화
 	}
 
-	//** 충돌 체크: head 외 나머지 몸의 HitCollisionBoxes들의 충돌 체크
+	//** 충돌 체크: 바디샷. head 외 나머지 몸의 HitCollisionBoxes들의 충돌 체크
 	for (auto& HitLocation : HitLocations)
 	{
 		FHitResult ConfirmHitResult;
