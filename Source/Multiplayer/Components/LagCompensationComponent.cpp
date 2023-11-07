@@ -107,7 +107,105 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 
 FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(const TArray<FFramePackage>& FramePackages, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations)
 {
-	return FShotgunServerSideRewindResult();
+	for (auto& Frame : FramePackages) // 예외 처리
+	{
+		if (Frame.Character == nullptr) return FShotgunServerSideRewindResult();
+	}
+
+
+	FShotgunServerSideRewindResult ShotgunResult;
+	TArray<FFramePackage> CurrentFrames;
+	for (auto& Frame : FramePackages)
+	{
+		FFramePackage CurrentFrame;
+		CurrentFrame.Character = Frame.Character;
+		CacheBoxPositions(Frame.Character, CurrentFrame); // HitCollisionBoxes 기록
+		MoveBoxes(Frame.Character, Frame); // HitCollisionBoxes 이동
+		EnableCharacterMeshCollision(Frame.Character, ECollisionEnabled::NoCollision);
+
+		CurrentFrames.Add(CurrentFrame);
+	}
+
+	for (auto& Frame : FramePackages)
+	{
+		// 머리 HitCollisionBox를 먼저 충돌처리 체크 할 수 있도록 해준다.
+		UBoxComponent* HeadBox = Frame.Character->HitCollisionBoxes[FName("head")];
+		HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		HeadBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	}
+
+	TWeakObjectPtr<UWorld> World = GetWorld();
+	//** 충돌체크: 헤드샷 
+	for (auto& HitLocation : HitLocations)
+	{
+		FHitResult ConfirmHitResult;
+		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
+
+		if (World.IsValid())
+		{
+			World->LineTraceSingleByChannel(ConfirmHitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility); // LineTrace로 헤드샷 충돌 검사
+
+			TObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(ConfirmHitResult.GetActor()); // 헤드샷이 나온 경우, 캐스팅 성공
+			if (IsValid(BaseCharacter)) // 헤드샷 맞은 캐릭터가 있다면
+			{
+				if (ShotgunResult.HeadShots.Contains(BaseCharacter))
+				{	// 첫 헤드샷 이후의 헤드샷은 ++
+					ShotgunResult.HeadShots[BaseCharacter]++;
+				}
+				else
+				{	// 첫 헤드샷
+					ShotgunResult.HeadShots.Emplace(BaseCharacter, 1);
+				}
+			}
+		}
+	}
+
+	//** head 외의 HitCollisionBoxes들을 활성화. 헤드샷용 head HitCollsionBox는 비활성화
+	for (auto& Frame : FramePackages)
+	{
+		for (auto& HitBoxPair : Frame.Character->HitCollisionBoxes)
+		{
+			if (HitBoxPair.Value != nullptr)
+			{
+				HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+				HitBoxPair.Value->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+			}
+		}
+		UBoxComponent* HeadBox = Frame.Character->HitCollisionBoxes[FName("head")];
+		HeadBox->SetCollisionEnabled(ECollisionEnabled::NoCollision); // head의 HitCollisionBox는 비활성화
+	}
+
+	//** 충돌 체크: head 외 나머지 몸의 HitCollisionBoxes들의 충돌 체크
+	for (auto& HitLocation : HitLocations)
+	{
+		FHitResult ConfirmHitResult;
+		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
+		if (World.IsValid())
+		{
+			World->LineTraceSingleByChannel(ConfirmHitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility);
+			TObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(ConfirmHitResult.GetActor());
+			if (IsValid(BaseCharacter))
+			{
+				if (ShotgunResult.BodyShots.Contains(BaseCharacter))
+				{	// 첫 바디샷 이후의 헤드샷은 ++
+					ShotgunResult.BodyShots[BaseCharacter]++;
+				}
+				else
+				{	// 첫 바디샷
+					ShotgunResult.BodyShots.Emplace(BaseCharacter, 1);
+				}
+			}
+		}
+	}
+
+	//** HitCollissionBoxes 초기화
+	for (auto& Frame : CurrentFrames)
+	{
+		ResetHitBoxes(Frame.Character, Frame);
+		EnableCharacterMeshCollision(Frame.Character, ECollisionEnabled::QueryAndPhysics);
+	}
+
+	return ShotgunResult;
 }
 
 void ULagCompensationComponent::CacheBoxPositions(ABaseCharacter* HitCharacter, FFramePackage& OutFramePackage)
@@ -195,7 +293,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewin
 		FramesToCheck.Add(GetFrameToCheck(HitCharacter, HitTime));
 	}
 
-	return FShotgunServerSideRewindResult();
+	return ShotgunConfirmHit(FramesToCheck, TraceStart, HitLocations);
 }
 
 FFramePackage ULagCompensationComponent::GetFrameToCheck(ABaseCharacter* HitCharacter, float HitTime)
