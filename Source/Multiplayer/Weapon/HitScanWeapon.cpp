@@ -1,10 +1,12 @@
 #include "HitScanWeapon.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Multiplayer/Character/BaseCharacter.h"
+#include "Multiplayer/PlayerController/MainPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 #include "Multiplayer/EnumTypes/EWeaponTypes.h"
+#include "Multiplayer/Components/LagCompensationComponent.h"
 #include "DrawDebugHelpers.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
@@ -27,10 +29,29 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		WeaponTraceHit(Start, HitTarget, FireHit);
 
 		TObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(FireHit.GetActor());
-		if (IsValid(BaseCharacter) && HasAuthority() && InstigatorController)
+		if (IsValid(BaseCharacter) && InstigatorController)
 		{
-			// 데미지 전달
-			UGameplayStatics::ApplyDamage(BaseCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+			if (HasAuthority() && bUseServerSideRewind == false) // Server이고 ServerSideRewind 사용X 
+			{
+				// 데미지 전달
+				UGameplayStatics::ApplyDamage(BaseCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+			}
+			if (HasAuthority() == false && bUseServerSideRewind) // Client이고 ServerSideRewind 사용O 
+			{
+				BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(OwnerPawn) : BaseCharcterOwnerCharacter;
+				MainPlayerOwnerController = MainPlayerOwnerController == nullptr ? Cast<AMainPlayerController>(InstigatorController) : MainPlayerOwnerController;
+
+				if (BaseCharcterOwnerCharacter && MainPlayerOwnerController && BaseCharcterOwnerCharacter->GetLagCompensation())
+				{
+					BaseCharcterOwnerCharacter->GetLagCompensation()->ServerScoreRequest(
+						BaseCharacter,
+						Start,
+						HitTarget,
+						MainPlayerOwnerController->GetServerTime() - MainPlayerOwnerController->SingleTripTime,
+						this
+					); // HitTime = ServerTime - SingleTripTime 을 사용
+				}
+			}
 		} 
 		if (ImpactParticles) // 충돌 시 파티클 스폰 
 		{

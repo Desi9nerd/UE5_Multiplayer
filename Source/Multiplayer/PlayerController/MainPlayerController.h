@@ -31,6 +31,8 @@ public:
 	void HandleMatchHasStarted(); // 경기 시작 시 Announcement 위젯 안 보이게 하기
 	void HandleCooldown(); // 경기 끝난 후 Announcement 위젯 보이게 하기
 
+	float SingleTripTime = 0.0f; // SingleTripTime = 0.5f * RoundTripTime;
+
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();

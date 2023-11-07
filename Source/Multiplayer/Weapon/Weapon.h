@@ -104,6 +104,17 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	float SphereRadius = 75.0f; // 샷건의 산탄분포에 이용될 SphereRadius
 
+	UPROPERTY(EditAnywhere)
+	float Damage = 20.0f; // 무기 데미지
+
+	UPROPERTY(EditAnywhere)
+	bool bUseServerSideRewind = false; // ServerSideRewind 사용 true/false
+
+	UPROPERTY()
+	class ABaseCharacter* BaseCharcterOwnerCharacter;
+	UPROPERTY()
+	class AMainPlayerController* MainPlayerOwnerController;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;
@@ -143,11 +154,6 @@ private:
 	// Incremented in SpendRound, decremented in ClientUpdateAmmo.
 	int32 Sequence = 0;
 
-	UPROPERTY()
-	class ABaseCharacter* BaseCharcterOwnerCharacter;
-	UPROPERTY()
-	class AMainPlayerController* MainPlayerOwnerController;
-
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType; // 무기 종류
 
@@ -162,4 +168,5 @@ public:
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
+	FORCEINLINE float GetDamage() const { return Damage; }
 };

@@ -1,6 +1,8 @@
 #include "LagCompensationComponent.h"
 #include "Multiplayer/Character/BaseCharacter.h"
+#include "Multiplayer/Weapon/Weapon.h"
 #include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 
 ULagCompensationComponent::ULagCompensationComponent()
@@ -13,34 +15,6 @@ void ULagCompensationComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
-}
-
-void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if (FrameHistory.Num() <= 1)
-	{
-		FFramePackage ThisFrame;
-		SaveFramePackage(ThisFrame);
-		FrameHistory.AddHead(ThisFrame); // FrameHistory에 추가
-	}
-	else
-	{
-		// HistoryLength = Newest Frame Package Time - Oldest Frame Package Time
-		float HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
-		while (HistoryLength > MaxRecordTime)
-		{
-			FrameHistory.RemoveNode(FrameHistory.GetTail()); // FrameHistory에서 삭제
-			HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;// HistoryLength 업데이트
-		}
-
-		FFramePackage ThisFrame;
-		SaveFramePackage(ThisFrame);
-		FrameHistory.AddHead(ThisFrame); // FrameHistory에 추가
-
-		ShowFramePackage(ThisFrame, FColor::Red);
-	}
 }
 
 void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
@@ -279,4 +253,57 @@ FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABaseCharact
 	}
 
 	return ConfirmHit(FrameToCheck, HitCharacter, TraceStart, HitLocation);
+}
+
+void ULagCompensationComponent::ServerScoreRequest_Implementation(ABaseCharacter* HitCharacter,
+	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, AWeapon* DamageCauser)
+{
+	FServerSideRewindResult Confirm = ServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime); // ServerSideRewind 알고리즘으로 Hit 여부 판별
+
+	if (Character && HitCharacter && DamageCauser && Confirm.bHitConfirmed) // Hit 되었다면
+	{
+		// 데미지 전달
+		UGameplayStatics::ApplyDamage(
+			HitCharacter,
+			DamageCauser->GetDamage(),
+			Character->Controller,
+			DamageCauser,
+			UDamageType::StaticClass()
+		); 
+	}
+}
+
+void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	SaveFramePackage();
+}
+
+void ULagCompensationComponent::SaveFramePackage()
+{
+	if (Character == nullptr || Character->HasAuthority() == false) return; // Client(=Server가 아니라면)면 리턴
+
+	if (FrameHistory.Num() <= 1)
+	{
+		FFramePackage ThisFrame;
+		SaveFramePackage(ThisFrame);
+		FrameHistory.AddHead(ThisFrame); // FrameHistory에 추가
+	}
+	else
+	{
+		// HistoryLength = Newest Frame Package Time - Oldest Frame Package Time
+		float HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;
+		while (HistoryLength > MaxRecordTime)
+		{
+			FrameHistory.RemoveNode(FrameHistory.GetTail()); // FrameHistory에서 삭제
+			HistoryLength = FrameHistory.GetHead()->GetValue().Time - FrameHistory.GetTail()->GetValue().Time;// HistoryLength 업데이트
+		}
+
+		FFramePackage ThisFrame;
+		SaveFramePackage(ThisFrame);
+		FrameHistory.AddHead(ThisFrame); // FrameHistory에 추가
+
+		//ShowFramePackage(ThisFrame, FColor::Red);
+	}
 }
