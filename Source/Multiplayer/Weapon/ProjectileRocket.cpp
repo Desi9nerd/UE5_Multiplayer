@@ -19,8 +19,8 @@ AProjectileRocket::AProjectileRocket()
 	RocketMovementComponent->bRotationFollowsVelocity = true;
 	RocketMovementComponent->SetIsReplicated(true);
 
-	RocketMovementComponent->InitialSpeed = 1500.0f; // 로켓 속도. 변경 가능.
-	RocketMovementComponent->MaxSpeed = 1500.0f; // 로켓 최대 속도. 변경 가능.
+	RocketMovementComponent->InitialSpeed = InitialRocketSpeed; // 로켓 속도.
+	RocketMovementComponent->MaxSpeed = InitialRocketSpeed; // 로켓 최대 속도
 	RocketMovementComponent->ProjectileGravityScale = 0.2f; // 로켓 중력. 변경 가능.
 }
 
@@ -59,6 +59,24 @@ void AProjectileRocket::Destroyed()
 {
 	Super::Destroyed();
 }
+
+#if WITH_EDITOR // Editor에서만 override되도록 #if~#endif 사용. 컴파일 타임 수행. 런타임 실행X
+void AProjectileRocket::PostEditChangeProperty(FPropertyChangedEvent& Event)
+{
+	Super::PostEditChangeProperty(Event);
+
+	FName PropertyName = Event.Property != nullptr ? Event.Property->GetFName() : NAME_None;
+	// Property가 변경되었을때 변경된 것들 중 InitialRocketSpeed란 이름이 있다면 
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(AProjectileRocket, InitialRocketSpeed))
+	{
+		if (IsValid(RocketMovementComponent))
+		{
+			RocketMovementComponent->InitialSpeed = InitialRocketSpeed;
+			RocketMovementComponent->MaxSpeed = InitialRocketSpeed;
+		}
+	}
+}
+#endif
 
 void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {

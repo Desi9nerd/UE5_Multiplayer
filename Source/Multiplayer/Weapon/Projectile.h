@@ -19,7 +19,9 @@ public:
 	FVector_NetQuantize TraceStart;
 	FVector_NetQuantize100 InitialVelocity; // 좀 더 정밀한 값 사용을 위해 FVector_NetQuantize100 사용.
 	UPROPERTY(EditAnywhere)
-	float InitialSpeed = 15000.0f; // Projectile(=총알) 속도
+	float InitialSpeed = 15000.0f; // ProjectileBullet(=총알) 속도
+	UPROPERTY(EditAnywhere)
+	float InitialRocketSpeed = 1500.0f; // ProjectileRocket(=로켓) 속도
 
 protected:
 	virtual void BeginPlay() override;
