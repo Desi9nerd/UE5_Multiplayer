@@ -14,6 +14,13 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
 
+	//** Server-side Rewind에 사용되는 변수들
+	bool bUseServerSideRewind = false;
+	FVector_NetQuantize TraceStart;
+	FVector_NetQuantize100 InitialVelocity; // 좀 더 정밀한 값 사용을 위해 FVector_NetQuantize100 사용.
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed = 15000.0f; // Projectile(=총알) 속도
+
 protected:
 	virtual void BeginPlay() override;
 	void StartDestroyTimer();
