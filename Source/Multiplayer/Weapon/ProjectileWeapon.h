@@ -13,6 +13,9 @@ public:
 	virtual void Fire(const FVector& HitTarget) override;
 
 private:
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere) // Replicated O
 	TSubclassOf<class AProjectile> ProjectileClass;
+
+	UPROPERTY(EditAnywhere) // Replicated X. Local에서만 Spawn된다
+	TSubclassOf<AProjectile> ServerSideRewindProjectileClass;
 };

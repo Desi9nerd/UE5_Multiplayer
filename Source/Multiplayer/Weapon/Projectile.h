@@ -22,6 +22,8 @@ public:
 	float InitialSpeed = 15000.0f; // ProjectileBullet(=총알) 속도
 	UPROPERTY(EditAnywhere)
 	float InitialRocketSpeed = 1500.0f; // ProjectileRocket(=로켓) 속도
+	
+	float Damage = 20.0f; // 발사체가 입힐 데미지
 
 protected:
 	virtual void BeginPlay() override;
@@ -35,9 +37,6 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	class UBoxComponent* CollisionBox;
-
-	UPROPERTY(EditAnywhere) // 하위 클래스에서 접근할 수 있도록 protected
-	float Damage = 20.0f; // 발사체가 입힐 데미지
 
 	UPROPERTY(EditAnywhere)
 	class UNiagaraSystem* TrailSystem; // 발사체 Trail 이펙트
