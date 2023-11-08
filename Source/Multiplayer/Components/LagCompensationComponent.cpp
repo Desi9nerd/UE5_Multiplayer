@@ -355,6 +355,7 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(ABaseCharacter* HitChar
 		// OlderFrame과 YoungerFrame 사이 보간
 		FrameToCheck = InterpBetweenFrames(Older->GetValue(), Younger->GetValue(), HitTime);
 	}
+	FrameToCheck.Character = HitCharacter;
 
 	return FrameToCheck;
 }

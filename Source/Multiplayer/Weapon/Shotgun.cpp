@@ -1,6 +1,8 @@
 #include "Shotgun.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Multiplayer/Character/BaseCharacter.h"
+#include "Multiplayer/PlayerController/MainPlayerController.h"
+#include "Multiplayer/Components/LagCompensationComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
@@ -52,21 +54,45 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		}
 
 		//** HitMap에 등록된 캐릭터들에게 데미지 입히기
+		TArray<ABaseCharacter*> HitCharacters;
 		for (auto HitPair : HitMap)
 		{
-			if (HitPair.Key && HasAuthority() && InstigatorController) // HitMap에 등록 && Server && Controller (O)
+			if (HitPair.Key && InstigatorController) // HitMap에 등록 && Controller (O)
 			{
-				// 데미지 전달: Damage * HitPair.Value 만큼 데미지
-				UGameplayStatics::ApplyDamage(
-					HitPair.Key, // Character that was hit
-					Damage * HitPair.Value, // Multiply Damage by number of times hit
-					InstigatorController,
-					this,
-					UDamageType::StaticClass()
+				// Server이고 ServerSideRewind 사용X 이면 데미지 전달
+				if (HasAuthority() && bUseServerSideRewind == false) 
+				{
+					// 데미지 전달: Damage * HitPair.Value 만큼 데미지
+					UGameplayStatics::ApplyDamage(
+						HitPair.Key, // Character that was hit
+						Damage * HitPair.Value, // Multiply Damage by number of times hit
+						InstigatorController,
+						this,
+						UDamageType::StaticClass()
+					);
+				}
+
+				HitCharacters.Add(HitPair.Key); // 피격 캐릭터들 등록
+			}//if
+		} //for
+
+		// Client이고 ServerSideRewind 사용O 이면 ServerScoreRequest()한다.
+		if (HasAuthority() == false && bUseServerSideRewind)
+		{
+			BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(OwnerPawn) : BaseCharcterOwnerCharacter;
+			MainPlayerOwnerController = MainPlayerOwnerController == nullptr ? Cast<AMainPlayerController>(InstigatorController) : MainPlayerOwnerController;
+
+			if (BaseCharcterOwnerCharacter && MainPlayerOwnerController && BaseCharcterOwnerCharacter->GetLagCompensation() && BaseCharcterOwnerCharacter->IsLocallyControlled())
+			{
+				BaseCharcterOwnerCharacter->GetLagCompensation()->ShotgunServerScoreRequest(
+					HitCharacters, // 피격되는 캐릭터들 
+					Start,	// Muzzle 소켓 위치
+					HitTargets, // 매개변수로 들어온 const TArray<FVector_NetQuantize>& HitTargets
+					MainPlayerOwnerController->GetServerTime() - MainPlayerOwnerController->SingleTripTime
 				);
 			}
-		} 
-	}
+		}
+	}//if(IsValid(MuzzleFlashSocket))
 }
 
 void AShotgun::ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector_NetQuantize>& HitTargets) // 샷건 산탄분포를 위해 LineTrace의 End Loc 랜덤 변경하는 함수

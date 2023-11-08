@@ -31,17 +31,17 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		TObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(FireHit.GetActor());
 		if (IsValid(BaseCharacter) && InstigatorController)
 		{
-			if (HasAuthority() && bUseServerSideRewind == false) // Server이고 ServerSideRewind 사용X 
+			if (HasAuthority() && bUseServerSideRewind == false) // Server이고 ServerSideRewind 사용X 이면 데미지 전달
 			{
 				// 데미지 전달
 				UGameplayStatics::ApplyDamage(BaseCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
 			}
-			if (HasAuthority() == false && bUseServerSideRewind) // Client이고 ServerSideRewind 사용O 
+			if (HasAuthority() == false && bUseServerSideRewind) // Client이고 ServerSideRewind 사용O 이면 ServerScoreRequest()한다.
 			{
 				BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(OwnerPawn) : BaseCharcterOwnerCharacter;
 				MainPlayerOwnerController = MainPlayerOwnerController == nullptr ? Cast<AMainPlayerController>(InstigatorController) : MainPlayerOwnerController;
 
-				if (BaseCharcterOwnerCharacter && MainPlayerOwnerController && BaseCharcterOwnerCharacter->GetLagCompensation())
+				if (BaseCharcterOwnerCharacter && MainPlayerOwnerController && BaseCharcterOwnerCharacter->GetLagCompensation() && BaseCharcterOwnerCharacter->IsLocallyControlled())
 				{
 					BaseCharcterOwnerCharacter->GetLagCompensation()->ServerScoreRequest(
 						BaseCharacter,
