@@ -51,6 +51,7 @@ void AProjectileBullet::BeginPlay()
 {
 	Super::BeginPlay();
 
+	/*
 	FPredictProjectilePathParams PathParams; // Projectile Path 계산에 필요한 값들을 담는 변수
 	PathParams.bTraceWithChannel = true; // 특정 ECollisionChannel을 사용할 수 있도록 true 설정
 	PathParams.bTraceWithCollision = true; // 쏜 Trace의 Hit Event가 발생하도록 true 설정
@@ -67,4 +68,5 @@ void AProjectileBullet::BeginPlay()
 	FPredictProjectilePathResult PathResult; // Projectile Path 결과값
 
 	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult); // PathParams 값으로 ProjectilePath을 계산하여 PathResult로 결과값을 업데이트한다.
+	*/
 }

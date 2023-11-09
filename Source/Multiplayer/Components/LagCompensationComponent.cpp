@@ -126,6 +126,85 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 	return FServerSideRewindResult{ false, false };
 }
 
+FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FFramePackage& Package, ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
+{
+	FFramePackage CurrentFrame;
+	CacheBoxPositions(HitCharacter, CurrentFrame); // HitCollisionBoxes 기록
+	MoveBoxes(HitCharacter, Package);  // HitCollisionBoxes 이동
+	EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::NoCollision);
+
+	// 머리 HitCollisionBox를 먼저 충돌처리 할 수 있도록 해준다.
+	UBoxComponent* HeadBox = HitCharacter->HitCollisionBoxes[FName("head")];
+	HeadBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	HeadBox->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
+
+
+	FPredictProjectilePathParams PathParams; // Projectile Path 계산에 필요한 값들을 담는 변수
+	PathParams.bTraceWithCollision = true; // 쏜 Trace의 Hit Event가 발생하도록 true 설정
+	PathParams.MaxSimTime = MaxRecordTime; // 발사체가 공중에 머물 수 있는 최대시간
+	PathParams.LaunchVelocity = InitialVelocity; // 발사속도 = 최초속도
+	PathParams.StartLocation = TraceStart; // 시작위치
+	PathParams.SimFrequency = 15.0f; // 빈도수. 높을수록 SphereTrace가 많아진다.
+	PathParams.ProjectileRadius = 5.0f; // SphereTrace의 반지름 값
+	PathParams.TraceChannel = ECC_HitBox; // Multiplayer.h에 #define 정의한 채널 사용
+	PathParams.ActorsToIgnore.Add(GetOwner()); // Projectile Path Trace 계산에 무시되는 Actor들
+	PathParams.DrawDebugTime = 5.0f; // 디버그 보여주기 지속시간
+	PathParams.DrawDebugType = EDrawDebugTrace::ForDuration; // DrawDebugTime 동안만 보여주도록 설정
+
+	FPredictProjectilePathResult PathResult; // Projectile Path 결과값
+	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult); // PathParams 값으로 ProjectilePath를 계산하여 PathResult로 결과값을 업데이트한다.
+
+	if (PathResult.HitResult.bBlockingHit) // 헤드샷이 나온 경우, 바로 return 
+	{
+		if (PathResult.HitResult.Component.IsValid())
+		{
+			UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
+			if (Box)
+			{
+				//** 디버깅용. 추후 삭제
+				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.0f);
+			}
+		}
+
+		ResetHitBoxes(HitCharacter, CurrentFrame);
+		EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+		return FServerSideRewindResult{ true, true };
+	}
+	else // 헤드샷이 아닌 경우, 나머지 HitCollsionBoxes들을 LineTrace로 충돌 검사
+	{
+		for (auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
+		{
+			if (HitBoxPair.Value != nullptr)
+			{
+				HitBoxPair.Value->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+				HitBoxPair.Value->SetCollisionResponseToChannel(ECC_HitBox, ECollisionResponse::ECR_Block);
+			}
+		}
+
+		UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
+		if (PathResult.HitResult.bBlockingHit)
+		{
+			if (PathResult.HitResult.Component.IsValid())
+			{
+				UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
+				if (Box)
+				{
+					//** 디버깅용. 추후 삭제
+					DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
+				}
+			}
+
+			ResetHitBoxes(HitCharacter, CurrentFrame);
+			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+			return FServerSideRewindResult{ true, false };
+		}
+	}
+
+	ResetHitBoxes(HitCharacter, CurrentFrame);
+	EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
+	return FServerSideRewindResult{ false, false };
+}
+
 FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(const TArray<FFramePackage>& FramePackages, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations)
 {
 	for (auto& Frame : FramePackages) // 예외 처리
@@ -325,6 +404,14 @@ FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABaseCharact
 	FFramePackage FrameToCheck = GetFrameToCheck(HitCharacter, HitTime);
 
 	return ConfirmHit(FrameToCheck, HitCharacter, TraceStart, HitLocation);
+}
+
+FServerSideRewindResult ULagCompensationComponent::ProjectileServerSideRewind(ABaseCharacter* HitCharacter,
+	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
+{
+	FFramePackage FrameToCheck = GetFrameToCheck(HitCharacter, HitTime);
+
+	return ProjectileConfirmHit(FrameToCheck, HitCharacter, TraceStart, InitialVelocity, HitTime);
 }
 
 FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunServerSideRewind(const TArray<ABaseCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, float HitTime)

@@ -65,13 +65,27 @@ public:
 	friend class ABaseCharacter;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	void ShowFramePackage(const FFramePackage& Package, const FColor& Color);
-	FServerSideRewindResult ServerSideRewind(class ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime);  // Server-side Rewinding Time 알고리즘
 
+	//** Hitscan
+	FServerSideRewindResult ServerSideRewind(
+		ABaseCharacter* HitCharacter, 
+		const FVector_NetQuantize& TraceStart, 
+		const FVector_NetQuantize& HitLocation, 
+		float HitTime); // Server-side Rewinding Time 알고리즘
+
+	//** Projectile
+	FServerSideRewindResult ProjectileServerSideRewind(
+		ABaseCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize100& InitialVelocity,
+		float HitTime); // Server-side Rewinding Time 알고리즘
+
+	//** Shotgun
 	FShotgunServerSideRewindResult ShotgunServerSideRewind(
 		const TArray<ABaseCharacter*>& HitCharacters,
 		const FVector_NetQuantize& TraceStart,
 		const TArray<FVector_NetQuantize>& HitLocations,
-		float HitTime); // Shotgun: Server-side Rewinding Time 알고리즘
+		float HitTime); // Server-side Rewinding Time 알고리즘
 
 	UFUNCTION(Server, Reliable) // Client으로부터 call되어 Server에서 실행된다.
 	void ServerScoreRequest(ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, class AWeapon* DamageCauser);
@@ -88,16 +102,32 @@ protected:
 	void SaveFramePackage();
 	void SaveFramePackage(FFramePackage& Package); // 오버로딩
 	FFramePackage InterpBetweenFrames(const FFramePackage& OlderFrame, const FFramePackage& YoungerFrame, float HitTime);
-	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation);
-	FShotgunServerSideRewindResult ShotgunConfirmHit(
-		const TArray<FFramePackage>& FramePackages,
-		const FVector_NetQuantize& TraceStart,
-		const TArray<FVector_NetQuantize>& HitLocations);
 	void CacheBoxPositions(ABaseCharacter* HitCharacter, FFramePackage& OutFramePackage);
 	void MoveBoxes(ABaseCharacter* HitCharacter, const FFramePackage& Package);
 	void ResetHitBoxes(ABaseCharacter* HitCharacter, const FFramePackage& Package);
 	void EnableCharacterMeshCollision(ABaseCharacter* HitCharacter, ECollisionEnabled::Type CollisionEnabled);
 	FFramePackage GetFrameToCheck(ABaseCharacter* HitCharacter, float HitTime);
+
+	//** Hitscan
+	FServerSideRewindResult ConfirmHit(
+		const FFramePackage& Package, 
+		ABaseCharacter* HitCharacter, 
+		const FVector_NetQuantize& TraceStart, 
+		const FVector_NetQuantize& HitLocation);
+
+	//** Projectile
+	FServerSideRewindResult ProjectileConfirmHit(
+		const FFramePackage& Package,
+		ABaseCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize100& InitialVelocity,
+		float HitTime);
+
+	//** Shotgun
+	FShotgunServerSideRewindResult ShotgunConfirmHit(
+		const TArray<FFramePackage>& FramePackages,
+		const FVector_NetQuantize& TraceStart,
+		const TArray<FVector_NetQuantize>& HitLocations);
 
 private:
 	UPROPERTY()
