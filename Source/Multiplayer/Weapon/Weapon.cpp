@@ -48,6 +48,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState); // WeaponState를 모든 Client들에게 Replicate 해준다.
+	DOREPLIFETIME_CONDITION(AWeapon, bUseServerSideRewind, COND_OwnerOnly);
 }
 
 void AWeapon::ShowPickupWidget(bool bShowWidget)
@@ -102,6 +103,12 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}
 }
 
+void AWeapon::OnPingTooHigh(bool bPingTooHigh)
+{
+	// Ping이 안 높으면 SSR 사용, Ping이 너무 높으면 no SSR 
+	bUseServerSideRewind = (bPingTooHigh == false);
+}
+
 void AWeapon::SetWeaponState(EWeaponState State)
 {
 	WeaponState = State; //무기상태 변경
@@ -143,6 +150,19 @@ void AWeapon::OnEquipped() //무기 장착상태
 		WeaponMesh->SetEnableGravity(true); // 중력을 켜준다.
 		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	}
+	EnableCustomDepth(false);
+
+	BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(GetOwner()) : BaseCharcterOwnerCharacter;
+	if (IsValid(BaseCharcterOwnerCharacter) && bUseServerSideRewind) // SSR
+	{
+		MainPlayerOwnerController = MainPlayerOwnerController == nullptr ? Cast<AMainPlayerController>(BaseCharcterOwnerCharacter->Controller) : MainPlayerOwnerController;
+		if (MainPlayerOwnerController && HasAuthority() && 
+			MainPlayerOwnerController->HighPingDelegate.IsBound() == false)
+		{
+			// Dynamic Delegate 등록
+			MainPlayerOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
 }
 
 void AWeapon::OnDropped() // 무기가 바닥에 떨어져 있는 상태
@@ -161,6 +181,18 @@ void AWeapon::OnDropped() // 무기가 바닥에 떨어져 있는 상태
 	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE);
 	WeaponMesh->MarkRenderStateDirty();
 	EnableCustomDepth(true);
+
+	BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(GetOwner()) : BaseCharcterOwnerCharacter;
+	if (IsValid(BaseCharcterOwnerCharacter) && bUseServerSideRewind) // SSR
+	{
+		MainPlayerOwnerController = MainPlayerOwnerController == nullptr ? Cast<AMainPlayerController>(BaseCharcterOwnerCharacter->Controller) : MainPlayerOwnerController;
+		if (MainPlayerOwnerController && HasAuthority() &&
+			MainPlayerOwnerController->HighPingDelegate.IsBound())
+		{
+			// Dynamic Delegate 해제
+			MainPlayerOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
 }
 
 void AWeapon::OnEquippedSecondary() // Secondary 무기로 장착된 상태
@@ -182,7 +214,19 @@ void AWeapon::OnEquippedSecondary() // Secondary 무기로 장착된 상태
 	//{
 	//	WeaponMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
 	//	WeaponMesh->MarkRenderStateDirty();
-	//}	
+	//}
+
+	BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(GetOwner()) : BaseCharcterOwnerCharacter;
+	if (IsValid(BaseCharcterOwnerCharacter) && bUseServerSideRewind) // SSR
+	{
+		MainPlayerOwnerController = MainPlayerOwnerController == nullptr ? Cast<AMainPlayerController>(BaseCharcterOwnerCharacter->Controller) : MainPlayerOwnerController;
+		if (MainPlayerOwnerController && HasAuthority() &&
+			MainPlayerOwnerController->HighPingDelegate.IsBound())
+		{
+			// Dynamic Delegate 해제
+			MainPlayerOwnerController->HighPingDelegate.RemoveDynamic(this, &AWeapon::OnPingTooHigh);
+		}
+	}
 }
 
 void AWeapon::SetHUDAmmo()

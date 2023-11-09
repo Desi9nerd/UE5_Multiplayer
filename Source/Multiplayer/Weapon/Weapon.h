@@ -98,6 +98,9 @@ protected:
 	UFUNCTION()
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void OnPingTooHigh(bool bPingTooHigh);
+
 	//** Trace end with scatter
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	float DistanceToSphere = 800.0f; // 샷건의 SphereRadius까지의 거리
@@ -107,14 +110,14 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.0f; // 무기 데미지
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(Replicated, EditAnywhere)
 	bool bUseServerSideRewind = false; // ServerSideRewind 사용 true/false
 
 	UPROPERTY()
 	class ABaseCharacter* BaseCharcterOwnerCharacter;
 	UPROPERTY()
 	class AMainPlayerController* MainPlayerOwnerController;
-
+	
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	USkeletalMeshComponent* WeaponMesh;

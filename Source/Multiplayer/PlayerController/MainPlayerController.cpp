@@ -10,7 +10,6 @@
 #include "Multiplayer/HUD/Announcement.h"
 #include "Kismet/GameplayStatics.h" //UGameplayStatics::GetGameMode() 사용하기 위해 추가
 #include "Multiplayer/Components/CombatComponent.h"
-#include "Multiplayer/Weapon/Weapon.h"
 #include "Multiplayer/GameState/MultiplayerGameState.h"
 #include "Components/Image.h"
 
@@ -38,6 +37,54 @@ void AMainPlayerController::Tick(float DeltaTime)
 	CheckTimeSync(DeltaTime); // 매 TimeSyncFrequency 마다 Server Time을 Sync한다.
 	PollInit(); // 체력, 점수, 승패 초기화
 	CheckPing(DeltaTime); // Ping 체크
+}
+
+void AMainPlayerController::CheckPing(float DeltaTime) // Ping 체크
+{
+	if (HasAuthority()) return; // Server면 예외처리 리턴
+
+	HighPingRunningTime += DeltaTime; // Tick의 DeltaTime을 변수로 받아 더한다
+
+	if (HighPingRunningTime > CheckPingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if (IsValid(PlayerState))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("PlayerState->GetPing() * 4 : %d"), PlayerState->GetPing() * 4); //디버깅용. 추후 삭제
+			if (PlayerState->GetPing() * 4 > HighPingThreshold) // ping is compressed; it's actually ping / 4
+			{
+				HighPingWarning(); // High Ping 경고(이미지 띄우기)
+				PingAnimationRunningTime = 0.0f;
+				ServerReportPingStatus(true);
+			}
+			else
+			{
+				ServerReportPingStatus(false);
+			}
+		}
+
+		HighPingRunningTime = 0.0f;
+	}
+
+	bool bHighPingAnimationPlaying =
+		MainHUD && MainHUD->CharacterOverlay &&
+		MainHUD->CharacterOverlay->HighPingAnimation &&
+		MainHUD->CharacterOverlay->IsAnimationPlaying(MainHUD->CharacterOverlay->HighPingAnimation);
+	if (bHighPingAnimationPlaying) // High Ping 애니메이션이 재생중이면
+	{
+		PingAnimationRunningTime += DeltaTime;
+		// High Ping 애니메이션을 재생 한 시간이 HighPingDuration로 설정한 시간보다 길어지면
+		if (PingAnimationRunningTime > HighPingDuration)
+		{
+			StopHighPingWarning(); // High Ping 경고 멈추기(이미지 안 띄우기)
+		}
+	}
+}
+
+// Ping이 너무 높으면 bHighPing변수로 true, 아니면 false가 들어온다. 
+void AMainPlayerController::ServerReportPingStatus_Implementation(bool bHighPing) // Server RPC
+{
+	HighPingDelegate.Broadcast(bHighPing); // bHighPing 변수를 Broadcast 시킨다
 }
 
 void AMainPlayerController::CheckTimeSync(float DeltaTime)
@@ -475,40 +522,6 @@ void AMainPlayerController::HandleCooldown() // 경기 끝난 후 Announcement �
 	{
 		BaseCharacter->bDisableGameplay = true; // true면 캐릭터 움직임 제한. 마우스 회전으로 시야 회전은 가능
 		BaseCharacter->GetCombat()->FireButtonPressed(false); // 발사 버튼 false
-	}
-}
-
-void AMainPlayerController::CheckPing(float DeltaTime) // Ping 체크
-{
-	HighPingRunningTime += DeltaTime; // Tick의 DeltaTime을 변수로 받아 더한다
-
-	if (HighPingRunningTime > CheckPingFrequency)
-	{
-		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
-		if (IsValid(PlayerState))
-		{
-			if (PlayerState->GetPing() * 4 > HighPingThreshold) // ping is compressed; it's actually ping / 4
-			{
-				HighPingWarning(); // High Ping 경고(이미지 띄우기)
-				PingAnimationRunningTime = 0.0f;
-			}
-		}
-
-		HighPingRunningTime = 0.0f;
-	}
-
-	bool bHighPingAnimationPlaying =
-		MainHUD && MainHUD->CharacterOverlay &&
-		MainHUD->CharacterOverlay->HighPingAnimation &&
-		MainHUD->CharacterOverlay->IsAnimationPlaying(MainHUD->CharacterOverlay->HighPingAnimation);
-	if (bHighPingAnimationPlaying) // High Ping 애니메이션이 재생중이면
-	{
-		PingAnimationRunningTime += DeltaTime;
-		// High Ping 애니메이션을 재생 한 시간이 HighPingDuration로 설정한 시간보다 길어지면
-		if (PingAnimationRunningTime > HighPingDuration)
-		{
-			StopHighPingWarning(); // High Ping 경고 멈추기(이미지 안 띄우기)
-		}
 	}
 }
 

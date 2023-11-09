@@ -7,6 +7,9 @@
 /** PlayerController
  *  HUD를 Update 한다.
  */
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHighPingDelegate, bool, bPingTooHigh);
+
 UCLASS()
 class MULTIPLAYER_API AMainPlayerController : public APlayerController
 {
@@ -32,6 +35,7 @@ public:
 	void HandleCooldown(); // 경기 끝난 후 Announcement 위젯 보이게 하기
 
 	float SingleTripTime = 0.0f; // SingleTripTime = 0.5f * RoundTripTime;
+	FHighPingDelegate HighPingDelegate;
 
 protected:
 	virtual void BeginPlay() override;
@@ -103,7 +107,7 @@ private:
 	int32 HUDDefeats;
 	int32 HUDGrenades;
 
-	//** Ping 관련 변수들
+	//** Ping 관련 변수들 + 함수
 	float HighPingRunningTime = 0.0f;
 	UPROPERTY(EditAnywhere)
 	float HighPingDuration = 5.0f;
@@ -112,4 +116,6 @@ private:
 	float CheckPingFrequency = 20.0f;
 	UPROPERTY(EditAnywhere)
 	float HighPingThreshold = 50.0f;
+	UFUNCTION(Server, Reliable) // Server RPC
+	void ServerReportPingStatus(bool bHighPing);
 };
