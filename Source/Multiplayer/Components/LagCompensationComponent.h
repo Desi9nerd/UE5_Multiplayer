@@ -87,15 +87,30 @@ public:
 		const TArray<FVector_NetQuantize>& HitLocations,
 		float HitTime); // Server-side Rewinding Time 알고리즘
 
+	//** Hitscan
 	UFUNCTION(Server, Reliable) // Client으로부터 call되어 Server에서 실행된다.
-	void ServerScoreRequest(ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, class AWeapon* DamageCauser);
+	void ServerScoreRequest(
+		ABaseCharacter* HitCharacter, 
+		const FVector_NetQuantize& TraceStart, 
+		const FVector_NetQuantize& HitLocation, 
+		float HitTime, 
+		class AWeapon* DamageCauser);
+
+	//** Projectile
+	UFUNCTION(Server, Reliable)
+	void ProjectileServerScoreRequest(
+		ABaseCharacter* HitCharacter,
+		const FVector_NetQuantize& TraceStart,
+		const FVector_NetQuantize100& InitialVelocity,
+		float HitTime);
+
+	//** Shotgun
 	UFUNCTION(Server, Reliable) // Client으로부터 call되어 Server에서 실행된다.
 	void ShotgunServerScoreRequest(
 		const TArray<ABaseCharacter*>& HitCharacters,
 		const FVector_NetQuantize& TraceStart,
 		const TArray<FVector_NetQuantize>& HitLocations,
-		float HitTime
-	);
+		float HitTime);
 
 protected:
 	virtual void BeginPlay() override;

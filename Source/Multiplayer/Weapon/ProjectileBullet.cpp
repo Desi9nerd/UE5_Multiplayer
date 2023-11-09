@@ -1,6 +1,8 @@
 #include "ProjectileBullet.h"
 #include "Kismet/GameplayStatics.h"
-#include "GameFramework/Character.h"
+#include "Multiplayer/Character/BaseCharacter.h"
+#include "Multiplayer/PlayerController/MainPlayerController.h"
+#include "Multiplayer/Components/LagCompensationComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 
 AProjectileBullet::AProjectileBullet()
@@ -34,13 +36,29 @@ void AProjectileBullet::PostEditChangeProperty(FPropertyChangedEvent& Event)
 
 void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	TWeakObjectPtr<ACharacter> OwnerCharacter = Cast<ACharacter>(GetOwner());
+	TWeakObjectPtr<ABaseCharacter> OwnerCharacter = Cast<ABaseCharacter>(GetOwner());
 	if (OwnerCharacter.IsValid()) // 총알을 맞춘 대상이 캐릭터(=적 플레이어)라면
 	{
-		TWeakObjectPtr<AController> OwnerController = OwnerCharacter->Controller;
+		TWeakObjectPtr<AMainPlayerController> OwnerController = Cast<AMainPlayerController>(OwnerCharacter->Controller);
 		if (OwnerController.IsValid())
 		{
-			UGameplayStatics::ApplyDamage(OtherActor, Damage, OwnerController.Get(), this, UDamageType::StaticClass());
+			if (OwnerCharacter->HasAuthority() && bUseServerSideRewind == false) // Server && SSR X
+			{
+				UGameplayStatics::ApplyDamage(OtherActor, Damage, OwnerController.Get(), this, UDamageType::StaticClass());
+
+				Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, Hit);
+				return;
+			}
+			TWeakObjectPtr<ABaseCharacter> HitCharacter = Cast<ABaseCharacter>(OtherActor);
+			if (bUseServerSideRewind && OwnerCharacter->GetLagCompensation() && OwnerCharacter->IsLocallyControlled() && HitCharacter.IsValid()) // Client && SSR O
+			{
+				OwnerCharacter->GetLagCompensation()->ProjectileServerScoreRequest(
+					HitCharacter.Get(),
+					TraceStart,
+					InitialVelocity,
+					OwnerController->GetServerTime() - OwnerController->SingleTripTime
+				);
+			}
 		}
 	}
 

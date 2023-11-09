@@ -59,8 +59,9 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		{
 			if (HitPair.Key && InstigatorController) // HitMap에 등록 && Controller (O)
 			{
-				// Server이고 ServerSideRewind 사용X 이면 데미지 전달
-				if (HasAuthority() && bUseServerSideRewind == false) 
+				bool bCauseAuthDamage = bUseServerSideRewind == false || OwnerPawn->IsLocallyControlled();
+				
+				if (HasAuthority() && bCauseAuthDamage) // Server && no SSR
 				{
 					// 데미지 전달: Damage * HitPair.Value 만큼 데미지
 					UGameplayStatics::ApplyDamage(
@@ -75,9 +76,8 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				HitCharacters.Add(HitPair.Key); // 피격 캐릭터들 등록
 			}//if
 		} //for
-
-		// Client이고 ServerSideRewind 사용O 이면 ServerScoreRequest()한다.
-		if (HasAuthority() == false && bUseServerSideRewind)
+		
+		if (HasAuthority() == false && bUseServerSideRewind) // Client &&  SSR
 		{
 			BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(OwnerPawn) : BaseCharcterOwnerCharacter;
 			MainPlayerOwnerController = MainPlayerOwnerController == nullptr ? Cast<AMainPlayerController>(InstigatorController) : MainPlayerOwnerController;

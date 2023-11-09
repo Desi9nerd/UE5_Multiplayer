@@ -31,12 +31,14 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		TObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(FireHit.GetActor());
 		if (IsValid(BaseCharacter) && InstigatorController)
 		{
-			if (HasAuthority() && bUseServerSideRewind == false) // Server이고 ServerSideRewind 사용X 이면 데미지 전달
+			bool bCauseAuthDamage = bUseServerSideRewind == false || OwnerPawn->IsLocallyControlled();
+
+			if (HasAuthority() && bCauseAuthDamage) // Server && no SSR이면 데미지 전달
 			{
 				// 데미지 전달
 				UGameplayStatics::ApplyDamage(BaseCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
 			}
-			if (HasAuthority() == false && bUseServerSideRewind) // Client이고 ServerSideRewind 사용O 이면 ServerScoreRequest()한다.
+			if (HasAuthority() == false && bUseServerSideRewind) // Client && SSR이면 ServerScoreRequest()
 			{
 				BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(OwnerPawn) : BaseCharcterOwnerCharacter;
 				MainPlayerOwnerController = MainPlayerOwnerController == nullptr ? Cast<AMainPlayerController>(InstigatorController) : MainPlayerOwnerController;
