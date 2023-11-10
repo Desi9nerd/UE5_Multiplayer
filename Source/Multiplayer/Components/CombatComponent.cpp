@@ -263,20 +263,13 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip) // Server
 
 void UCombatComponent::SwapWeapons() // 무기 교체
 {
-	if (CombatState != ECombatState::ECS_Unoccupied) return; // 재장전이나 수류탄 던질 때는 무기교체 안 되도록 예외처리
+	if (CombatState != ECombatState::ECS_Unoccupied || Character == nullptr || !Character->HasAuthority()) return; // 재장전이나 수류탄 던질 때 || Server일 때는 무기교체 안 되도록 예외처리
 
-	TWeakObjectPtr<AWeapon> TempWeapon = EquippedWeapon;
-	EquippedWeapon = SecondaryWeapon;
-	SecondaryWeapon = TempWeapon.Get();
+	Character->PlaySwapMontage(); // 무기 교체 몽타주 재생
+	CombatState = ECombatState::ECS_SwappingWeapons;
+	Character->bFinishedSwapping = false;
 
-	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped); // 바뀐 장착무기의 상태를 EWS_Equipped로 설정.
-	AttachActorToRightHand(EquippedWeapon); // 바뀐 장착무기를 오른손 소켓에 붙여줌
-	EquippedWeapon->SetHUDAmmo();
-	UpdateCarriedAmmo();
-	PlayEquipWeaponSound(EquippedWeapon);
-
-	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary); // 바뀐 Secondary무기의 상태를 EWS_EquippedSecondary로 설정.
-	AttachActorToBackpack(SecondaryWeapon); // 바뀐 Secondary 무기를 등 소켓에 붙여줌
+	if (SecondaryWeapon) SecondaryWeapon->EnableCustomDepth(false);
 }
 
 void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
@@ -461,6 +454,32 @@ void UCombatComponent::FinishReloading()
 	}
 }
 
+void UCombatComponent::FinishSwap()
+{
+	if (Character.IsValid() && Character->HasAuthority()) // Server
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+	}
+	if (Character.IsValid()) Character->bFinishedSwapping = true;
+	if (IsValid(SecondaryWeapon)) SecondaryWeapon->EnableCustomDepth(true);
+}
+
+void UCombatComponent::FinishSwapAttachWeapons()
+{
+	TWeakObjectPtr<AWeapon> TempWeapon = EquippedWeapon;
+	EquippedWeapon = SecondaryWeapon;
+	SecondaryWeapon = TempWeapon.Get();
+
+	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped); // 바뀐 장착무기의 상태를 EWS_Equipped로 설정.
+	AttachActorToRightHand(EquippedWeapon); // 바뀐 장착무기를 오른손 소켓에 붙여줌
+	EquippedWeapon->SetHUDAmmo();
+	UpdateCarriedAmmo();
+	PlayEquipWeaponSound(EquippedWeapon);
+
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_EquippedSecondary); // 바뀐 Secondary무기의 상태를 EWS_EquippedSecondary로 설정.
+	AttachActorToBackpack(SecondaryWeapon); // 바뀐 Secondary 무기를 등 소켓에 붙여줌
+}
+
 void UCombatComponent::ShotgunShellReload()
 {
 	if (Character.IsValid() && Character->HasAuthority())
@@ -545,6 +564,12 @@ void UCombatComponent::OnRep_CombatState() // Client
 		if (Character.IsValid() && Character->IsLocallyControlled() == false)
 		{
 			Character->PlayThrowGrenadeMontage();
+		}
+		break;
+	case ECombatState::ECS_SwappingWeapons:
+		if (Character.IsValid() && Character->IsLocallyControlled() == false)
+		{
+			Character->PlaySwapMontage();
 		}
 		break;
 	}
@@ -870,9 +895,9 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)//RPC들은 _
 bool UCombatComponent::CanFire()
 {
 	if (EquippedWeapon == nullptr) return false; // 장착된 무기가 없다면 false 리턴
-	if (bLocallyReloading) return false; // 재장전이면 false 리턴
-
+	
 	if (EquippedWeapon->IsEmpty() == false && bCanFire && CombatState == ECombatState::ECS_Reloading && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Shotgun) return true;
+	if (bLocallyReloading) return false; // 재장전이면 false 리턴
 
 	return EquippedWeapon->IsEmpty() == false && bCanFire && CombatState == ECombatState::ECS_Unoccupied; // 총알이 비어있지 않았다면(=총알이 있다면) 
 }

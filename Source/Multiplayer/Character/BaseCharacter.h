@@ -22,10 +22,12 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
+	//** Play 몽타주
 	void PlayFireMontage(bool bAiming);
 	void PlayReloadMontage();
 	void PlayElimMontage();
 	void PlayThrowGrenadeMontage();
+	void PlaySwapMontage();
 	virtual void OnRep_ReplicatedMovement() override;
 	void Elim(); // Server에서만 콜되는 Elim함수
 
@@ -46,6 +48,8 @@ public:
 
 	UPROPERTY()
 	TMap<FName, class UBoxComponent*> HitCollisionBoxes;
+
+	bool bFinishedSwapping = false;
 
 protected:
 	virtual void BeginPlay() override;
@@ -124,6 +128,8 @@ private:
 	UAnimMontage* ElimMontage; // 사망 몽타주
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ThrowGrenadeMontage; // 수류탄 투척 몽타주
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* SwapMontage; // 무기 교체 몽타주
 
 	void HideCameraIfCharacterClose(); //카메라와 캐릭터가 지나치게 가까워지면 캐릭터를 숨겨준다.
 

@@ -87,7 +87,10 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	}
 
 	bUseFABRIK = BaseCharacter->GetCombatState() == ECombatState::ECS_Unoccupied; // Unoccupied 상태일 때 FABRIK를 사용한다.
-	if (BaseCharacter->IsLocallyControlled() && BaseCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade)
+	bool bFABRIKOverride = BaseCharacter->IsLocallyControlled() &&
+		BaseCharacter->GetCombatState() != ECombatState::ECS_ThrowingGrenade &&
+		BaseCharacter->bFinishedSwapping;
+	if (bFABRIKOverride)
 	{
 		bUseFABRIK = (BaseCharacter->IsLocallyReloading() == false); 
 	}
