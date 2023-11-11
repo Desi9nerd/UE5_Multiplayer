@@ -135,7 +135,7 @@ void UCombatComponent::FireProjectileWeapon()
 		{
 			LocalFire(HitTarget);
 		}
-		ServerFire(HitTarget);
+		ServerFire(HitTarget, EquippedWeapon->FireDelay);
 	}
 }
 
@@ -148,7 +148,7 @@ void UCombatComponent::FireHitScanWeapon()
 		{
 			LocalFire(HitTarget);
 		}
-		ServerFire(HitTarget);
+		ServerFire(HitTarget, EquippedWeapon->FireDelay);
 	}
 }
 
@@ -164,7 +164,7 @@ void UCombatComponent::FireShotgun()
 		{
 			ShotgunLocalFire(HitTargets);
 		}
-		ServerShotgunFire(HitTargets);
+		ServerShotgunFire(HitTargets, EquippedWeapon->FireDelay);
 	}
 }
 
@@ -194,9 +194,20 @@ void UCombatComponent::FireTimerFinished()
 	ReloadEmptyWeapon(); // 총알이 비었는지 확인하고 만약 비었을 시 재장전
 }
 
-void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget) // Server RPC 총 발사 함수
+void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget, float FireDelay) // Server RPC 총 발사 함수
 {
 	MulticastFire(TraceHitTarget);
+}
+
+bool UCombatComponent::ServerFire_Validate(const FVector_NetQuantize& TraceHitTarget, float FireDelay)
+{
+	if (IsValid(EquippedWeapon))
+	{	// 장착된 무기의 FireDelay값과 Client(=매개변수로 들어온)의 FireDelay값이 오차범위 0.001f 안이면 true 리턴
+		// 이 이상의 오차는 데이터가 조작되었다고 가정하고 false 리턴
+		bool bNearlyEqual = FMath::IsNearlyEqual(EquippedWeapon->FireDelay, FireDelay, 0.001f);
+		return bNearlyEqual;
+	}
+	return true;
 }
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
@@ -206,9 +217,19 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 	LocalFire(TraceHitTarget);
 }
 
-void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
+void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets, float FireDelay) // Server RPC 샷건총 발사 함수
 {
 	MulticastShotgunFire(TraceHitTargets);
+}
+
+bool UCombatComponent::ServerShotgunFire_Validate(const TArray<FVector_NetQuantize>& TraceHitTargets, float FireDelay)
+{
+	if (IsValid(EquippedWeapon))
+	{	// 장착된 무기의 FireDelay값과 Client(=매개변수로 들어온)의 FireDelay값이 오차범위 0.001f 안이면 true 리턴
+		bool bNearlyEqual = FMath::IsNearlyEqual(EquippedWeapon->FireDelay, FireDelay, 0.001f);
+		return bNearlyEqual;
+	}
+	return true;
 }
 
 void UCombatComponent::MulticastShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
