@@ -37,7 +37,7 @@ public:
 	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
 	FMultiplayerOnFindSessionsComplete MultiplayerOnFindSessionsComplete;
 	FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionComplete;
-	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
+	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;//ReturnToMainMenu::OnDestroySession
 	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
 
 protected:
