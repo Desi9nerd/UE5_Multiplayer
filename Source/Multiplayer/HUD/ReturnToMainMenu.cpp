@@ -3,6 +3,7 @@
 #include "Components/Button.h"
 #include "MultiplayerSessionsSubsystem.h"
 #include "GameFramework/GameModeBase.h"
+#include "Multiplayer/Character/BaseCharacter.h"
 
 void UReturnToMainMenu::MenuSetup() // 메뉴 설정 및 띄우기
 {
@@ -111,8 +112,33 @@ void UReturnToMainMenu::ReturnButtonClicked()
 {
 	ReturnButton->SetIsEnabled(false);
 
+	TWeakObjectPtr<UWorld> World = GetWorld();
+	if (World.IsValid())
+	{
+		TWeakObjectPtr<APlayerController> FirstPlayerController = World->GetFirstPlayerController();
+		if (FirstPlayerController.IsValid())
+		{
+			TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(FirstPlayerController->GetPawn());
+			if (BaseCharacter.IsValid())
+			{
+				BaseCharacter->ServerLeaveGame(); // 게임 퇴장
+				BaseCharacter->OnLeftGame.AddDynamic(this, &UReturnToMainMenu::OnPlayerLeftGame); // Dynamic Delegate 등록
+			}
+			else
+			{
+				ReturnButton->SetIsEnabled(true);
+			}
+		}
+	}
+}
+
+void UReturnToMainMenu::OnPlayerLeftGame() // 플레이어 게임 퇴장
+{
+	UE_LOG(LogTemp, Warning, TEXT("OnPlayerLeftGame()"));
+
 	if (IsValid(MultiplayerSessionsSubsystem))
 	{
+		UE_LOG(LogTemp, Warning, TEXT("MultiplayerSessionsSubsystem valid"));
 		MultiplayerSessionsSubsystem->DestroySession(); // 세션 종료
 	}
 }

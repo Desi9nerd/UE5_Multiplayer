@@ -94,7 +94,7 @@ void AMultiplayerGameMode::PlayerEliminated(ABaseCharacter* ElimmedCharacter, AM
 
 	if (IsValid(ElimmedCharacter))
 	{
-		ElimmedCharacter->Elim(); // 캐릭터 소멸시키기
+		ElimmedCharacter->Elim(false); // 캐릭터 소멸시키기
 	}
 }
 
@@ -113,5 +113,21 @@ void AMultiplayerGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AControl
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
 
 		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]); // Player 재시작
+	}
+}
+
+void AMultiplayerGameMode::PlayerLeftGame(AMultiplayerPlayerState* PlayerLeaving) // 플레이어 게임 퇴장
+{
+	if (PlayerLeaving == nullptr) return;
+
+	TWeakObjectPtr<AMultiplayerGameState> MultiplayerGameState = GetGameState<AMultiplayerGameState>();
+	if (MultiplayerGameState.IsValid() && MultiplayerGameState->TopScoringPlayers.Contains(PlayerLeaving))
+	{
+		MultiplayerGameState->TopScoringPlayers.Remove(PlayerLeaving);
+	}
+	TWeakObjectPtr<ABaseCharacter> CharacterLeaving = Cast<ABaseCharacter>(PlayerLeaving->GetPawn());
+	if (CharacterLeaving.IsValid())
+	{
+		CharacterLeaving->Elim(true);
 	}
 }

@@ -159,17 +159,17 @@ void ABaseCharacter::OnRep_ReplicatedMovement()
 	TimeSinceLastMovementReplication = 0.0f; // 마지막 움직임이 Replicated된 후 경과한 시간을 0으로 초기화
 }
 
-void ABaseCharacter::Elim() // Server Only
+void ABaseCharacter::Elim(bool bPlayerLeftGame) // Server Only
 {
 	DropOrDestroyWeapons(); // 장착된 무기와 Secondary 무기를 떨어뜨리거나 소멸시킴
 
-	MulticastElim();
-
-	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABaseCharacter::ElimTimerFinished, ElimDelay); // SetTimer 후 ElimTimerFinished() 함수 호출
+	MulticastElim(bPlayerLeftGame);
 }
 
-void ABaseCharacter::MulticastElim_Implementation() // RPC
+void ABaseCharacter::MulticastElim_Implementation(bool bPlayerLeftGame) // RPC
 {
+	bLeftGame = bPlayerLeftGame;
+
 	if (MainPlayerController)
 	{
 		MainPlayerController->SetHUDWeaponAmmo(0); // 캐릭터가 죽으면(=Elim) 총알 수 0으로 업데이트
@@ -230,14 +230,32 @@ void ABaseCharacter::MulticastElim_Implementation() // RPC
 	{
 		ShowSniperScopeWidget(false);
 	}
+
+	//** SetTimer 후 ElimTimerFinished() 함수 호출
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABaseCharacter::ElimTimerFinished, ElimDelay);
 }
 
 void ABaseCharacter::ElimTimerFinished()
 {
 	TWeakObjectPtr<AMultiplayerGameMode> MultiplayerGameMode = GetWorld()->GetAuthGameMode<AMultiplayerGameMode>();
-	if (MultiplayerGameMode.IsValid())
+	if (MultiplayerGameMode.IsValid() && false == bLeftGame) // 게임퇴장X
 	{
 		MultiplayerGameMode->RequestRespawn(this, Controller); // 리스폰
+	}
+	if (IsLocallyControlled() && bLeftGame) // 게임퇴장O
+	{
+		// 해당 플레이어만 게임에서 퇴장한다. 다른 Client들에서는 Broadcast되지 않도록 IsLocallyControlled()일 때만 Broadcast한다.
+		OnLeftGame.Broadcast();
+	}
+}
+
+void ABaseCharacter::ServerLeaveGame_Implementation() // 게임 퇴장
+{
+	TWeakObjectPtr<AMultiplayerGameMode> MultiplayerGameMode = GetWorld()->GetAuthGameMode<AMultiplayerGameMode>();
+	MultiplayerPlayerState = MultiplayerPlayerState == nullptr ? GetPlayerState<AMultiplayerPlayerState>() : MultiplayerPlayerState;
+	if (MultiplayerGameMode.IsValid())
+	{
+		MultiplayerGameMode->PlayerLeftGame(MultiplayerPlayerState.Get());
 	}
 }
 

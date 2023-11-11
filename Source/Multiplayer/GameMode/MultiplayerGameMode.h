@@ -23,6 +23,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void PlayerEliminated(class ABaseCharacter* ElimmedCharacter, class AMainPlayerController* VictimController, AMainPlayerController* AttackerController);
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
+	void PlayerLeftGame(class AMultiplayerPlayerState* PlayerLeaving); // 플레이어 게임 퇴장
 
 	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
 

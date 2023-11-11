@@ -8,6 +8,8 @@
 #include "Multiplayer/EnumTypes/ECombatState.h"
 #include "BaseCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
+
 class AWeapon;
 
 UCLASS()
@@ -29,10 +31,9 @@ public:
 	void PlayThrowGrenadeMontage();
 	void PlaySwapMontage();
 	virtual void OnRep_ReplicatedMovement() override;
-	void Elim(); // Server에서만 콜되는 Elim함수
-
+	void Elim(bool bPlayerLeftGame); // Server에서만 콜되는 Elim함수
 	UFUNCTION(NetMulticast, Reliable) // RPC
-	void MulticastElim(); // Player 삭제
+	void MulticastElim(bool bPlayerLeftGame); // Player 삭제
 
 	virtual void Destroyed() override;
 
@@ -49,7 +50,13 @@ public:
 	UPROPERTY()
 	TMap<FName, class UBoxComponent*> HitCollisionBoxes;
 
-	bool bFinishedSwapping = false;
+	bool bFinishedSwapping = false; // 무기교체 true/false
+
+	UFUNCTION(Server, Reliable) // Server RPC
+	void ServerLeaveGame(); // 게임 퇴장
+
+	FOnLeftGame OnLeftGame;
+
 
 protected:
 	virtual void BeginPlay() override;
@@ -172,6 +179,8 @@ private:
 	float ElimDelay = 3.0f; // 죽은 Player가 사라지는데 걸리는 시간
 
 	void ElimTimerFinished();
+
+	bool bLeftGame = false; // 게임 퇴장여부 true/false
 
 	//** Dissolve effect
 	UPROPERTY(VisibleAnywhere)
