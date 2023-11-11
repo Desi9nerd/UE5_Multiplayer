@@ -80,11 +80,6 @@ void AWeapon::BeginPlay()
 	{
 		PickupWidget->SetVisibility(false); //PickupWidget을 꺼주고 시작한다.
 	}
-
-	if (!HasAuthority())
-	{
-		FireDelay = 0.001f;
-	}
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
