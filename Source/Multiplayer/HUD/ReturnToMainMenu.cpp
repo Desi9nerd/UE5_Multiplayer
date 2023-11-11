@@ -4,7 +4,7 @@
 #include "MultiplayerSessionsSubsystem.h"
 #include "GameFramework/GameModeBase.h"
 
-void UReturnToMainMenu::MenuSetup() // 메뉴 설정
+void UReturnToMainMenu::MenuSetup() // 메뉴 설정 및 띄우기
 {
 	AddToViewport();
 	SetVisibility(ESlateVisibility::Visible);
@@ -23,7 +23,7 @@ void UReturnToMainMenu::MenuSetup() // 메뉴 설정
 		}
 	}
 
-	if (IsValid(ReturnButton))
+	if (IsValid(ReturnButton) && false == ReturnButton->OnClicked.IsBound())
 	{
 		// Dynamic Delegate 등록
 		ReturnButton->OnClicked.AddDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
@@ -33,7 +33,8 @@ void UReturnToMainMenu::MenuSetup() // 메뉴 설정
 	if (GameInstance.IsValid())
 	{
 		MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
-		if (IsValid(MultiplayerSessionsSubsystem))
+		if (IsValid(MultiplayerSessionsSubsystem) && 
+			false == MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsBound())
 		{
 			// Dynamic Delegate 등록
 			MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &UReturnToMainMenu::OnDestroySession);
@@ -92,6 +93,17 @@ void UReturnToMainMenu::MenuTearDown() // 메뉴 해제
 			PlayerController->SetInputMode(InputModeData);
 			PlayerController->SetShowMouseCursor(false);
 		}
+	}
+	if (IsValid(ReturnButton) && ReturnButton->OnClicked.IsBound())
+	{
+		// Dynamic Delegate 등록 해제
+		ReturnButton->OnClicked.RemoveDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
+	}
+	if (IsValid(MultiplayerSessionsSubsystem) && 
+		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.IsBound())
+	{
+		// Dynamic Delegate 등록 해제
+		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.RemoveDynamic(this, &UReturnToMainMenu::OnDestroySession);
 	}
 }
 

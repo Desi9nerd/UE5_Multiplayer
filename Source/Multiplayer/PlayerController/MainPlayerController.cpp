@@ -12,6 +12,7 @@
 #include "Multiplayer/Components/CombatComponent.h"
 #include "Multiplayer/GameState/MultiplayerGameState.h"
 #include "Components/Image.h"
+#include "Multiplayer/HUD/ReturnToMainMenu.h"
 
 void AMainPlayerController::BeginPlay()
 {
@@ -388,6 +389,36 @@ void AMainPlayerController::PollInit() // 체력, 점수, 승패 초기화
 					if (bInitializeGrenades) SetHUDGrenades(BaseCharacter->GetCombat()->GetGrenades());
 				}
 			}
+		}
+	}
+}
+
+void AMainPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+	if (InputComponent == nullptr) return;
+
+	// 키 입력 시 ReturnToMainMenu 창 띄우기
+	InputComponent->BindAction("Quit", IE_Pressed, this, &AMainPlayerController::ShowReturnToMainMenu);
+}
+
+void AMainPlayerController::ShowReturnToMainMenu()
+{
+	if (ReturnToMainMenuWidget == nullptr) return;
+	if (ReturnToMainMenu == nullptr)
+	{
+		ReturnToMainMenu = CreateWidget<UReturnToMainMenu>(this, ReturnToMainMenuWidget);
+	}
+	if (ReturnToMainMenu)
+	{
+		bReturnToMainMenuOpen = (false == bReturnToMainMenuOpen); // true면 false, false면 true 변환
+		if (bReturnToMainMenuOpen)
+		{
+			ReturnToMainMenu->MenuSetup(); // 메뉴 설정 및 띄우기
+		}
+		else
+		{
+			ReturnToMainMenu->MenuTearDown(); // 메뉴 해제
 		}
 	}
 }

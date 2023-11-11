@@ -41,9 +41,9 @@ protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
 	void PollInit(); // 체력, 점수, 승패, 수류탄 초기화
+	virtual void SetupInputComponent() override;
 
-	//** Server와 Client 사이의 Sync Time
-	
+	//** Server와 Client 사이의 Sync Time	
 	// Request 받았을 때 Client의 Time을 전달하여 현재 Server Time을 요청하는 함수.
 	UFUNCTION(Server, Reliable) // Server RPC, client->Server
 	void ServerRequestServerTime(float TimeOfClientRequest);
@@ -70,10 +70,20 @@ protected:
 	void HighPingWarning(); // High Ping 경고(이미지 띄우기)
 	void StopHighPingWarning(); // High Ping 경고 멈추기(이미지 안 띄우기)
 
+	void ShowReturnToMainMenu(); // 키 입력 시 ReturnToMainMenu 창 띄우기
+
 private:
 	TObjectPtr<class AMainHUD> MainHUD;
 	UPROPERTY()
 	class AMultiplayerGameMode* MultiplayerGameMode;
+
+	//** Return to Main Menu
+	UPROPERTY(EditAnywhere, Category = HUD)
+	TSubclassOf<class UUserWidget> ReturnToMainMenuWidget;
+	UPROPERTY()
+	class UReturnToMainMenu* ReturnToMainMenu;
+
+	bool bReturnToMainMenuOpen = false;
 
 	float LevelStartingTime = 0.0f; // 게임레벨맵에 들어간 시간
 	float MatchTime = 0.0f;		// 경기 시간
