@@ -51,7 +51,6 @@ void AMainPlayerController::CheckPing(float DeltaTime) // Ping 체크
 		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
 		if (IsValid(PlayerState))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("PlayerState->GetPing() * 4 : %d"), PlayerState->GetPing() * 4); //디버깅용. 추후 삭제
 			if (PlayerState->GetPing() * 4 > HighPingThreshold) // ping is compressed; it's actually ping / 4
 			{
 				HighPingWarning(); // High Ping 경고(이미지 띄우기)

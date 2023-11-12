@@ -91,7 +91,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 			BeamEnd = OutHit.ImpactPoint; // 충돌위치(=ImpactPoint)를 BeamEnd 위치로 설정.
 		}
 
-		DrawDebugSphere(GetWorld(), BeamEnd, 16.0f, 12, FColor::Orange, true);
+		//DrawDebugSphere(GetWorld(), BeamEnd, 16.0f, 12, FColor::Orange, true);//디버깅용
 
 		if (BeamParticles)
 		{

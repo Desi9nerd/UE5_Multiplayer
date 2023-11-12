@@ -71,16 +71,6 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 
 		if (ConfirmHitResult.bBlockingHit) // 헤드샷이 나온 경우, 바로 return 
 		{
-			//** 디버깅용. 추후 삭제
-			if (ConfirmHitResult.Component.IsValid())
-			{
-				UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
-				if (Box)
-				{
-					DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.0f);
-				}
-			}
-
 			ResetHitBoxes(HitCharacter, CurrentFrame); // HitCollisionBoxes 초기화
 			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 
@@ -101,16 +91,6 @@ FServerSideRewindResult ULagCompensationComponent::ConfirmHit(const FFramePackag
 
 			if (ConfirmHitResult.bBlockingHit) // 충돌 O
 			{
-				//** 디버깅용. 추후 삭제
-				if (ConfirmHitResult.Component.IsValid())
-				{
-					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
-					if (Box)
-					{
-						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.0f);
-					}
-				}
-
 				ResetHitBoxes(HitCharacter, CurrentFrame); // HitCollisionBoxes 초기화
 				EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 
@@ -148,24 +128,14 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 	PathParams.ProjectileRadius = 5.0f; // SphereTrace의 반지름 값
 	PathParams.TraceChannel = ECC_HitBox; // Multiplayer.h에 #define 정의한 채널 사용
 	PathParams.ActorsToIgnore.Add(GetOwner()); // Projectile Path Trace 계산에 무시되는 Actor들
-	PathParams.DrawDebugTime = 5.0f; // 디버그 보여주기 지속시간
-	PathParams.DrawDebugType = EDrawDebugTrace::ForDuration; // DrawDebugTime 동안만 보여주도록 설정
+	//PathParams.DrawDebugTime = 5.0f; // 디버그 보여주기 지속시간
+	//PathParams.DrawDebugType = EDrawDebugTrace::ForDuration; // DrawDebugTime 동안만 보여주도록 설정
 
 	FPredictProjectilePathResult PathResult; // Projectile Path 결과값
 	UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult); // PathParams 값으로 ProjectilePath를 계산하여 PathResult로 결과값을 업데이트한다.
 
 	if (PathResult.HitResult.bBlockingHit) // 헤드샷이 나온 경우, 바로 return 
 	{
-		if (PathResult.HitResult.Component.IsValid())
-		{
-			UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
-			if (Box)
-			{
-				//** 디버깅용. 추후 삭제
-				DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.0f);
-			}
-		}
-
 		ResetHitBoxes(HitCharacter, CurrentFrame);
 		EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 		return FServerSideRewindResult{ true, true };
@@ -184,16 +154,6 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 		UGameplayStatics::PredictProjectilePath(this, PathParams, PathResult);
 		if (PathResult.HitResult.bBlockingHit)
 		{
-			if (PathResult.HitResult.Component.IsValid())
-			{
-				UBoxComponent* Box = Cast<UBoxComponent>(PathResult.HitResult.Component);
-				if (Box)
-				{
-					//** 디버깅용. 추후 삭제
-					DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
-				}
-			}
-
 			ResetHitBoxes(HitCharacter, CurrentFrame);
 			EnableCharacterMeshCollision(HitCharacter, ECollisionEnabled::QueryAndPhysics);
 			return FServerSideRewindResult{ true, false };
@@ -249,16 +209,6 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 			TObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(ConfirmHitResult.GetActor()); // 헤드샷이 나온 경우, 캐스팅 성공
 			if (IsValid(BaseCharacter)) // 헤드샷 맞은 캐릭터가 있다면
 			{
-				//** 디버깅용. 추후 삭제
-				if (ConfirmHitResult.Component.IsValid())
-				{
-					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
-					if (Box)
-					{
-						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Red, false, 8.0f);
-					}
-				}
-
 				if (ShotgunResult.HeadShots.Contains(BaseCharacter))
 				{	// 첫 헤드샷 이후의 헤드샷은 ++
 					ShotgunResult.HeadShots[BaseCharacter]++;
@@ -297,16 +247,6 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 			TObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(ConfirmHitResult.GetActor());
 			if (IsValid(BaseCharacter))
 			{
-				//** 디버깅용. 추후 삭제
-				if (ConfirmHitResult.Component.IsValid())
-				{
-					UBoxComponent* Box = Cast<UBoxComponent>(ConfirmHitResult.Component);
-					if (Box)
-					{
-						DrawDebugBox(GetWorld(), Box->GetComponentLocation(), Box->GetScaledBoxExtent(), FQuat(Box->GetComponentRotation()), FColor::Blue, false, 8.f);
-					}
-				}
-
 				if (ShotgunResult.BodyShots.Contains(BaseCharacter))
 				{	// 첫 바디샷 이후의 헤드샷은 ++
 					ShotgunResult.BodyShots[BaseCharacter]++;
