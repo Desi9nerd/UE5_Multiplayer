@@ -57,6 +57,10 @@ public:
 
 	FOnLeftGame OnLeftGame;
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastGainedTheLead(); // 1등 Crown 띄우기
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastLostTheLead(); // 1등에서 밀려나면 Crown 띄운거 없애기
 
 protected:
 	virtual void BeginPlay() override;
@@ -203,14 +207,18 @@ private:
 	//** Elim Bot
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ElimBotEffect; 
-
 	UPROPERTY(VisibleAnywhere)
 	UParticleSystemComponent* ElimBotComponent;
-
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ElimBotSound;
 
 	TWeakObjectPtr<class AMultiplayerPlayerState> MultiplayerPlayerState;
+
+	//** Crown Effect
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* CrownSystem;
+	UPROPERTY()
+	class UNiagaraComponent* CrownComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* AttachedGrenade; // 수류탄 매쉬

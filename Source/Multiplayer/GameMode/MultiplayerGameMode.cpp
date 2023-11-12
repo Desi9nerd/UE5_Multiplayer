@@ -84,8 +84,35 @@ void AMultiplayerGameMode::PlayerEliminated(ABaseCharacter* ElimmedCharacter, AM
 	if (AttackerPlayerState && AttackerPlayerState != VictimPlayerState
 		&& MultiplayerGameState)
 	{
+		TArray<AMultiplayerPlayerState*> PlayersCurrentlyInTheLead;
+		for (auto LeadPlayer : MultiplayerGameState->TopScoringPlayers)
+		{
+			PlayersCurrentlyInTheLead.Add(LeadPlayer); // 1등 플레이어 기록
+		}
+
 		AttackerPlayerState->AddToScore(1.0f); // 점수 더하기
 		MultiplayerGameState->UpdateTopScore(AttackerPlayerState);
+
+		if (MultiplayerGameState->TopScoringPlayers.Contains(AttackerPlayerState))
+		{
+			TObjectPtr<ABaseCharacter> Leader = Cast<ABaseCharacter>(AttackerPlayerState->GetPawn());
+			if (IsValid(Leader))
+			{
+				Leader->MulticastGainedTheLead(); // 1등 Crown 띄우기
+			}
+		}
+
+		for (int32 i = 0; i < PlayersCurrentlyInTheLead.Num(); i++)
+		{
+			if (false == MultiplayerGameState->TopScoringPlayers.Contains(PlayersCurrentlyInTheLead[i]))
+			{
+				TWeakObjectPtr<ABaseCharacter> Loser = Cast<ABaseCharacter>(PlayersCurrentlyInTheLead[i]->GetPawn());
+				if (Loser.IsValid())
+				{
+					Loser->MulticastLostTheLead(); // 1등에서 밀려나면 Crown 띄운거 없애기
+				}
+			}
+		}
 	}
 	if (VictimPlayerState)
 	{

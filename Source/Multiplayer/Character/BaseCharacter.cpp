@@ -21,6 +21,9 @@
 #include "Multiplayer/EnumTypes/EWeaponTypes.h"
 #include "Components/BoxComponent.h"
 #include "Multiplayer/Components/LagCompensationComponent.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Multiplayer/GameState/MultiplayerGameState.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -231,6 +234,12 @@ void ABaseCharacter::MulticastElim_Implementation(bool bPlayerLeftGame) // RPC
 		ShowSniperScopeWidget(false);
 	}
 
+	//** Crown을 가지고 있는 플레이어가 죽을때 Crown 없애기
+	if (IsValid(CrownComponent))
+	{
+		CrownComponent->DestroyComponent();
+	}
+
 	//** SetTimer 후 ElimTimerFinished() 함수 호출
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABaseCharacter::ElimTimerFinished, ElimDelay);
 }
@@ -302,6 +311,36 @@ void ABaseCharacter::Destroyed()
 	if (IsValid(Combat) && Combat->EquippedWeapon && bMatchNotInProgress)
 	{
 		Combat->EquippedWeapon->Destroy(); // 플레이어에 장착된 무기 소멸
+	}
+}
+
+void ABaseCharacter::MulticastGainedTheLead_Implementation() // 1등 Crown 띄우기
+{
+	if (CrownSystem == nullptr) return;
+	if (CrownComponent == nullptr) // Crown이 새로 생기는 경우
+	{
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			CrownSystem,
+			GetCapsuleComponent(),
+			FName(),
+			GetActorLocation() + FVector(0.0f, 0.0f, 120.0f),
+			GetActorRotation(),
+			EAttachLocation::KeepWorldPosition,
+			false
+		);
+	}
+
+	if (IsValid(CrownComponent)) // 이미 Crown이 있는 상태에서 지속되는 경우. 1등이 계속 1등인 경우
+	{
+		CrownComponent->Activate(); // Crown 활성화
+	}
+}
+
+void ABaseCharacter::MulticastLostTheLead_Implementation() // 1등에서 밀려나면 Crown 띄운거 없애기
+{
+	if (IsValid(CrownComponent))
+	{
+		CrownComponent->DestroyComponent(); // Crown 비활성화
 	}
 }
 
@@ -909,6 +948,13 @@ void ABaseCharacter::PollInit()
 		{
 			MultiplayerPlayerState->AddToScore(0.0f); // 점수 초기화
 			MultiplayerPlayerState->AddToDefeats(0); // 승리횟수 초기화
+
+			TWeakObjectPtr<AMultiplayerGameState> MultiplayerGameState = Cast<AMultiplayerGameState>(UGameplayStatics::GetGameState(this));
+			if (MultiplayerGameState.IsValid() && 
+				MultiplayerGameState->TopScoringPlayers.Contains(MultiplayerPlayerState))
+			{
+				MulticastGainedTheLead(); // 1등 Crown 띄우기
+			}
 		}
 	}
 }
