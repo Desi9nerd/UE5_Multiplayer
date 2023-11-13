@@ -78,7 +78,8 @@ protected:
 	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim); // 공격자, 피격으로 죽는 플레이어를 화면에 텍스트로 띄우기
 
 private:
-	TObjectPtr<class AMainHUD> MainHUD;
+	UPROPERTY()
+	class AMainHUD* MainHUD;
 	UPROPERTY()
 	class AMultiplayerGameMode* MultiplayerGameMode;
 
