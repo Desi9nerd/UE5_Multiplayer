@@ -61,7 +61,13 @@ private:
 	float CrosshairSpreadMax = 16.0f; // Crosshair 퍼지는 정도 최대값
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UElimAnnouncement> ElimAnnouncementClass; 
+	TSubclassOf<class UElimAnnouncement> ElimAnnouncementClass;
+	UPROPERTY(EditAnywhere)
+	float ElimAnnouncementTime = 2.5f; // 화면에 띄우는 시간
+	UPROPERTY()
+	TArray<UElimAnnouncement*> ElimMessages;
+	UFUNCTION()
+	void ElimAnnouncementTimerFinished(UElimAnnouncement* MsgToRemove);
 
 public:
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; }
