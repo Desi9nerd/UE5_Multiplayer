@@ -24,6 +24,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		const FVector Start = SocketTransform.GetLocation();
 
 		TMap<ABaseCharacter*, uint32> HitMap; // 캐릭터가 여러번 피격(=Hit)처리 되도록 HitMap변수에 담는다
+		TMap<ABaseCharacter*, uint32> HeadShotHitMap;// 캐릭터가 여러번 헤드샷 피격처리 되도록 HitMap변수에 담는다
 
 		for (FVector_NetQuantize HitTarget : HitTargets)
 		{
@@ -33,15 +34,20 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			ABaseCharacter* BaseCharacter = Cast<ABaseCharacter>(FireHit.GetActor());
 			if (BaseCharacter)
 			{
-				if (HitMap.Contains(BaseCharacter))
-				{
-					HitMap[BaseCharacter]++; // 첫 피격 이후의 피격 시 HitMap에 값 ++하면서 기록
-				}
-				else
-				{
-					HitMap.Emplace(BaseCharacter, 1); //첫 피격 시 TMap<ABaseCharacter*, uint32> HitMap에 등록
-				}
+				const bool bHeadShot = FireHit.BoneName.ToString() == FString("head"); // 피격된 본이 "head"면 true
 
+				if (bHeadShot) // 헤드샷인 경우
+				{
+					if (HeadShotHitMap.Contains(BaseCharacter))	HeadShotHitMap[BaseCharacter]++;
+					else HeadShotHitMap.Emplace(BaseCharacter, 1);
+
+				}
+				else // 헤드샷이 아닌 경우
+				{
+					if (HitMap.Contains(BaseCharacter))	HitMap[BaseCharacter]++; // 첫 피격 이후의 피격 시 HitMap에 값 ++하면서 기록
+					else HitMap.Emplace(BaseCharacter, 1); //첫 피격 시 TMap<ABaseCharacter*, uint32> HitMap에 등록
+				}
+				
 				if (ImpactParticles)
 				{
 					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, FireHit.ImpactPoint, FireHit.ImpactNormal.Rotation());
@@ -55,28 +61,53 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 
 		//** HitMap에 등록된 캐릭터들에게 데미지 입히기
 		TArray<ABaseCharacter*> HitCharacters;
-		for (auto HitPair : HitMap)
+		TMap<ABaseCharacter*, float> DamageMap; // 각 캐릭터에 가해질 데미지를 더해서 DamageMap변수에 담는다
+		//* DamageMap에 바디샷 데미지 계산 후 저장
+		for (auto HitPair : HitMap) // 바디샷
 		{
-			if (HitPair.Key && InstigatorController) // HitMap에 등록 && Controller (O)
+			if (HitPair.Key) // HitMap에 등록
+			{
+				DamageMap.Emplace(HitPair.Key, HitPair.Value * Damage); // HitPair.Value * Damage만큼 데미지 저장
+
+				HitCharacters.AddUnique(HitPair.Key); // 피격 캐릭터들 등록
+			}
+		}
+		//* DamageMap에 헤드샷 데미지 계산 후 저장
+		for (auto HeadShotHitPair : HeadShotHitMap) // 헤드샷
+		{
+			if (HeadShotHitPair.Key) // HeadShotHitMap에 등록
+			{
+				if (DamageMap.Contains(HeadShotHitPair.Key)) // 해당 캐릭터가 DamageMap에 등록되어 있다면
+					DamageMap[HeadShotHitPair.Key] += HeadShotHitPair.Value * HeadShotDamage; // 데미지를 더한다
+				else  // 해당 캐릭터가 DamageMap에 등록되어 있지 않다면 등록한다
+					DamageMap.Emplace(HeadShotHitPair.Key, HeadShotHitPair.Value * HeadShotDamage);
+
+				HitCharacters.AddUnique(HeadShotHitPair.Key); // 피격 캐릭터들 등록
+			}
+		}
+
+		//* DamageMap을 루프를 돌아 각각 캐릭터의 Total Damage를 구한다.
+		for (auto DamagePair : DamageMap)
+		{
+			if (DamagePair.Key && InstigatorController)
 			{
 				bool bCauseAuthDamage = bUseServerSideRewind == false || OwnerPawn->IsLocallyControlled();
-				
+
 				if (HasAuthority() && bCauseAuthDamage) // Server && no SSR
 				{
 					// 데미지 전달: Damage * HitPair.Value 만큼 데미지
 					UGameplayStatics::ApplyDamage(
-						HitPair.Key, // Character that was hit
-						Damage * HitPair.Value, // Multiply Damage by number of times hit
+						DamagePair.Key,		// Character that was hit
+						DamagePair.Value,	// Damage calculated in the two for loops above
 						InstigatorController,
 						this,
 						UDamageType::StaticClass()
 					);
 				}
+			}
+		}
 
-				HitCharacters.Add(HitPair.Key); // 피격 캐릭터들 등록
-			}//if
-		} //for
-		
+
 		if (HasAuthority() == false && bUseServerSideRewind) // Client &&  SSR
 		{
 			BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(OwnerPawn) : BaseCharcterOwnerCharacter;

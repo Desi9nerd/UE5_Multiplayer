@@ -35,8 +35,10 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 
 			if (HasAuthority() && bCauseAuthDamage) // Server && no SSR이면 데미지 전달
 			{
+				const float DamageToCause = FireHit.BoneName.ToString() == FString("head") ? HeadShotDamage : Damage; // DamageToCause변수값을 데미지를 입히는 본이 "head"면 HeadShotDamage, 아니면 Damage로 설정
+
 				// 데미지 전달
-				UGameplayStatics::ApplyDamage(BaseCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+				UGameplayStatics::ApplyDamage(BaseCharacter, DamageToCause, InstigatorController, this, UDamageType::StaticClass());
 			}
 			if (HasAuthority() == false && bUseServerSideRewind) // Client && SSR이면 ServerScoreRequest()
 			{
@@ -74,6 +76,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	} 
 }
 
+// TraceStart와 HitTarget 변수를 매개변수로 받아 OutHit값을 구하여 사용할 수 있게 한다.
 void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit)
 {
 	TObjectPtr<UWorld> World = GetWorld();
@@ -88,7 +91,11 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 
 		if (OutHit.bBlockingHit) // LineTrace가 BlockingHit 된다면
 		{
-			BeamEnd = OutHit.ImpactPoint; // 충돌위치(=ImpactPoint)를 BeamEnd 위치로 설정.
+			BeamEnd = OutHit.ImpactPoint; // BeamEnd 위치를 충돌위치(=ImpactPoint)로 설정.
+		}
+		else // LineTrace가 BlockingHit 되지 않는다면
+		{
+			OutHit.ImpactPoint = End; // 충돌위치(=ImpactPoint)를 End로 설정.
 		}
 
 		//DrawDebugSphere(GetWorld(), BeamEnd, 16.0f, 12, FColor::Orange, true);//디버깅용

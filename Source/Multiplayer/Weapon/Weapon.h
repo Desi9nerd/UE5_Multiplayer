@@ -109,6 +109,8 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.0f; // 무기 데미지
+	UPROPERTY(EditAnywhere)
+	float HeadShotDamage = 60.0f; // 무기 헤드샷 데미지
 
 	UPROPERTY(Replicated, EditAnywhere)
 	bool bUseServerSideRewind = false; // ServerSideRewind 사용 true/false
@@ -172,4 +174,5 @@ public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
 	FORCEINLINE float GetDamage() const { return Damage; }
+	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
 };
