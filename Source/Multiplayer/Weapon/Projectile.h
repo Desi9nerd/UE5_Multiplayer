@@ -22,8 +22,13 @@ public:
 	float InitialSpeed = 15000.0f; // ProjectileBullet(=총알) 속도
 	UPROPERTY(EditAnywhere)
 	float InitialRocketSpeed = 1500.0f; // ProjectileRocket(=로켓) 속도
-	
+
+	// Only set this for Grenades and Rockets
+	UPROPERTY(EditAnywhere)
 	float Damage = 20.0f; // 발사체가 입힐 데미지
+	// Doesn't matter for Grenades and Rockets
+	UPROPERTY(EditAnywhere)
+	float HeadShotDamage = 40.0f; // 발사체가 입힐 헤드샷 데미지
 
 protected:
 	virtual void BeginPlay() override;
