@@ -558,8 +558,8 @@ void ABaseCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDa
 		}
 		else // 데미지가 남은 실드수치 보다 높은 경우
 		{
-			Shield = 0.0f;
 			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.0f, Damage); // 실드를 깍고 남은 데미지
+			Shield = 0.0f;
 		}
 	}
 
