@@ -37,6 +37,8 @@ public:
 	float SingleTripTime = 0.0f; // SingleTripTime = 0.5f * RoundTripTime;
 	FHighPingDelegate HighPingDelegate;
 
+	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim); // GameMode에서 실행(=Server에서 call된다)
+
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
@@ -71,6 +73,9 @@ protected:
 	void StopHighPingWarning(); // High Ping 경고 멈추기(이미지 안 띄우기)
 
 	void ShowReturnToMainMenu(); // 키 입력 시 ReturnToMainMenu 창 띄우기
+
+	UFUNCTION(Client, Reliable) // Client RPC
+	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim); // 공격자, 피격으로 죽는 플레이어를 화면에 텍스트로 띄우기
 
 private:
 	TObjectPtr<class AMainHUD> MainHUD;

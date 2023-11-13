@@ -123,6 +123,15 @@ void AMultiplayerGameMode::PlayerEliminated(ABaseCharacter* ElimmedCharacter, AM
 	{
 		ElimmedCharacter->Elim(false); // 캐릭터 소멸시키기
 	}
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		TWeakObjectPtr<AMainPlayerController> MainPlayerController = Cast<AMainPlayerController>(*It);
+		if (MainPlayerController.IsValid() && AttackerPlayerState && VictimPlayerState)
+		{
+			MainPlayerController->BroadcastElim(AttackerPlayerState, VictimPlayerState); // 사살자, 피살자 띄우기
+		}
+	}
 }
 
 void AMultiplayerGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController)

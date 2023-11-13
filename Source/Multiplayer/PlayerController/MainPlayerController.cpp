@@ -14,6 +14,46 @@
 #include "Components/Image.h"
 #include "Multiplayer/HUD/ReturnToMainMenu.h"
 
+void AMainPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim) // GameMode에서 실행(=Server에서 call된다)
+{
+	// 해당 PlayerController를 소유한 Client에만 해당 메시지가 나오도록 하기위해 Client RPC 사용
+	ClientElimAnnouncement(Attacker, Victim);
+}
+
+void AMainPlayerController::ClientElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Victim) // Client RPC
+{
+	TWeakObjectPtr<APlayerState> Self = GetPlayerState<APlayerState>();
+
+	if (IsValid(Attacker) && IsValid(Victim) && Self.IsValid())
+	{
+		MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+		if (IsValid(MainHUD))
+		{
+			if (Attacker == Self && Victim != Self)
+			{
+				MainHUD->AddElimAnnouncement("You", Victim->GetPlayerName());
+				return;
+			}
+			if (Attacker != Self && Victim == Self)
+			{
+				MainHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "you");
+				return;
+			}
+			if (Attacker == Victim && Attacker == Self)
+			{
+				MainHUD->AddElimAnnouncement("You", "yourself");
+				return;
+			}
+			if (Attacker == Victim && Attacker != Self)
+			{
+				MainHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves");
+				return;
+			}
+			MainHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName());
+		}
+	}
+}
+
 void AMainPlayerController::BeginPlay()
 {
 	Super::BeginPlay();

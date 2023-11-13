@@ -2,6 +2,7 @@
 #include "GameFramework/PlayerController.h"
 #include "CharacterOverlay.h"
 #include "Announcement.h"
+#include "ElimAnnouncement.h"
 
 void AMainHUD::BeginPlay()
 {
@@ -25,6 +26,21 @@ void AMainHUD::AddAnnouncement()
 	{
 		Announcement = CreateWidget<UAnnouncement>(PlayerController.Get(), AnnouncementClass);
 		Announcement->AddToViewport();
+	}
+}
+
+void AMainHUD::AddElimAnnouncement(FString Attacker, FString Victim)
+{
+	OwningPlayer = OwningPlayer == nullptr ? GetOwningPlayerController() : OwningPlayer;
+	if (IsValid(OwningPlayer) && IsValid(ElimAnnouncementClass))
+	{
+		TObjectPtr<UElimAnnouncement> ElimAnouncementWidget = CreateWidget<UElimAnnouncement>(OwningPlayer, ElimAnnouncementClass);
+		if (ElimAnouncementWidget)
+		{
+			// '공격한 플레이어'와 '피격 당해서 죽은 플레이어'를 화면에 띄운다.
+			ElimAnouncementWidget->SetElimAnnouncementText(Attacker, Victim);
+			ElimAnouncementWidget->AddToViewport();
+		}
 	}
 }
 
