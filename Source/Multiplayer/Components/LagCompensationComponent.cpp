@@ -429,18 +429,20 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(ABaseCharacter* HitChar
 }
 
 void ULagCompensationComponent::ServerScoreRequest_Implementation(ABaseCharacter* HitCharacter,
-	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime, AWeapon* DamageCauser)
+	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime)
 {
 	FServerSideRewindResult Confirm = ServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime); // ServerSideRewind 알고리즘으로 Hit 여부 판별
 
-	if (Character && HitCharacter && DamageCauser && Confirm.bHitConfirmed) // Hit 되었다면
+	if (Character && HitCharacter && Confirm.bHitConfirmed && Character->GetEquippedWeapon()) // Hit 되었다면
 	{
+		const float Damage = Confirm.bHeadShot ? Character->GetEquippedWeapon()->GetHeadShotDamage() : Character->GetEquippedWeapon()->GetDamage(); // 헤드샷, 바디샷 데미지 중 맞는거 담음
+
 		// 데미지 전달
 		UGameplayStatics::ApplyDamage(
 			HitCharacter,
-			DamageCauser->GetDamage(),
+			Damage, // 헤드샷 or 바디샷 데미지
 			Character->Controller,
-			DamageCauser,
+			Character->GetEquippedWeapon(),
 			UDamageType::StaticClass()
 		); 
 	}
@@ -450,12 +452,14 @@ void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(ABas
 {
 	FServerSideRewindResult Confirm = ProjectileServerSideRewind(HitCharacter, TraceStart, InitialVelocity, HitTime);
 
-	if (Character && HitCharacter && Confirm.bHitConfirmed) // Hit 되었다면
+	if (Character && HitCharacter && Confirm.bHitConfirmed && Character->GetEquippedWeapon()) // Hit 되었다면
 	{
+		const float Damage = Confirm.bHeadShot ? Character->GetEquippedWeapon()->GetHeadShotDamage() : Character->GetEquippedWeapon()->GetDamage();
+
 		// 데미지 전달
 		UGameplayStatics::ApplyDamage(
 			HitCharacter,
-			Character->GetEquippedWeapon()->GetDamage(),
+			Damage,
 			Character->Controller,
 			Character->GetEquippedWeapon(),
 			UDamageType::StaticClass()
@@ -474,7 +478,7 @@ void ULagCompensationComponent::ShotgunServerScoreRequest_Implementation(const T
 		float TotalDamage = 0.0f; // 전달할 데미지 총량
 		if (Confirm.HeadShots.Contains(HitCharacter)) // 헤드샷
 		{
-			float HeadShotDamage = Confirm.HeadShots[HitCharacter] * HitCharacter->GetEquippedWeapon()->GetDamage();
+			float HeadShotDamage = Confirm.HeadShots[HitCharacter] * HitCharacter->GetEquippedWeapon()->GetHeadShotDamage();
 			TotalDamage += HeadShotDamage;
 		}
 		if (Confirm.BodyShots.Contains(HitCharacter)) // 바디샷

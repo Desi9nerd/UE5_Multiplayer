@@ -93,8 +93,7 @@ public:
 		ABaseCharacter* HitCharacter, 
 		const FVector_NetQuantize& TraceStart, 
 		const FVector_NetQuantize& HitLocation, 
-		float HitTime, 
-		class AWeapon* DamageCauser);
+		float HitTime);
 
 	//** Projectile
 	UFUNCTION(Server, Reliable)
