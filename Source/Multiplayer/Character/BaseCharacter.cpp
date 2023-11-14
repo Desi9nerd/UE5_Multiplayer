@@ -202,6 +202,7 @@ void ABaseCharacter::MulticastElim_Implementation(bool bPlayerLeftGame) // RPC
 	//** Ãæµ¹X. Disable Collision
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Capsule Ãæµ¹ ²¨ÁÜ
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Mesh Ãæµ¹ ²¨ÁÜ
+	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision); // ¼ö·ùÅº Mesh Ãæµ¹ ²¨ÁÜ
 
 	// Elim Bot ½ºÆù½ÃÅ°±â
 	if (IsValid(ElimBotEffect))
