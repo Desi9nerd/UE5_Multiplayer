@@ -345,6 +345,27 @@ void ABaseCharacter::MulticastLostTheLead_Implementation() // 1등에서 밀려나면 C
 	}
 }
 
+void ABaseCharacter::SetTeamColor(ETeam Team)
+{
+	if (GetMesh() == nullptr || OriginalMaterial == nullptr) return; // 예외 처리
+
+	switch (Team)
+	{
+	case ETeam::ET_NoTeam:
+		GetMesh()->SetMaterial(0, OriginalMaterial);
+		DissolveMaterialInstance = BlueDissolveMatInst;
+		break;
+	case ETeam::ET_BlueTeam:
+		GetMesh()->SetMaterial(0, BlueMaterial);
+		DissolveMaterialInstance = BlueDissolveMatInst;
+		break;
+	case ETeam::ET_RedTeam:
+		GetMesh()->SetMaterial(0, RedMaterial);
+		DissolveMaterialInstance = RedDissolveMatInst;
+		break;
+	}
+}
+
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -957,6 +978,7 @@ void ABaseCharacter::PollInit()
 		{
 			MultiplayerPlayerState->AddToScore(0.0f); // 점수 초기화
 			MultiplayerPlayerState->AddToDefeats(0); // 승리횟수 초기화
+			SetTeamColor(MultiplayerPlayerState->GetTeam()); // Team에 따라 Team Color 초기화
 
 			TWeakObjectPtr<AMultiplayerGameState> MultiplayerGameState = Cast<AMultiplayerGameState>(UGameplayStatics::GetGameState(this));
 			if (MultiplayerGameState.IsValid() && 

@@ -6,6 +6,7 @@
 #include "Multiplayer/Interfaces/ICrosshair.h"
 #include "Components/TimelineComponent.h"
 #include "Multiplayer/EnumTypes/ECombatState.h"
+#include "Multiplayer/EnumTypes/ETeam.h"
 #include "BaseCharacter.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
@@ -61,6 +62,7 @@ public:
 	void MulticastGainedTheLead(); // 1등 Crown 띄우기
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastLostTheLead(); // 1등에서 밀려나면 Crown 띄운거 없애기
+	void SetTeamColor(ETeam Team);
 
 protected:
 	virtual void BeginPlay() override;
@@ -201,8 +203,20 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Elim)
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance; // 런타임에 변경되는 Dynamic Instance. 
 	
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(VisibleAnywhere, Category = Elim)
 	UMaterialInstance* DissolveMaterialInstance;// Material Instance. BP에서 등록
+
+	//** Team colors
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* RedDissolveMatInst;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* RedMaterial;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* BlueDissolveMatInst;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* BlueMaterial;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* OriginalMaterial;
 
 	//** Elim Bot
 	UPROPERTY(EditAnywhere)

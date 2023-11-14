@@ -68,3 +68,23 @@ void AMultiplayerPlayerState::AddToDefeats(int32 DefeatsAmount)
 		}
 	}
 }
+
+void AMultiplayerPlayerState::OnRep_Team()
+{
+	TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast <ABaseCharacter>(GetPawn());
+	if (BaseCharacter.IsValid())
+	{
+		BaseCharacter->SetTeamColor(Team);
+	}
+}
+
+void AMultiplayerPlayerState::SetTeam(ETeam TeamToSet)
+{
+	Team = TeamToSet; // Team 설정
+
+	TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast <ABaseCharacter>(GetPawn());
+	if (BaseCharacter.IsValid())
+	{
+		BaseCharacter->SetTeamColor(Team); // Team에 맞는 Team Color 설정
+	}
+}
