@@ -321,7 +321,7 @@ void ABaseCharacter::MulticastGainedTheLead_Implementation() // 1µî Crown ¶ç¿ì±â
 	{
 		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			CrownSystem,
-			GetCapsuleComponent(),
+			GetMesh(),
 			FName(),
 			GetActorLocation() + FVector(0.0f, 0.0f, 120.0f),
 			GetActorRotation(),
