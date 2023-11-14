@@ -87,6 +87,10 @@ protected:
 	UFUNCTION()
 	void OnRep_ShowTeamScores();
 
+	//** Announcement ¶ç¿ì±â ¹®ÀÚ
+	FString GetInfoText(const TArray<class AMultiplayerPlayerState*>& Players);
+	FString GetTeamsInfoText(class AMultiplayerGameState* MultiplayerGameState);
+
 private:
 	UPROPERTY()
 	class AMainHUD* MainHUD;

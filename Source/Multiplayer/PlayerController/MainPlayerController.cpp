@@ -13,6 +13,7 @@
 #include "Multiplayer/GameState/MultiplayerGameState.h"
 #include "Components/Image.h"
 #include "Multiplayer/HUD/ReturnToMainMenu.h"
+#include "Multiplayer/EnumTypes/EAnnouncement.h"
 
 void AMainPlayerController::BroadcastElim(APlayerState* Attacker, APlayerState* Victim) // GameMode에서 실행(=Server에서 call된다)
 {
@@ -636,7 +637,7 @@ void AMainPlayerController::HandleCooldown() // 경기 끝난 후 Announcement �
 		if (bHUDValid)
 		{
 			MainHUD->Announcement->SetVisibility(ESlateVisibility::Visible); // Announcement 보이게하기
-			FString AnnouncementText("NEXT GAME STARTS IN:"); // 기본 문구 띄우기(나중에 여기 수정하기)
+			FString AnnouncementText = Announcement::NewMatchStartsIn;
 			MainHUD->Announcement->AnnouncementText->SetText(FText::FromString(AnnouncementText));
 
 			AMultiplayerGameState* MultiplayerGameState = Cast<AMultiplayerGameState>(UGameplayStatics::GetGameState(this));
@@ -644,28 +645,8 @@ void AMainPlayerController::HandleCooldown() // 경기 끝난 후 Announcement �
 			if (IsValid(MultiplayerGameState) && IsValid(MultiplayerPlayerState))
 			{
 				TArray<AMultiplayerPlayerState*> TopPlayers = MultiplayerGameState->TopScoringPlayers;
-				FString InfoTextString;
-				if (TopPlayers.Num() == 0) // 승자가 없는 경우
-				{
-					InfoTextString = FString("DRAW");
-				}
-				else if (TopPlayers.Num() == 1 && TopPlayers[0] == MultiplayerPlayerState) // 자신이 승자
-				{
-					InfoTextString = FString("YOU WIN!");
-				}
-				else if (TopPlayers.Num() == 1) // 승자 이름 띄우기
-				{
-					InfoTextString = FString::Printf(TEXT("WINNER: \n%s"), *TopPlayers[0]->GetPlayerName());
-				}
-				else if (TopPlayers.Num() > 1) // 승자가 여러명인 경우ㄴ
-				{
-					// 최고 득점자들 띄우기
-					InfoTextString = FString("WINNERS:\n"); 
-					for (auto TiedPlayer : TopPlayers)
-					{
-						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
-					}
-				}
+				
+				FString InfoTextString = bShowTeamScores ? GetTeamsInfoText(MultiplayerGameState) : GetInfoText(TopPlayers);
 
 				MainHUD->Announcement->InfoText->SetText(FText::FromString(InfoTextString));
 			}
@@ -711,4 +692,75 @@ void AMainPlayerController::StopHighPingWarning()  // High Ping 경고 멈추기
 			MainHUD->CharacterOverlay->StopAnimation(MainHUD->CharacterOverlay->HighPingAnimation);
 		}
 	}
+}
+
+FString AMainPlayerController::GetInfoText(const TArray<AMultiplayerPlayerState*>& Players)
+{
+	TWeakObjectPtr<AMultiplayerPlayerState> MPlayerState = GetPlayerState<AMultiplayerPlayerState>();
+	if (MPlayerState == nullptr) return FString();
+
+	FString InfoTextString;
+	if (Players.Num() == 0) // 승자가 없는 경우
+	{
+		InfoTextString = Announcement::ThereIsNoWinner;
+	}
+	else if (Players.Num() == 1 && Players[0] == MPlayerState) // 자신이 승자
+	{
+		InfoTextString = Announcement::YouAreTheWinner;
+	}
+	else if (Players.Num() == 1) // 승자 이름 띄우기
+	{
+		InfoTextString = FString::Printf(TEXT("WINNERS: \n%s"), *Players[0]->GetPlayerName());
+	}
+	else if (Players.Num() > 1) // 승자가 여러명인 경우
+	{
+		// 최고 득점자들 띄우기
+		InfoTextString = Announcement::PlayersTiedForTheWin;
+		InfoTextString.Append(FString("\n"));
+		for (auto TiedPlayer : Players)
+		{
+			InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+		}
+	}
+
+	return InfoTextString;
+}
+
+FString AMainPlayerController::GetTeamsInfoText(AMultiplayerGameState* MultiplayerGameState)
+{
+	if (MultiplayerGameState == nullptr) return FString();
+
+	FString InfoTextString;
+	// Red, Blue Team 점수 가져와 변수에 담기
+	const int32 RedTeamScore = MultiplayerGameState->RedTeamScore;
+	const int32 BlueTeamScore = MultiplayerGameState->BlueTeamScore;
+
+	if (RedTeamScore == 0 && BlueTeamScore == 0) // 두 팀 모두 0점
+	{
+		InfoTextString = Announcement::ThereIsNoWinner;
+	}
+	else if (RedTeamScore == BlueTeamScore) // 동점
+	{
+		InfoTextString = FString::Printf(TEXT("%s\n"), *Announcement::TeamsTiedForTheWin);
+		InfoTextString.Append(Announcement::RedTeam);
+		InfoTextString.Append(TEXT("\n"));
+		InfoTextString.Append(Announcement::BlueTeam);
+		InfoTextString.Append(TEXT("\n"));
+	}
+	else if (RedTeamScore > BlueTeamScore) // RedTeam Win
+	{
+		InfoTextString = Announcement::RedTeamWins;
+		InfoTextString.Append(TEXT("\n"));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::RedTeam, RedTeamScore));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::BlueTeam, BlueTeamScore));
+	}
+	else if (BlueTeamScore > RedTeamScore) // BlueTeam Win
+	{
+		InfoTextString = Announcement::BlueTeamWins;
+		InfoTextString.Append(TEXT("\n"));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::BlueTeam, BlueTeamScore));
+		InfoTextString.Append(FString::Printf(TEXT("%s: %d\n"), *Announcement::RedTeam, RedTeamScore));
+	}
+
+	return InfoTextString;
 }
