@@ -46,6 +46,24 @@ void ATeamGameMode::Logout(AController* Exiting)
 	}
 }
 
+float ATeamGameMode::CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage)
+{
+	TWeakObjectPtr<AMultiplayerPlayerState> AttackerPState = Attacker->GetPlayerState<AMultiplayerPlayerState>();
+	TWeakObjectPtr<AMultiplayerPlayerState> VictimPState = Victim->GetPlayerState<AMultiplayerPlayerState>();
+	if (AttackerPState == nullptr || VictimPState == nullptr) return BaseDamage;
+
+	if (VictimPState == AttackerPState) // 자기 스스로 데미지 입히는 경우
+	{
+		return BaseDamage;
+	}
+	if (AttackerPState->GetTeam() == VictimPState->GetTeam()) // 같은 팀인 경우
+	{
+		return 0.0f; // 같은 팀인 경우, 데미지를 입히지 않는다.
+	}
+
+	return BaseDamage; // 데미지 반환
+}
+
 void ATeamGameMode::HandleMatchHasStarted() // Team 배정
 {
 	Super::HandleMatchHasStarted();

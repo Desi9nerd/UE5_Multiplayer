@@ -247,10 +247,10 @@ void ABaseCharacter::MulticastElim_Implementation(bool bPlayerLeftGame) // RPC
 
 void ABaseCharacter::ElimTimerFinished()
 {
-	TWeakObjectPtr<AMultiplayerGameMode> MultiplayerGameMode = GetWorld()->GetAuthGameMode<AMultiplayerGameMode>();
-	if (MultiplayerGameMode.IsValid() && false == bLeftGame) // 게임퇴장X
+	MGameMode = MGameMode == nullptr ? GetWorld()->GetAuthGameMode<AMultiplayerGameMode>() : MGameMode;
+	if (IsValid(MGameMode) && false == bLeftGame) // 게임퇴장X
 	{
-		MultiplayerGameMode->RequestRespawn(this, Controller); // 리스폰
+		MGameMode->RequestRespawn(this, Controller); // 리스폰
 	}
 	if (IsLocallyControlled() && bLeftGame) // 게임퇴장O
 	{
@@ -261,11 +261,11 @@ void ABaseCharacter::ElimTimerFinished()
 
 void ABaseCharacter::ServerLeaveGame_Implementation() // 게임 퇴장
 {
-	TWeakObjectPtr<AMultiplayerGameMode> MultiplayerGameMode = GetWorld()->GetAuthGameMode<AMultiplayerGameMode>();
+	MGameMode = MGameMode == nullptr ? GetWorld()->GetAuthGameMode<AMultiplayerGameMode>() : MGameMode;
 	MultiplayerPlayerState = MultiplayerPlayerState == nullptr ? GetPlayerState<AMultiplayerPlayerState>() : MultiplayerPlayerState;
-	if (MultiplayerGameMode.IsValid())
+	if (IsValid(MGameMode) && MultiplayerPlayerState.IsValid())
 	{
-		MultiplayerGameMode->PlayerLeftGame(MultiplayerPlayerState.Get());
+		MGameMode->PlayerLeftGame(MultiplayerPlayerState.Get());
 	}
 }
 
@@ -307,8 +307,8 @@ void ABaseCharacter::Destroyed()
 		ElimBotComponent->DestroyComponent(); // Elim Bot 소멸
 	}
 
-	TWeakObjectPtr<AMultiplayerGameMode> MultiplayerGameMode = Cast<AMultiplayerGameMode>(UGameplayStatics::GetGameMode(this));
-	bool bMatchNotInProgress = MultiplayerGameMode.IsValid() && MultiplayerGameMode->GetMatchState() != MatchState::InProgress; // MultiplayerGameMode가 있고 MatchState이 경기 중이 아니라면 true
+	MGameMode = MGameMode == nullptr ? GetWorld()->GetAuthGameMode<AMultiplayerGameMode>() : MGameMode;
+	bool bMatchNotInProgress = MGameMode && MGameMode->GetMatchState() != MatchState::InProgress; // MGameMode가 있고 MatchState이 경기 중이 아니라면 true
 	if (IsValid(Combat) && Combat->EquippedWeapon && bMatchNotInProgress)
 	{
 		Combat->EquippedWeapon->Destroy(); // 플레이어에 장착된 무기 소멸
@@ -568,7 +568,10 @@ void ABaseCharacter::GrenadeButtonPressed()
 
 void ABaseCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
-	if (bElimmed) return; // 예외 처리. 죽은 상태면 데미지X 
+	MGameMode = MGameMode == nullptr ? GetWorld()->GetAuthGameMode<AMultiplayerGameMode>() : MGameMode;
+	if (bElimmed || MGameMode == nullptr) return; // 예외 처리. 죽은 상태면 데미지X
+
+	Damage = MGameMode->CalculateDamage(InstigatorController, Controller, Damage);
 
 	float DamageToHealth = Damage;
 	if (Shield > 0.0f) // 실드가 0이상이면 체력을 깍기 전에 실드를 먼저 깐다. 
@@ -593,13 +596,12 @@ void ABaseCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDa
 
 	if (Health == 0.0f)
 	{
-		TWeakObjectPtr<AMultiplayerGameMode> MultiplayerGameMode = GetWorld()->GetAuthGameMode<AMultiplayerGameMode>();
-		if (MultiplayerGameMode.IsValid())
+		if (IsValid(MGameMode))
 		{
 			MainPlayerController = MainPlayerController == nullptr ? Cast<AMainPlayerController>(Controller) : MainPlayerController;
 
 			TObjectPtr<AMainPlayerController> AttackerController = Cast<AMainPlayerController>(InstigatorController);
-			MultiplayerGameMode->PlayerEliminated(this, MainPlayerController, AttackerController);
+			MGameMode->PlayerEliminated(this, MainPlayerController, AttackerController);
 		}
 	}
 }
@@ -955,10 +957,11 @@ void ABaseCharacter::UpdateHUDAmmo()
 
 void ABaseCharacter::SpawnDefaultWeapon() // 게임시작 시 기본무기 생성
 {
-	TWeakObjectPtr<AMultiplayerGameMode> MultiplayerGameMode = Cast<AMultiplayerGameMode>(UGameplayStatics::GetGameMode(this));
+	MGameMode = MGameMode == nullptr ? GetWorld()->GetAuthGameMode<AMultiplayerGameMode>() : MGameMode;
+
 	TWeakObjectPtr<UWorld> World = GetWorld();
 
-	if (MultiplayerGameMode.IsValid() && World.IsValid() && bElimmed == false && IsValid(DefaultWeaponClass))
+	if (IsValid(MGameMode) && World.IsValid() && bElimmed == false && IsValid(DefaultWeaponClass))
 	{
 		TWeakObjectPtr<AWeapon> StartingWeapon = World->SpawnActor<AWeapon>(DefaultWeaponClass);
 		StartingWeapon->bDestroyWeapon = true; // 기본무기 생성 true. 캐릭터가 죽으면(=Elim) 해당 무기 소멸.

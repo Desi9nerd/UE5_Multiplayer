@@ -203,7 +203,7 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Elim)
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance; // 런타임에 변경되는 Dynamic Instance. 
 	
-	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Elim)
 	UMaterialInstance* DissolveMaterialInstance;// Material Instance. BP에서 등록
 
 	//** Team colors
@@ -240,6 +240,9 @@ private:
 	//** 게임시작 시 지급되는 기본 무기
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeaponClass;
+
+	UPROPERTY()
+	class AMultiplayerGameMode* MGameMode;
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);

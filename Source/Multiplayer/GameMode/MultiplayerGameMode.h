@@ -24,6 +24,7 @@ public:
 	virtual void PlayerEliminated(class ABaseCharacter* ElimmedCharacter, class AMainPlayerController* VictimController, AMainPlayerController* AttackerController);
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
 	void PlayerLeftGame(class AMultiplayerPlayerState* PlayerLeaving); // 플레이어 게임 퇴장
+	virtual float CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage);
 
 	FORCEINLINE float GetCountdownTime() const { return CountdownTime; }
 

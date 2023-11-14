@@ -167,3 +167,8 @@ void AMultiplayerGameMode::PlayerLeftGame(AMultiplayerPlayerState* PlayerLeaving
 		CharacterLeaving->Elim(true);
 	}
 }
+
+float AMultiplayerGameMode::CalculateDamage(AController* Attacker, AController* Victim, float BaseDamage)
+{
+	return BaseDamage;
+}
