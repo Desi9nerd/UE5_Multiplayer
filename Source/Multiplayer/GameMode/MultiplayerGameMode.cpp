@@ -67,7 +67,7 @@ void AMultiplayerGameMode::OnMatchStateSet()
 		TWeakObjectPtr<AMainPlayerController> SelectedPlayer = Cast<AMainPlayerController>(*It);
 		if (SelectedPlayer.IsValid())
 		{
-			SelectedPlayer->OnMatchStateSet(MatchState);
+			SelectedPlayer->OnMatchStateSet(MatchState, bTeamsMatch);
 		}
 	}
 }

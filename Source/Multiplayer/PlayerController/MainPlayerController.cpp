@@ -68,6 +68,67 @@ void AMainPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AMainPlayerController, MatchState); // replicated 되도록 MatchState 등록
+	DOREPLIFETIME(AMainPlayerController, bShowTeamScores);
+}
+
+void AMainPlayerController::HideTeamScores() // Team 점수 숨기기
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+	bool bHUDValid = MainHUD &&
+		MainHUD->CharacterOverlay &&
+		MainHUD->CharacterOverlay->RedTeamScore &&
+		MainHUD->CharacterOverlay->BlueTeamScore &&
+		MainHUD->CharacterOverlay->ScoreSpacerText;
+	if (bHUDValid)
+	{	// 빈칸으로 만들어 숨긴다.
+		MainHUD->CharacterOverlay->RedTeamScore->SetText(FText());
+		MainHUD->CharacterOverlay->BlueTeamScore->SetText(FText());
+		MainHUD->CharacterOverlay->ScoreSpacerText->SetText(FText());
+	}
+}
+
+void AMainPlayerController::InitTeamScores() // Team 점수 초기화
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+	bool bHUDValid = MainHUD &&
+		MainHUD->CharacterOverlay &&
+		MainHUD->CharacterOverlay->RedTeamScore &&
+		MainHUD->CharacterOverlay->BlueTeamScore &&
+		MainHUD->CharacterOverlay->ScoreSpacerText;
+	if (bHUDValid)
+	{	// 0 | 0 으로 보이게 초기화
+		FString Zero("0");
+		FString Spacer("|");
+		MainHUD->CharacterOverlay->RedTeamScore->SetText(FText::FromString(Zero));
+		MainHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(Zero));
+		MainHUD->CharacterOverlay->ScoreSpacerText->SetText(FText::FromString(Spacer));
+	}
+}
+
+void AMainPlayerController::SetHUDRedTeamScore(int32 RedScore) // RedTeam 점수 띄우기
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+	bool bHUDValid = MainHUD &&
+		MainHUD->CharacterOverlay &&
+		MainHUD->CharacterOverlay->RedTeamScore;
+	if (bHUDValid)
+	{	// Red Team 점수 설정
+		FString ScoreText = FString::Printf(TEXT("%d"), RedScore);
+		MainHUD->CharacterOverlay->RedTeamScore->SetText(FText::FromString(ScoreText));
+	}
+}
+
+void AMainPlayerController::SetHUDBlueTeamScore(int32 BlueScore) // BlueTeam 점수 띄우기
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+	bool bHUDValid = MainHUD &&
+		MainHUD->CharacterOverlay &&
+		MainHUD->CharacterOverlay->BlueTeamScore;
+	if (bHUDValid)
+	{	// Blue Team 점수 설정
+		FString ScoreText = FString::Printf(TEXT("%d"), BlueScore);
+		MainHUD->CharacterOverlay->BlueTeamScore->SetText(FText::FromString(ScoreText));
+	}
 }
 
 void AMainPlayerController::Tick(float DeltaTime)
@@ -462,6 +523,18 @@ void AMainPlayerController::ShowReturnToMainMenu()
 	}
 }
 
+void AMainPlayerController::OnRep_ShowTeamScores()
+{
+	if (bShowTeamScores)
+	{
+		InitTeamScores(); // Team 점수 초기화
+	}
+	else // false == bShowTeamScores
+	{
+		HideTeamScores(); // Team 점수 숨기기
+	}
+}
+
 void AMainPlayerController::ServerRequestServerTime_Implementation(float TimeOfClientRequest)
 {
 	float ServerTimeOfReceipt = GetWorld()->GetTimeSeconds(); // Server의 현재 Time
@@ -494,13 +567,13 @@ void AMainPlayerController::ReceivedPlayer()
 	}
 }
 
-void AMainPlayerController::OnMatchStateSet(FName State)
+void AMainPlayerController::OnMatchStateSet(FName State, bool bTeamsMatch)
 {
 	MatchState = State;  // GameMode에서 건내받는 FName State으로 MatchState 설정
 
 	if (MatchState == MatchState::InProgress) //GameMode.h 내의 MatchState::InProgress
 	{
-		HandleMatchHasStarted();
+		HandleMatchHasStarted(bTeamsMatch);
 	}
 	else if (MatchState == MatchState::Cooldown)
 	{
@@ -520,8 +593,10 @@ void AMainPlayerController::OnRep_MatchState()
 	}
 }
 
-void AMainPlayerController::HandleMatchHasStarted() // 경기 시작 시 Announcement 위젯 안 보이게 하기
+void AMainPlayerController::HandleMatchHasStarted(bool bTeamsMatch) // 경기 시작 시 Announcement 위젯 안 보이게 하기
 {
+	if (HasAuthority()) bShowTeamScores = bTeamsMatch; // Server
+
 	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
 	if (IsValid(MainHUD))
 	{
@@ -533,6 +608,16 @@ void AMainPlayerController::HandleMatchHasStarted() // 경기 시작 시 Announc
 		if (MainHUD->Announcement)
 		{
 			MainHUD->Announcement->SetVisibility(ESlateVisibility::Hidden);
+		}
+
+		if (false == HasAuthority()) return; // Client라면 리턴 종료
+		if (bTeamsMatch)
+		{
+			InitTeamScores(); // Team 점수 초기화
+		}
+		else // false == bTeamsMatch
+		{
+			HideTeamScores(); // Team 점수 숨기기
 		}
 	}
 }

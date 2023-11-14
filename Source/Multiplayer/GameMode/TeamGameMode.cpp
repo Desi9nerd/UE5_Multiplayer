@@ -3,6 +3,11 @@
 #include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
 #include "Kismet/GameplayStatics.h"
 
+ATeamGameMode::ATeamGameMode()
+{
+	bTeamsMatch = true;
+}
+
 void ATeamGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);

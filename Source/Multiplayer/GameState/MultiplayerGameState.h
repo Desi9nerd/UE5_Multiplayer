@@ -20,6 +20,8 @@ public:
 	TArray<AMultiplayerPlayerState*> TopScoringPlayers;
 
 	//** Teams
+	void RedTeamScores();  // Red Team µÊ¡°
+	void BlueTeamScores(); // Blue Team µÊ¡°
 	TArray<TObjectPtr<AMultiplayerPlayerState>> RedTeam;
 	TArray<TObjectPtr<AMultiplayerPlayerState>> BlueTeam;
 	UPROPERTY(ReplicatedUsing = OnRep_RedTeamScore)

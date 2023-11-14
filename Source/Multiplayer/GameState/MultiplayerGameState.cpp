@@ -30,6 +30,16 @@ void AMultiplayerGameState::UpdateTopScore(AMultiplayerPlayerState* ScoringPlaye
 	}
 }
 
+void AMultiplayerGameState::RedTeamScores() // Red Team µÊ¡°
+{
+	++RedTeamScore;
+}
+
+void AMultiplayerGameState::BlueTeamScores() // Blue Team µÊ¡°
+{
+	++BlueTeamScore;
+}
+
 void AMultiplayerGameState::OnRep_RedTeamScore()
 {
 

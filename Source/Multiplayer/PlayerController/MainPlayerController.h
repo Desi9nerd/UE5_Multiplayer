@@ -18,6 +18,10 @@ class MULTIPLAYER_API AMainPlayerController : public APlayerController
 public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	void HideTeamScores(); // Team 점수 숨기기
+	void InitTeamScores(); // Team 점수 초기화
+	void SetHUDRedTeamScore(int32 RedScore); // RedTeam 점수 띄우기
+	void SetHUDBlueTeamScore(int32 BlueScore);// BlueTeam 점수 띄우기
 	void SetHUDHealth(float Health, float MaxHealth); // HealthBar에 Health/MaxHealth
 	void SetHUDShield(float Shield, float MaxShield);
 	void SetHUDScore(float Score); // 점수 매기기
@@ -30,8 +34,8 @@ public:
 	virtual void OnPossess(APawn* InPawn) override; // possed된 Pawn에 접근하는 함수
 	virtual float GetServerTime(); // Synced된 Server world clock를 리턴하는 함수
 	virtual void ReceivedPlayer() override; // 가능한 빨리 server clock을 Sync
-	void OnMatchStateSet(FName State);
-	void HandleMatchHasStarted(); // 경기 시작 시 Announcement 위젯 안 보이게 하기
+	void OnMatchStateSet(FName State, bool bTeamsMatch = false);
+	void HandleMatchHasStarted(bool bTeamsMatch = false); // 경기 시작 시 Announcement 위젯 안 보이게 하기
 	void HandleCooldown(); // 경기 끝난 후 Announcement 위젯 보이게 하기
 
 	float SingleTripTime = 0.0f; // SingleTripTime = 0.5f * RoundTripTime;
@@ -76,6 +80,12 @@ protected:
 
 	UFUNCTION(Client, Reliable) // Client RPC
 	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim); // 공격자, 피격으로 죽는 플레이어를 화면에 텍스트로 띄우기
+
+	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
+	bool bShowTeamScores = false;
+
+	UFUNCTION()
+	void OnRep_ShowTeamScores();
 
 private:
 	UPROPERTY()

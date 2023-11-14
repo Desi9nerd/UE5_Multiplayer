@@ -29,6 +29,14 @@ public:
 	UTextBlock* ScoreAmount; // 薄熱
 
 	UPROPERTY(meta = (BindWidget))
+	UTextBlock* RedTeamScore; // Red Team 薄熱
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* BlueTeamScore;// Blue Team 薄熱
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* ScoreSpacerText;
+
+	UPROPERTY(meta = (BindWidget))
 	UTextBlock* DefeatsAmount; // 蝓葬 �蝦�
 
 	UPROPERTY(meta = (BindWidget))

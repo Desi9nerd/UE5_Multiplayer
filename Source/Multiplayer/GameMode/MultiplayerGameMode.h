@@ -39,6 +39,8 @@ public:
 
 	float LevelStartingTime = 0.0f; // 게임레벨맵에 들어간 시간
 
+	bool bTeamsMatch = false; // Team 경기 true/false
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;
