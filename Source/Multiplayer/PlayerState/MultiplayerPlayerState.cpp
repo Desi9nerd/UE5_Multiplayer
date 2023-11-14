@@ -8,6 +8,7 @@ void AMultiplayerPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimePropert
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AMultiplayerPlayerState, Defeats);
+	DOREPLIFETIME(AMultiplayerPlayerState, Team);
 }
 
 void AMultiplayerPlayerState::OnRep_Score()
