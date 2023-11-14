@@ -53,7 +53,7 @@ void AMultiplayerGameState::BlueTeamScores() // Blue Team µÊ¡°
 	}
 }
 
-void AMultiplayerGameState::OnRep_RedTeamScore()
+void AMultiplayerGameState::OnRep_RedTeamScore() // Red Team µÊ¡°
 {
 	TWeakObjectPtr<AMainPlayerController> MPlayer = Cast<AMainPlayerController>(GetWorld()->GetFirstPlayerController());
 	if (MPlayer.IsValid())
@@ -62,7 +62,7 @@ void AMultiplayerGameState::OnRep_RedTeamScore()
 	}
 }
 
-void AMultiplayerGameState::OnRep_BlueTeamScore()
+void AMultiplayerGameState::OnRep_BlueTeamScore() // Blue Team µÊ¡°
 {
 	TWeakObjectPtr<AMainPlayerController> MPlayer = Cast<AMainPlayerController>(GetWorld()->GetFirstPlayerController());
 	if (MPlayer.IsValid())
