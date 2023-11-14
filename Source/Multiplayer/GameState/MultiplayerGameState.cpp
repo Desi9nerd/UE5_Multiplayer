@@ -1,6 +1,7 @@
 #include "MultiplayerGameState.h"
 #include "Net/UnrealNetwork.h"
 #include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
+#include "Multiplayer/PlayerController/MainPlayerController.h"
 
 void AMultiplayerGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -33,19 +34,39 @@ void AMultiplayerGameState::UpdateTopScore(AMultiplayerPlayerState* ScoringPlaye
 void AMultiplayerGameState::RedTeamScores() // Red Team µÊ¡°
 {
 	++RedTeamScore;
+
+	TWeakObjectPtr<AMainPlayerController> MPlayer = Cast<AMainPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (MPlayer.IsValid())
+	{
+		MPlayer->SetHUDBlueTeamScore(RedTeamScore);
+	}
 }
 
 void AMultiplayerGameState::BlueTeamScores() // Blue Team µÊ¡°
 {
 	++BlueTeamScore;
+
+	TWeakObjectPtr<AMainPlayerController> MPlayer = Cast<AMainPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (MPlayer.IsValid())
+	{
+		MPlayer->SetHUDRedTeamScore(BlueTeamScore);
+	}
 }
 
 void AMultiplayerGameState::OnRep_RedTeamScore()
 {
-
+	TWeakObjectPtr<AMainPlayerController> MPlayer = Cast<AMainPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (MPlayer.IsValid())
+	{
+		MPlayer->SetHUDBlueTeamScore(RedTeamScore);
+	}
 }
 
 void AMultiplayerGameState::OnRep_BlueTeamScore()
 {
-
+	TWeakObjectPtr<AMainPlayerController> MPlayer = Cast<AMainPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (MPlayer.IsValid())
+	{
+		MPlayer->SetHUDRedTeamScore(BlueTeamScore);
+	}
 }

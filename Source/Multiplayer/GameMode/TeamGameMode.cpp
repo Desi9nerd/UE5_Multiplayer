@@ -1,6 +1,7 @@
 #include "TeamGameMode.h"
 #include "Multiplayer/GameState/MultiplayerGameState.h"
 #include "Multiplayer/PlayerState/MultiplayerPlayerState.h"
+#include "Multiplayer/PlayerController/MainPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 
 ATeamGameMode::ATeamGameMode()
@@ -67,6 +68,26 @@ float ATeamGameMode::CalculateDamage(AController* Attacker, AController* Victim,
 	}
 
 	return BaseDamage; // 데미지 반환
+}
+
+void ATeamGameMode::PlayerEliminated(class ABaseCharacter* ElimmedCharacter, class AMainPlayerController* VictimController, AMainPlayerController* AttackerController)
+{
+	Super::PlayerEliminated(ElimmedCharacter, VictimController, AttackerController);
+
+	TWeakObjectPtr<AMultiplayerGameState> MGameState = Cast<AMultiplayerGameState>(UGameplayStatics::GetGameState(this));
+	TWeakObjectPtr<AMultiplayerPlayerState> AttackerPState = AttackerController ? Cast<AMultiplayerPlayerState>(AttackerController->PlayerState) : nullptr;
+	
+	if (MGameState.IsValid() && AttackerPState.IsValid())
+	{
+		if (AttackerPState->GetTeam() == ETeam::ET_RedTeam)
+		{
+			MGameState->RedTeamScores();
+		}
+		if (AttackerPState->GetTeam() == ETeam::ET_BlueTeam)
+		{
+			MGameState->BlueTeamScores();
+		}
+	}
 }
 
 void ATeamGameMode::HandleMatchHasStarted() // Team 배정
