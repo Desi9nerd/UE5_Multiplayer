@@ -570,6 +570,8 @@ void ABaseCharacter::GrenadeButtonPressed()
 {
 	if (IsValid(Combat))
 	{
+		if (Combat->bHoldingTheFlag) return; // 깃발 들고있을때 예외 처리
+
 		Combat->ThrowGrenade();
 	}
 }
@@ -658,6 +660,8 @@ void ABaseCharacter::EquipButtonPressed()
 		// Authority가 없는 경우, ServerEquipButtonPressed()가 서버에서 실행된다.
 		// Authority가 있는 경우도 ServerEquipButtonPressed()가 서버에서 실행된다.
 
+		if (Combat->bHoldingTheFlag) return;
+
 		if (Combat->CombatState == ECombatState::ECS_Unoccupied) 
 		{
 			ServerEquipButtonPressed(); //무기 장착
@@ -695,6 +699,7 @@ void ABaseCharacter::ServerEquipButtonPressed_Implementation() // E 버튼을 누렀�
 
 void ABaseCharacter::CrouchButtonPressed()
 {
+	if (Combat && Combat->bHoldingTheFlag) return;
 	if (bDisableGameplay) return;
 
 	if (bIsCrouched)
@@ -709,6 +714,7 @@ void ABaseCharacter::CrouchButtonPressed()
 
 void ABaseCharacter::ReloadButtonPressed()
 {
+	if (Combat && Combat->bHoldingTheFlag) return;
 	if (bDisableGameplay) return;
 
 	if (IsValid(Combat))
@@ -719,6 +725,7 @@ void ABaseCharacter::ReloadButtonPressed()
 
 void ABaseCharacter::AimButtonPressed()
 {
+	if (Combat && Combat->bHoldingTheFlag) return;
 	if (bDisableGameplay) return;
 
 	if (IsValid(Combat))
@@ -729,6 +736,7 @@ void ABaseCharacter::AimButtonPressed()
 
 void ABaseCharacter::AimButtonReleased()
 {
+	if (Combat && Combat->bHoldingTheFlag) return;
 	if (bDisableGameplay) return;
 
 	if (IsValid(Combat))
@@ -829,6 +837,7 @@ void ABaseCharacter::SimProxiesTurn()
 
 void ABaseCharacter::Jump()
 {
+	if (Combat && Combat->bHoldingTheFlag) return;
 	if (bDisableGameplay) return;
 
 	if (bIsCrouched)
@@ -843,6 +852,7 @@ void ABaseCharacter::Jump()
 
 void ABaseCharacter::FireButtonPressed()
 {
+	if (Combat && Combat->bHoldingTheFlag) return;
 	if (bDisableGameplay) return;
 
 	if (Combat)
@@ -853,6 +863,7 @@ void ABaseCharacter::FireButtonPressed()
 
 void ABaseCharacter::FireButtonReleased()
 {
+	if (Combat && Combat->bHoldingTheFlag) return;
 	if (bDisableGameplay) return;
 
 	if (Combat)
