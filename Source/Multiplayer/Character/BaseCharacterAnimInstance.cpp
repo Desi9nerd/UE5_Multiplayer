@@ -35,6 +35,7 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	TurningInPlace = BaseCharacter->GetTurningInPlace();
 	bRotateRootBone = BaseCharacter->ShouldRotateRootBone();
 	bElimmed = BaseCharacter->IsElimmed();
+	bHoldingTheFlag = BaseCharacter->IsHoldingTheFlag();
 
 	// YawOffset: Straft동작을 위한 Yaw Offset 설정
 	FRotator AimRotation = BaseCharacter->GetBaseAimRotation();//-180 ~ 180도. local값이 아닌 world값

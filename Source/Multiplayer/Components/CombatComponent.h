@@ -204,6 +204,8 @@ private:
 
 	void UpdateHUDGrenades();
 
+	bool bHoldingTheFlag = false; // 점령전 깃발 들고있는지 true/false
+
 public:
 	bool ShouldSwapWeapons() { return (EquippedWeapon != nullptr && SecondaryWeapon != nullptr); };
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }

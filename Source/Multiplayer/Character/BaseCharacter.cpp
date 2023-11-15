@@ -1079,3 +1079,10 @@ bool ABaseCharacter::IsLocallyReloading()
 
 	return Combat->bLocallyReloading;
 }
+
+bool ABaseCharacter::IsHoldingTheFlag() const
+{
+	if (Combat == nullptr) return false;
+
+	return Combat->bHoldingTheFlag;
+}
