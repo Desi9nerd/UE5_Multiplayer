@@ -93,6 +93,7 @@ protected:
 	void DropEquippedWeapon(); // 장착중인 무기 떨어뜨리기
 	void AttachActorToRightHand(AActor* ActorToAttach); // 무기 오른손 소켓에 붙이기
 	void AttachActorToLeftHand(AActor* ActorToAttach); // 무기 왼손 소켓에 붙이기
+	void AttachFlagToLeftHand(AWeapon* Flag); // 깃발 깃발소켓에 붙이기
 	void AttachActorToBackpack(AActor* ActorToAttach); // 무기 배낭위치에 붙이기
 	void UpdateCarriedAmmo(); // 현재 장착무기 탄창의 최대 총알 수 업데이트
 	void PlayEquipWeaponSound(AWeapon* WeaponToEquip); // 무기 장착 사운드 재생
@@ -204,7 +205,10 @@ private:
 
 	void UpdateHUDGrenades();
 
+	UPROPERTY(ReplicatedUsing = OnRep_HoldingTheFlag)
 	bool bHoldingTheFlag = false; // 점령전 깃발 들고있는지 true/false
+	UFUNCTION()
+	void OnRep_HoldingTheFlag();
 
 public:
 	bool ShouldSwapWeapons() { return (EquippedWeapon != nullptr && SecondaryWeapon != nullptr); };

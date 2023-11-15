@@ -33,6 +33,7 @@ void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	DOREPLIFETIME_CONDITION(UCombatComponent, CarriedAmmo, COND_OwnerOnly); //replicated 되도록 CarriedAmmo을 등록. CarriedAmmo를 가지고 있는 Client만 적용되기 때문에 COND_OwnerOnly 컨디션으로 설정한다. 이렇게 하면 Owning Client에만 적용이 되고 다른 Client들에게는 적용이 되지 않는다.
 	DOREPLIFETIME(UCombatComponent, CombatState); //replicated 되도록 CombatState을 등록
 	DOREPLIFETIME(UCombatComponent, Grenades); //replicated 되도록 Grenades을 등록
+	DOREPLIFETIME(UCombatComponent, bHoldingTheFlag);
 }
 
 void UCombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount) // 무기 줍기
@@ -269,18 +270,29 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip) // Server
 	if (Character == nullptr || WeaponToEquip == nullptr) return;
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 
-	// Primary 무기는 있고, Secondary 무기는 없는 경우
-	if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr) 
-	{	
-		EquipSecondaryWeapon(WeaponToEquip); // Secondary 무기 장착
+	if (WeaponToEquip->GetWeaponType() == EWeaponType::EWT_Flag) // 깃발
+	{
+		Character->Crouch(); // 앉는 자세로 변경
+		bHoldingTheFlag = true;
+		AttachFlagToLeftHand(WeaponToEquip); // 깃발소켓에 깃발 장착
+		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped);
+		WeaponToEquip->SetOwner(Character.Get());
 	}
-	else // Primary 무기가 없는 경우
-	{	
-		EquipPrimaryWeapon(WeaponToEquip); // Primary 무기 장착
-	}
+	else // 깃발X
+	{
+		// Primary 무기는 있고, Secondary 무기는 없는 경우
+		if (EquippedWeapon != nullptr && SecondaryWeapon == nullptr)
+		{
+			EquipSecondaryWeapon(WeaponToEquip); // Secondary 무기 장착
+		}
+		else // Primary 무기가 없는 경우
+		{
+			EquipPrimaryWeapon(WeaponToEquip); // Primary 무기 장착
+		}
 
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
-	Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
+		Character->GetCharacterMovement()->bOrientRotationToMovement = false;//무기장착 시 bOrientRotationMovement 꺼준다.
+		Character->bUseControllerRotationYaw = true;//마우스 좌우회전 시 캐릭터가 회전하며 계속해서 정면을 바라보도록 true 설정.
+	}	
 }
 
 void UCombatComponent::SwapWeapons() // 무기 교체
@@ -363,6 +375,17 @@ void UCombatComponent::AttachActorToLeftHand(AActor* ActorToAttach)
 	if (IsValid(HandSocket)) // 해당 소켓이 존재하면
 	{
 		HandSocket->AttachActor(ActorToAttach, Character->GetMesh()); // 무기를 해당 소켓에 붙여준다.
+	}
+}
+
+void UCombatComponent::AttachFlagToLeftHand(AWeapon* Flag) //왼손의 깃발소켓에 깃발 장착
+{
+	if (Character == nullptr || Character->GetMesh() == nullptr || Flag == nullptr) return;
+
+	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("FlagSocket"));
+	if (HandSocket)
+	{
+		HandSocket->AttachActor(Flag, Character->GetMesh());
 	}
 }
 
@@ -953,4 +976,12 @@ void UCombatComponent::InitializeCarriedAmmo() // 게임 시작 시 주어지는 각 무기 
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle, StartingShotgunAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_GrenadeLauncher, StartingGrenadeLauncherAmmo);
+}
+
+void UCombatComponent::OnRep_HoldingTheFlag()
+{
+	if (bHoldingTheFlag && Character.IsValid() && Character->IsLocallyControlled())
+	{
+		Character->Crouch();
+	}
 }
