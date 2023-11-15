@@ -82,13 +82,15 @@ void AWeapon::BeginPlay()
 	}
 }
 
-void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-                              UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	//ABaseCharacter* BaseCharacter = Cast<ABaseCharacter>(OtherActor);
 	TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(OtherActor);
 	if (BaseCharacter.IsValid())
 	{
+		if (WeaponType == EWeaponType::EWT_Flag && BaseCharacter->GetTeam() != Team) return;
+		if (BaseCharacter->IsHoldingTheFlag()) return;
+
 		BaseCharacter->SetOverlappingWeapon(this);//캐릭터와 무기AreaSphere이 겹치면 무기정보 넘김
 	}
 }
@@ -99,6 +101,9 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	TWeakObjectPtr<ABaseCharacter> BaseCharacter = Cast<ABaseCharacter>(OtherActor);
 	if (BaseCharacter.IsValid())
 	{
+		if (WeaponType == EWeaponType::EWT_Flag && BaseCharacter->GetTeam() != Team) return;
+		if (BaseCharacter->IsHoldingTheFlag()) return;
+
 		BaseCharacter->SetOverlappingWeapon(nullptr);//캐릭터와 무기AreaSphere이 안 겹치면 nullptr
 	}
 }

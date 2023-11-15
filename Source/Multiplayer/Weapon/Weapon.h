@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Multiplayer/EnumTypes/EWeaponTypes.h"
+#include "Multiplayer/EnumTypes/ETeam.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -161,6 +162,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType; // 무기 종류
+
+	UPROPERTY(EditAnywhere)
+	ETeam Team;
 
 public:
 	void SetWeaponState(EWeaponState State);

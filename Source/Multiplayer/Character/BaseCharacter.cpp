@@ -1109,3 +1109,11 @@ bool ABaseCharacter::IsHoldingTheFlag() const
 
 	return Combat->bHoldingTheFlag;
 }
+
+ETeam ABaseCharacter::GetTeam()
+{
+	MultiplayerPlayerState = MultiplayerPlayerState == nullptr ? GetPlayerState<AMultiplayerPlayerState>() : MultiplayerPlayerState;
+	if (MultiplayerPlayerState == nullptr) return ETeam::ET_NoTeam;
+
+	return MultiplayerPlayerState->GetTeam();
+}
