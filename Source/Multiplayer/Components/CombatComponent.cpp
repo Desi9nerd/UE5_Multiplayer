@@ -274,9 +274,10 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip) // Server
 	{
 		Character->Crouch(); // ¾É´Â ÀÚ¼¼·Î º¯°æ
 		bHoldingTheFlag = true;
-		AttachFlagToLeftHand(WeaponToEquip); // ±ê¹ß¼ÒÄÏ¿¡ ±ê¹ß ÀåÂø
 		WeaponToEquip->SetWeaponState(EWeaponState::EWS_Equipped);
+		AttachFlagToLeftHand(WeaponToEquip); // ±ê¹ß¼ÒÄÏ¿¡ ±ê¹ß ÀåÂø
 		WeaponToEquip->SetOwner(Character.Get());
+		TheFlag = WeaponToEquip;
 	}
 	else // ±ê¹ßX
 	{

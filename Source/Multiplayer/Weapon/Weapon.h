@@ -39,7 +39,7 @@ public:
 	void SetHUDAmmo();
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
-	void Dropped(); // 소멸 후 무기 떨어뜨리기
+	virtual void Dropped(); // 소멸 후 무기 떨어뜨리기
 	void AddAmmo(int32 AmmoToAdd);
 	FVector TraceEndWithScatter(const FVector& HitTarget); // 산탄분포를 위해 LineTrace의 End Loc 랜덤 변경하는 함수
 

@@ -210,6 +210,9 @@ private:
 	UFUNCTION()
 	void OnRep_HoldingTheFlag();
 
+	UPROPERTY()
+	AWeapon* TheFlag;
+
 public:
 	bool ShouldSwapWeapons() { return (EquippedWeapon != nullptr && SecondaryWeapon != nullptr); };
 	FORCEINLINE int32 GetGrenades() const { return Grenades; }

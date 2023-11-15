@@ -295,6 +295,10 @@ void ABaseCharacter::DropOrDestroyWeapons() // ÀåÂøµÈ ¹«±â¿Í Secondary ¹«±â¸¦ ¶³
 		{
 			DropOrDestroyWeapon(Combat->SecondaryWeapon); // Secondary ¹«±â¸¦ ¶³¾î¶ß¸®°Å³ª ¼Ò¸ê½ÃÅ´
 		}
+		if (Combat->TheFlag)
+		{
+			Combat->TheFlag->Dropped();
+		}
 	}
 }
 
