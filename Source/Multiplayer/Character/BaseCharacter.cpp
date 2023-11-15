@@ -396,6 +396,14 @@ void ABaseCharacter::Tick(float DeltaTime)
 
 void ABaseCharacter::RotateInPlace(float DeltaTime)
 {
+	if (IsValid(Combat) && Combat->bHoldingTheFlag) // 깃발을 들고 있다면
+	{
+		bUseControllerRotationYaw = false;
+		GetCharacterMovement()->bOrientRotationToMovement = true;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+
 	if (bDisableGameplay)
 	{
 		bUseControllerRotationYaw = false;
