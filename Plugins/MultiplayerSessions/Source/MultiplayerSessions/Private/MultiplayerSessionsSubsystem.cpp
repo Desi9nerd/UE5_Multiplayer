@@ -18,6 +18,9 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem(): //Delegate을 만�
 
 void UMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, FString MatchType)
 {
+	DesiredNumPublicConnections = NumPublicConnections; // 접속을 희망하는 인원수
+	DesiredMatchType = MatchType;  // 게임종류 (개인전, 팀전, 깃발 중 하나)
+
 	if (!SessionInterface.IsValid())
 	{
 		return;

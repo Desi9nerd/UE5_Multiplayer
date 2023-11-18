@@ -40,6 +40,9 @@ public:
 	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;//ReturnToMainMenu::OnDestroySession
 	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
 
+	int32 DesiredNumPublicConnections{}; // 접속을 희망하는 인원수
+	FString DesiredMatchType{}; // 게임종류 (개인전, 팀전, 깃발 중 하나)
+
 protected:
 	// Internal callbacks for the delegates we'll add to the Online Session Interface delegate list.
 	// 아래의 함수들은 이 클래스 밖에서 콜하지 않는다.
