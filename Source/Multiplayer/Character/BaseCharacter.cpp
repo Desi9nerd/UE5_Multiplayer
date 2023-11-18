@@ -446,6 +446,9 @@ void ABaseCharacter::RotateInPlace(float DeltaTime)
 		return;
 	}
 
+	if (Combat && Combat->EquippedWeapon) GetCharacterMovement()->bOrientRotationToMovement = false;
+	if (Combat && Combat->EquippedWeapon) bUseControllerRotationYaw = true;
+
 	if (bDisableGameplay)
 	{
 		bUseControllerRotationYaw = false;
@@ -1152,4 +1155,11 @@ ETeam ABaseCharacter::GetTeam()
 	if (MultiplayerPlayerState == nullptr) return ETeam::ET_NoTeam;
 
 	return MultiplayerPlayerState->GetTeam();
+}
+
+void ABaseCharacter::SetHoldingTheFlag(bool bHolding)
+{
+	if (Combat == nullptr) return;
+
+	Combat->bHoldingTheFlag = bHolding;
 }

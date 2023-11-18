@@ -2,6 +2,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Multiplayer/Character/BaseCharacter.h"
 
 AFlag::AFlag()
 {
@@ -23,6 +24,32 @@ void AFlag::Dropped()
 	MainPlayerOwnerController = nullptr; // 무기소유 controller가 없도록 nullptr
 }
 
+void AFlag::ResetFlag() // 깃발 초기화
+{
+	TWeakObjectPtr<ABaseCharacter> FlagBearer = Cast<ABaseCharacter>(GetOwner());
+	if (FlagBearer.IsValid())
+	{
+		FlagBearer->SetHoldingTheFlag(false);
+		FlagBearer->SetOverlappingWeapon(nullptr);
+		FlagBearer->UnCrouch(); // 캐릭터 서 있는 상태로 변경
+	}
+
+	if (false == HasAuthority()) return; // Client이면 리턴
+
+	//** Server에서 진행
+	FDetachmentTransformRules DetachRules(EDetachmentRule::KeepWorld, true);
+	FlagMesh->DetachFromComponent(DetachRules);
+	SetWeaponState(EWeaponState::EWS_Initial); // 깃발(=무기)상태를 처음 상태로 초기화
+	GetAreaSphere()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetAreaSphere()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+
+	SetOwner(nullptr); 
+	BaseCharcterOwnerCharacter = nullptr;
+	MainPlayerOwnerController = nullptr;
+
+	SetActorTransform(InitialTransform); // 깃발 최초 위치로 되돌려줌
+}
+
 void AFlag::OnEquipped()
 {
 	ShowPickupWidget(false); // PickupWidget 꺼줌
@@ -30,7 +57,8 @@ void AFlag::OnEquipped()
 
 	FlagMesh->SetSimulatePhysics(false);
 	FlagMesh->SetEnableGravity(false);
-	FlagMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision); // FlagMesh 충돌X
+	FlagMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	FlagMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
 	EnableCustomDepth(false); // 윤곽선X
 }
 
@@ -50,4 +78,11 @@ void AFlag::OnDropped()
 	FlagMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_BLUE); // 윤곽선 파란색
 	FlagMesh->MarkRenderStateDirty();
 	EnableCustomDepth(true); // 윤곽선O
+}
+
+void AFlag::BeginPlay()
+{
+	Super::BeginPlay();
+
+	InitialTransform = GetActorTransform();
 }
