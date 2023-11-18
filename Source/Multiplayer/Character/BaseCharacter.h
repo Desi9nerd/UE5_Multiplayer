@@ -85,12 +85,13 @@ protected:
 	void GrenadeButtonPressed();
 	void DropOrDestroyWeapon(AWeapon* Weapon);
 	void DropOrDestroyWeapons();
+	void SetSpawnPoint();
+	void OnPlayerStateInitialized();
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);// 피격 데미지
 	void PollInit(); // HUD와 점수/승리횟수 매기기 관련 클래스 초기화
 	void RotateInPlace(float DeltaTime);
-
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -226,7 +227,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ElimBotSound;
 
-	TWeakObjectPtr<class AMultiplayerPlayerState> MultiplayerPlayerState;
+	UPROPERTY()
+	TObjectPtr<class AMultiplayerPlayerState> MultiplayerPlayerState;
 
 	//** Crown Effect
 	UPROPERTY(EditAnywhere)

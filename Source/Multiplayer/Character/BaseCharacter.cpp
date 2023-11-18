@@ -24,6 +24,7 @@
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "Multiplayer/GameState/MultiplayerGameState.h"
+#include "Multiplayer/PlayerStart/TeamPlayerStart.h"
 
 ABaseCharacter::ABaseCharacter()
 {
@@ -263,7 +264,7 @@ void ABaseCharacter::ServerLeaveGame_Implementation() // 게임 퇴장
 {
 	MGameMode = MGameMode == nullptr ? GetWorld()->GetAuthGameMode<AMultiplayerGameMode>() : MGameMode;
 	MultiplayerPlayerState = MultiplayerPlayerState == nullptr ? GetPlayerState<AMultiplayerPlayerState>() : MultiplayerPlayerState;
-	if (IsValid(MGameMode) && MultiplayerPlayerState.IsValid())
+	if (IsValid(MGameMode) && IsValid(MultiplayerPlayerState))
 	{
 		MGameMode->PlayerLeftGame(MultiplayerPlayerState.Get());
 	}
@@ -301,6 +302,43 @@ void ABaseCharacter::DropOrDestroyWeapons() // 장착된 무기와 Secondary 무기를 떨
 		}
 	}
 }
+
+void ABaseCharacter::SetSpawnPoint() // 게임시작 위치 초기화
+{
+	// 팀이 설정된 경우, 위치를 override한다.
+	if (HasAuthority() && MultiplayerPlayerState->GetTeam() != ETeam::ET_NoTeam)
+	{
+		TArray<TObjectPtr<AActor>> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, ATeamPlayerStart::StaticClass(), PlayerStarts); // PlayerStarts 배열에 ATeamPlayerStart::StaticClass()를 찾아 모두 담는다(=팀 배정이 된 캐릭터들을 모두 담는다)
+
+		//** 팀 배정이 된 캐릭터들 중 같은 팀의 ATeamPlayerStart들을 TeamPlayerStarts 배열에 다 담는다. 
+		TArray<TObjectPtr<ATeamPlayerStart>> TeamPlayerStarts;
+		for (auto Start : PlayerStarts)
+		{
+			TObjectPtr<ATeamPlayerStart> TeamStart = Cast<ATeamPlayerStart>(Start);
+			if (IsValid(TeamStart) && TeamStart->Team == MultiplayerPlayerState->GetTeam())
+			{
+				TeamPlayerStarts.Add(TeamStart);
+			}
+		}
+		if (TeamPlayerStarts.Num() > 0)
+		{
+			TWeakObjectPtr<ATeamPlayerStart> ChosenPlayerStart = TeamPlayerStarts[FMath::RandRange(0, TeamPlayerStarts.Num() - 1)];
+			SetActorLocationAndRotation(
+				ChosenPlayerStart->GetActorLocation(),
+				ChosenPlayerStart->GetActorRotation()
+			); // 위치, 회전값 설정
+		}
+	}
+}
+
+void ABaseCharacter::OnPlayerStateInitialized() // 게임 시작 시 초기화
+{
+	MultiplayerPlayerState->AddToScore(0.0f); // 점수 초기화
+	MultiplayerPlayerState->AddToDefeats(0); // 승리횟수 초기화
+	SetTeamColor(MultiplayerPlayerState->GetTeam()); // Team에 따라 Team Color 초기화
+	SetSpawnPoint(); // 게임 시작위치 초기화
+} 
 
 void ABaseCharacter::Destroyed()
 {
@@ -1000,11 +1038,9 @@ void ABaseCharacter::PollInit()
 	if (MultiplayerPlayerState == nullptr)
 	{
 		MultiplayerPlayerState = GetPlayerState<AMultiplayerPlayerState>();
-		if (MultiplayerPlayerState.IsValid())
+		if (IsValid(MultiplayerPlayerState))
 		{
-			MultiplayerPlayerState->AddToScore(0.0f); // 점수 초기화
-			MultiplayerPlayerState->AddToDefeats(0); // 승리횟수 초기화
-			SetTeamColor(MultiplayerPlayerState->GetTeam()); // Team에 따라 Team Color 초기화
+			OnPlayerStateInitialized(); // 초기화
 
 			TWeakObjectPtr<AMultiplayerGameState> MultiplayerGameState = Cast<AMultiplayerGameState>(UGameplayStatics::GetGameState(this));
 			if (MultiplayerGameState.IsValid() && 
