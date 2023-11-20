@@ -77,20 +77,9 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(
-				-1,
-				15.f,
-				FColor::Yellow,
-				FString(TEXT("Session created successfully!"))
-			);
-		}
-
 		UWorld* World = GetWorld();
 		if (World)
 		{
-			//World->ServerTravel("/Game/ThirdPerson/Maps/Lobby?listen");
 			World->ServerTravel(PathToLobby);
 		}
 	}
@@ -105,8 +94,8 @@ void UMenu::OnCreateSession(bool bWasSuccessful)
 				FString(TEXT("Failed to create session!"))
 			);
 		}
+		HostButton->SetIsEnabled(true);//실패한 경우 Host 버튼이 눌릴 수 있도록 SetIsEnabled를 true로 만든다.
 	}
-	HostButton->SetIsEnabled(true);//실패한 경우 Host 버튼이 눌릴 수 있도록 SetIsEnabled를 true로 만든다.
 }
 
 void UMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful)
@@ -165,39 +154,16 @@ void UMenu::OnStartSession(bool bWasSuccessful)
 
 void UMenu::HostButtonClicked()
 {
-	//디버깅용
-	/*if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			15.f,
-			FColor::Yellow,
-			FString(TEXT("Host Button Clicked"))
-		);
-	}*/
-
 	HostButton->SetIsEnabled(false);//버튼이 여러번 눌려 Session이 계속 생성하거나 찾는것을 방지하기 위해 버튼을 클릭하면 더 이상 눌리지 않게 SetIsEnabled를 false로 설정한다.
 
 	if (MultiplayerSessionsSubsystem)
 	{
 		MultiplayerSessionsSubsystem->CreateSession(NumPublicConnections, MatchType);//NumPublicConnections 숫자 크기까지 Players 접속 가능
-		UWorld* World = GetWorld();
 	}
 }
 
 void UMenu::JoinButtonClicked()
 {
-	//디버깅 테스트
-	/*if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			15.f,
-			FColor::Yellow,
-			FString(TEXT("Join Button Clicked"))
-		);
-	}*/
-
 	JoinButton->SetIsEnabled(false);//버튼이 여러번 눌려 Session이 계속 생성하거나 계속 찾는것을 방지하기 위해 버튼을 클릭하면 더 이상 눌리지 않게 SetIsEnabled를 false로 설정한다.
 
 	if (MultiplayerSessionsSubsystem)
