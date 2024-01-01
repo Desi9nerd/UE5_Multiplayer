@@ -13,8 +13,8 @@ void UMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FStr
 	SetVisibility(ESlateVisibility::Visible);
 	bIsFocusable = true;
 
-	UWorld* World = GetWorld();
-	if (World)
+	TObjectPtr<UWorld> World = GetWorld();
+	if (IsValid(World))
 	{
 		APlayerController* PlayerController = World->GetFirstPlayerController();
 		if (PlayerController)
