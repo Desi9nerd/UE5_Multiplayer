@@ -19,6 +19,8 @@ void AMainHUD::AddCharacterOverlay()
 	{
 		CharacterOverlay = CreateWidget<UCharacterOverlay>(PlayerController.Get(), CharacterOverlayClass);
 		CharacterOverlay->AddToViewport(); // Viewport¿¡ µî·Ï
+
+		CharacterOverlay->ChangeWeaponImage(EWeaponType::EWT_Pistol);
 	}
 }
 

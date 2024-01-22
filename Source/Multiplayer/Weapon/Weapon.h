@@ -38,6 +38,7 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnRep_Owner() override; // AActor의 함수 오버라이드
 	void SetHUDAmmo();
+	void SetHUDWeaponImg();
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void Fire(const FVector& HitTarget);
 	virtual void Dropped(); // 소멸 후 무기 떨어뜨리기

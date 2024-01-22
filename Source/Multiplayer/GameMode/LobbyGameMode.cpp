@@ -1,5 +1,5 @@
 #include "LobbyGameMode.h"
-#include "GameFramework/GameStateBase.h"
+#include "GameFramework/GameState.h"
 #include "MultiplayerSessionsSubsystem.h"
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)

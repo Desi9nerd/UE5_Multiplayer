@@ -246,6 +246,19 @@ void AWeapon::SetHUDAmmo()
 	}
 }
 
+void AWeapon::SetHUDWeaponImg()
+{
+	BaseCharcterOwnerCharacter = BaseCharcterOwnerCharacter == nullptr ? Cast<ABaseCharacter>(GetOwner()) : BaseCharcterOwnerCharacter;
+	if (IsValid(BaseCharcterOwnerCharacter))
+	{
+		MainPlayerOwnerController = MainPlayerOwnerController == nullptr ? Cast<AMainPlayerController>(BaseCharcterOwnerCharacter->Controller) : MainPlayerOwnerController;
+		if (IsValid(MainPlayerOwnerController))
+		{
+			MainPlayerOwnerController->SetHUDWeaponImage(WeaponType);
+		}
+	}
+}
+
 void AWeapon::SpendRound() // 총알(=Ammo) 소모 후 HUD 업데이트
 {
 	Ammo = FMath::Clamp(Ammo - 1, 0, MagCapacity); // 총알 소모 -1, 0~MagCapcity 값을 벗어나지 않도록 설정.
@@ -311,6 +324,7 @@ void AWeapon::OnRep_Owner() // Client
 		if (BaseCharcterOwnerCharacter && BaseCharcterOwnerCharacter->GetEquippedWeapon() && BaseCharcterOwnerCharacter->GetEquippedWeapon() == this)
 		{
 			SetHUDAmmo(); // HUD에 총알(Ammo) 수 업데이트
+			SetHUDWeaponImg();
 		}
 	}
 }

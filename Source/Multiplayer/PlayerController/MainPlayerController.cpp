@@ -431,6 +431,18 @@ void AMainPlayerController::SetHUDGrenades(int32 Grenades)
 	}
 }
 
+void AMainPlayerController::SetHUDWeaponImage(EWeaponType weaponType)
+{
+	MainHUD = MainHUD == nullptr ? Cast<AMainHUD>(GetHUD()) : MainHUD;
+
+	bool bHUDValid = MainHUD &&
+		MainHUD->CharacterOverlay;
+	if (bHUDValid)
+	{
+		MainHUD->CharacterOverlay->ChangeWeaponImage(weaponType);
+	}
+}
+
 void AMainPlayerController::SetHUDTime() // HUD에 시간 띄우기
 {
 	float TimeLeft = 0.0f;

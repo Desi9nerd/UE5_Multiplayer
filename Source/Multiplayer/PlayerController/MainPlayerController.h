@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "Multiplayer/EnumTypes/EWeaponTypes.h"
 #include "MainPlayerController.generated.h"
 
 /** PlayerController
@@ -31,6 +32,7 @@ public:
 	void SetHUDMatchCountdown(float CountdownTime); // 남은시간 띄우기
 	void SetHUDAnnouncementCountdown(float CountdownTime);
 	void SetHUDGrenades(int32 Grenades); // 수류탄 수 띄우기
+	void SetHUDWeaponImage(EWeaponType weaponType); // 무기타입 이미지 띄우기
 	virtual void OnPossess(APawn* InPawn) override; // possed된 Pawn에 접근하는 함수
 	virtual float GetServerTime(); // Synced된 Server world clock를 리턴하는 함수
 	virtual void ReceivedPlayer() override; // 가능한 빨리 server clock을 Sync

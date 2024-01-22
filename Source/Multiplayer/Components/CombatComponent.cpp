@@ -318,6 +318,7 @@ void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 	AttachActorToRightHand(EquippedWeapon); // Actor(= 무기) 오른손 소켓에 붙이기
 	EquippedWeapon->SetOwner(Character.Get()); // 무기의 Owner을 Character로 설정
 	EquippedWeapon->SetHUDAmmo(); // HUD에 총알 수 업데이트
+	EquippedWeapon->SetHUDWeaponImg();
 
 	UpdateCarriedAmmo(); // 현재 장착무기 탄창의 최대 총알 수 업데이트
 	PlayEquipWeaponSound(WeaponToEquip); // 무기 장착 사운드 재생
@@ -519,6 +520,7 @@ void UCombatComponent::FinishSwapAttachWeapons()
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped); // 바뀐 장착무기의 상태를 EWS_Equipped로 설정.
 	AttachActorToRightHand(EquippedWeapon); // 바뀐 장착무기를 오른손 소켓에 붙여줌
 	EquippedWeapon->SetHUDAmmo();
+	EquippedWeapon->SetHUDWeaponImg();
 	UpdateCarriedAmmo();
 	PlayEquipWeaponSound(EquippedWeapon);
 
@@ -748,6 +750,7 @@ void UCombatComponent::OnRep_EquippedWeapon() // Client
 		PlayEquipWeaponSound(EquippedWeapon); // 무기 장착 사운드 재생
 		EquippedWeapon->EnableCustomDepth(false); // 무기 외곽선 효과 false
 		EquippedWeapon->SetHUDAmmo(); // 총알 HUD 업데이트
+		EquippedWeapon->SetHUDWeaponImg();
 	}
 }
 
