@@ -1,14 +1,14 @@
-#pragma once
+﻿#pragma once
 
 namespace Announcement
 {
-	const FString NewMatchStartsIn(TEXT("NEXT GAME STARTS IN:"));
-	const FString ThereIsNoWinner(TEXT("There is no winner."));
-	const FString YouAreTheWinner(TEXT("You are the winner!"));
-	const FString PlayersTiedForTheWin(TEXT("Players tied for the win:"));
-	const FString TeamsTiedForTheWin(TEXT("Teams tied for the win:"));
+	const FString NewMatchStartsIn(TEXT("승자 발표         "));
+	const FString ThereIsNoWinner(TEXT("무승부. 승자가 없습니다."));
+	const FString YouAreTheWinner(TEXT("우승. 당신이 이겼습니다!"));
+	const FString PlayersTiedForTheWin(TEXT("공동 우승: "));
+	const FString TeamsTiedForTheWin(TEXT("팀 공동 우승: "));
 	const FString RedTeam(TEXT("Red team"));
 	const FString BlueTeam(TEXT("Blue team"));
-	const FString RedTeamWins(TEXT("Red team wins!"));
-	const FString BlueTeamWins(TEXT("Blue team wins!"));
+	const FString RedTeamWins(TEXT("Red team 승리!"));
+	const FString BlueTeamWins(TEXT("Blue team 승리!"));
 }

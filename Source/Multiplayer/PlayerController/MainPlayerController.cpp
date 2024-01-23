@@ -32,22 +32,22 @@ void AMainPlayerController::ClientElimAnnouncement_Implementation(APlayerState* 
 		{
 			if (Attacker == Self && Victim != Self)
 			{
-				MainHUD->AddElimAnnouncement("You", Victim->GetPlayerName());
+				MainHUD->AddElimAnnouncement("당신이", Victim->GetPlayerName());
 				return;
 			}
 			if (Attacker != Self && Victim == Self)
 			{
-				MainHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "you");
+				MainHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "당신을");
 				return;
 			}
 			if (Attacker == Victim && Attacker == Self)
 			{
-				MainHUD->AddElimAnnouncement("You", "yourself");
+				MainHUD->AddElimAnnouncement("당신이", "스스로를");
 				return;
 			}
 			if (Attacker == Victim && Attacker != Self)
 			{
-				MainHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "themselves");
+				MainHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "그들을");
 				return;
 			}
 			MainHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName());
@@ -404,10 +404,9 @@ void AMainPlayerController::SetHUDAnnouncementCountdown(float CountdownTime) // 
 			return;
 		}
 
-		int32 Minutes = FMath::FloorToInt(CountdownTime / 60.0f);
-		int32 Seconds = CountdownTime - Minutes * 60;
+		int32 Seconds = FMath::FloorToInt(CountdownTime);
 
-		FString CountdownText = FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds);
+		FString CountdownText = FString::Printf(TEXT("%d"), Seconds);
 		MainHUD->Announcement->WarmupTime->SetText(FText::FromString(CountdownText));
 	}
 }
