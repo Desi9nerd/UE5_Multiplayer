@@ -199,7 +199,7 @@ private:
 
 	UFUNCTION()
 	void UpdateDissolveMaterial(float DissolveValue);
-	void StartDissolve();
+	//void StartDissolve();
 	
 	UPROPERTY(VisibleAnywhere, Category = Elim)
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance; // 런타임에 변경되는 Dynamic Instance. 
@@ -219,13 +219,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = Elim)
 	UMaterialInstance* OriginalMaterial;
 
-	//** Elim Bot
+	//** Elim Coin
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* ElimBotEffect; 
+	class UNiagaraSystem* ElimCoinEffect;
 	UPROPERTY(VisibleAnywhere)
-	UParticleSystemComponent* ElimBotComponent;
+	class UNiagaraComponent* ElimCoinComponent;
 	UPROPERTY(EditAnywhere)
-	class USoundCue* ElimBotSound;
+	class USoundCue* ElimCoinSound;
 
 	UPROPERTY()
 	TObjectPtr<class AMultiplayerPlayerState> MultiplayerPlayerState;

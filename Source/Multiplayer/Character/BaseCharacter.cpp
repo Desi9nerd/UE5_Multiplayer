@@ -182,15 +182,15 @@ void ABaseCharacter::MulticastElim_Implementation(bool bPlayerLeftGame) // RPC
 	bElimmed = true;
 	PlayElimMontage();
 
-	//** Dissolve 효과 시작
-	if (DissolveMaterialInstance)
-	{
-		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
-		GetMesh()->SetMaterial(0, DynamicDissolveMaterialInstance);
-		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
-		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
-	}
-	StartDissolve();
+	////** Dissolve 효과 시작
+	//if (DissolveMaterialInstance)
+	//{
+	//	DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
+	//	GetMesh()->SetMaterial(0, DynamicDissolveMaterialInstance);
+	//	DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
+	//	DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
+	//}
+	//StartDissolve();
 
 	//** 캐릭터 움직임 제한
 	bDisableGameplay = true; // true면 캐릭터 움직임 제한. 마우스 회전으로 시야 회전은 가능
@@ -204,25 +204,25 @@ void ABaseCharacter::MulticastElim_Implementation(bool bPlayerLeftGame) // RPC
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Capsule 충돌 꺼줌
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision); // Mesh 충돌 꺼줌
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision); // 수류탄 Mesh 충돌 꺼줌
-
-	// Elim Bot 스폰시키기
-	if (IsValid(ElimBotEffect))
+	
+	// Elim Coin 스폰시키기
+	if (IsValid(ElimCoinEffect))
 	{
-		FVector ElimBotSpawnPoint(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z + 200.f);//캐릭터 위치(Z만 +200)
-		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(
+		FVector ElimCoinSpawnPoint(GetActorLocation().X, GetActorLocation().Y, GetActorLocation().Z - 50.f);//캐릭터 위치(Z만 -50)
+		ElimCoinComponent = UNiagaraFunctionLibrary::SpawnSystemAtLocation(
 			GetWorld(),
-			ElimBotEffect,
-			ElimBotSpawnPoint,
+			ElimCoinEffect,
+			ElimCoinSpawnPoint,
 			GetActorRotation()
-		); // Elim Bot Effect 스폰 시키기. ElimBotComponent 변수에 담기.
+		); // Elim Coin Effect 스폰 시키기. ElimCoinComponent 변수에 담기.
 	}
-	if (IsValid(ElimBotSound)) 
+	if (IsValid(ElimCoinSound))
 	{
 		UGameplayStatics::SpawnSoundAtLocation(
 			this,
-			ElimBotSound,
+			ElimCoinSound,
 			GetActorLocation()
-		); // Elim Bot Sound 
+		); // Elim Coin Sound 
 	}
 
 	//** 저격총 Scope 
@@ -343,10 +343,10 @@ void ABaseCharacter::OnPlayerStateInitialized() // 게임 시작 시 초기화
 void ABaseCharacter::Destroyed()
 {
 	Super::Destroyed();
-
-	if (IsValid(ElimBotComponent))
+	
+	if (IsValid(ElimCoinComponent))
 	{
-		ElimBotComponent->DestroyComponent(); // Elim Bot 소멸
+		ElimCoinComponent->DestroyComponent(); // Elim Coin 소멸
 	}
 
 	MGameMode = MGameMode == nullptr ? GetWorld()->GetAuthGameMode<AMultiplayerGameMode>() : MGameMode;
@@ -575,7 +575,7 @@ void ABaseCharacter::PlayElimMontage()
 	TWeakObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance.IsValid() && IsValid(ElimMontage))
 	{
-		AnimInstance->Montage_Play(ElimMontage);
+		AnimInstance->Montage_Play(ElimMontage, 0.5f, EMontagePlayReturnType::MontageLength, 0, true);
 	}
 }
 
@@ -1063,15 +1063,15 @@ void ABaseCharacter::UpdateDissolveMaterial(float DissolveValue)
 	}
 }
 
-void ABaseCharacter::StartDissolve()
-{
-	DissolveTrack.BindDynamic(this, &ABaseCharacter::UpdateDissolveMaterial); // Delegate
-	if (IsValid(DissolveCurve) && IsValid(DissolveTimeline))
-	{
-		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
-		DissolveTimeline->Play();
-	}
-}
+//void ABaseCharacter::StartDissolve()
+//{
+//	DissolveTrack.BindDynamic(this, &ABaseCharacter::UpdateDissolveMaterial); // Delegate
+//	if (IsValid(DissolveCurve) && IsValid(DissolveTimeline))
+//	{
+//		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
+//		DissolveTimeline->Play();
+//	}
+//}
 
 void ABaseCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
