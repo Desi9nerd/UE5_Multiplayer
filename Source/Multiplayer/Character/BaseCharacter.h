@@ -190,34 +190,52 @@ private:
 	bool bLeftGame = false; // 게임 퇴장여부 true/false
 
 	//** Dissolve effect
-	UPROPERTY(VisibleAnywhere)
-	UTimelineComponent* DissolveTimeline;
-	FOnTimelineFloat DissolveTrack;
+	//UPROPERTY(VisibleAnywhere)
+	//UTimelineComponent* DissolveTimeline;
+	//FOnTimelineFloat DissolveTrack;
+	//
+	//UPROPERTY(EditAnywhere)
+	//UCurveFloat* DissolveCurve;
 
-	UPROPERTY(EditAnywhere)
-	UCurveFloat* DissolveCurve;
-
-	UFUNCTION()
-	void UpdateDissolveMaterial(float DissolveValue);
+	//UFUNCTION()
+	//void UpdateDissolveMaterial(float DissolveValue);
 	//void StartDissolve();
 	
-	UPROPERTY(VisibleAnywhere, Category = Elim)
-	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance; // 런타임에 변경되는 Dynamic Instance. 
-	
-	UPROPERTY(EditAnywhere, Category = Elim)
-	UMaterialInstance* DissolveMaterialInstance;// Material Instance. BP에서 등록
+	//UPROPERTY(VisibleAnywhere, Category = Elim)
+	//UMaterialInstanceDynamic* DynamicDissolveMaterialInstance; // 런타임에 변경되는 Dynamic //Instance. 
+	//
+	//UPROPERTY(EditAnywhere, Category = Elim)
+	//UMaterialInstance* DissolveMaterialInstance;// Material Instance. BP에서 등록
 
 	//** Team colors
+	//UPROPERTY(EditAnywhere, Category = Elim)
+	//UMaterialInstance* RedDissolveMatInst;
 	UPROPERTY(EditAnywhere, Category = Elim)
-	UMaterialInstance* RedDissolveMatInst;
+	UMaterial* RedMaterial_0;
 	UPROPERTY(EditAnywhere, Category = Elim)
-	UMaterialInstance* RedMaterial;
+	UMaterial* RedMaterial_1;
 	UPROPERTY(EditAnywhere, Category = Elim)
-	UMaterialInstance* BlueDissolveMatInst;
+	UMaterial* RedMaterial_2;
 	UPROPERTY(EditAnywhere, Category = Elim)
-	UMaterialInstance* BlueMaterial;
+	UMaterial* RedMaterial_7;
 	UPROPERTY(EditAnywhere, Category = Elim)
-	UMaterialInstance* OriginalMaterial;
+	UMaterial* RedMaterial_8;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterial* RedMaterial_9;
+	//UPROPERTY(EditAnywhere, Category = Elim)
+	//UMaterialInstance* BlueDissolveMatInst;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterial* BlueMaterial_0;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterial* BlueMaterial_1;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterial* BlueMaterial_2;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterial* BlueMaterial_7;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterial* BlueMaterial_8;
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterial* BlueMaterial_9;
 
 	//** Elim Coin
 	UPROPERTY(EditAnywhere)

@@ -70,7 +70,7 @@ ABaseCharacter::ABaseCharacter()
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
 
-	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
+	//DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
 
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
@@ -389,21 +389,39 @@ void ABaseCharacter::MulticastLostTheLead_Implementation() // 1등에서 밀려나면 C
 
 void ABaseCharacter::SetTeamColor(ETeam Team)
 {
-	if (GetMesh() == nullptr || OriginalMaterial == nullptr) return; // 예외 처리
+	if (GetMesh() == nullptr || RedMaterial_0 == nullptr) return; // 예외 처리
 
 	switch (Team)
 	{
 	case ETeam::ET_NoTeam:
-		GetMesh()->SetMaterial(0, OriginalMaterial);
-		DissolveMaterialInstance = BlueDissolveMatInst;
-		break;
-	case ETeam::ET_BlueTeam:
-		GetMesh()->SetMaterial(0, BlueMaterial);
-		DissolveMaterialInstance = BlueDissolveMatInst;
+		GetMesh()->SetMaterial(0, RedMaterial_0);
+		GetMesh()->SetMaterial(1, RedMaterial_1);
+		GetMesh()->SetMaterial(2, RedMaterial_2);
+		GetMesh()->SetMaterial(7, RedMaterial_7);
+		GetMesh()->SetMaterial(8, RedMaterial_8);
+		GetMesh()->SetMaterial(9, RedMaterial_9);
+		//BackpackMesh->SetMaterial(0, TransparentMaterial);
+		//DissolveMaterialInstance = BlueDissolveMatInst;
 		break;
 	case ETeam::ET_RedTeam:
-		GetMesh()->SetMaterial(0, RedMaterial);
-		DissolveMaterialInstance = RedDissolveMatInst;
+		GetMesh()->SetMaterial(0, RedMaterial_0);
+		GetMesh()->SetMaterial(1, RedMaterial_1);
+		GetMesh()->SetMaterial(2, RedMaterial_2);
+		GetMesh()->SetMaterial(7, RedMaterial_7);
+		GetMesh()->SetMaterial(8, RedMaterial_8);
+		GetMesh()->SetMaterial(9, RedMaterial_9);
+		//BackpackMesh->SetMaterial(0, RedMaterial);
+		//DissolveMaterialInstance = RedDissolveMatInst;
+		break;
+	case ETeam::ET_BlueTeam:
+		GetMesh()->SetMaterial(0, BlueMaterial_0);
+		GetMesh()->SetMaterial(1, BlueMaterial_1);
+		GetMesh()->SetMaterial(2, BlueMaterial_2);
+		GetMesh()->SetMaterial(7, BlueMaterial_7);
+		GetMesh()->SetMaterial(8, BlueMaterial_8);
+		GetMesh()->SetMaterial(9, BlueMaterial_9);
+		//BackpackMesh->SetMaterial(0, BlueMaterial);
+		//DissolveMaterialInstance = BlueDissolveMatInst;
 		break;
 	}
 }
@@ -575,7 +593,7 @@ void ABaseCharacter::PlayElimMontage()
 	TWeakObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance.IsValid() && IsValid(ElimMontage))
 	{
-		AnimInstance->Montage_Play(ElimMontage, 0.5f, EMontagePlayReturnType::MontageLength, 0, true);
+		AnimInstance->Montage_Play(ElimMontage);
 	}
 }
 
@@ -1055,14 +1073,14 @@ void ABaseCharacter::PollInit()
 	}
 }
 
-void ABaseCharacter::UpdateDissolveMaterial(float DissolveValue)
-{
-	if (IsValid(DynamicDissolveMaterialInstance))
-	{
-		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
-	}
-}
-
+//void ABaseCharacter::UpdateDissolveMaterial(float DissolveValue)
+//{
+//	if (IsValid(DynamicDissolveMaterialInstance))
+//	{
+//		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
+//	}
+//}
+//
 //void ABaseCharacter::StartDissolve()
 //{
 //	DissolveTrack.BindDynamic(this, &ABaseCharacter::UpdateDissolveMaterial); // Delegate
