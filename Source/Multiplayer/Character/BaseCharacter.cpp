@@ -70,8 +70,6 @@ ABaseCharacter::ABaseCharacter()
 	NetUpdateFrequency = 66.0f;
 	MinNetUpdateFrequency = 33.0f;
 
-	//DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
-
 	AttachedGrenade = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Attached Grenade"));
 	AttachedGrenade->SetupAttachment(GetMesh(), FName("GrenadeSocket"));
 	AttachedGrenade->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -181,16 +179,6 @@ void ABaseCharacter::MulticastElim_Implementation(bool bPlayerLeftGame) // RPC
 
 	bElimmed = true;
 	PlayElimMontage();
-
-	////** Dissolve 효과 시작
-	//if (DissolveMaterialInstance)
-	//{
-	//	DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
-	//	GetMesh()->SetMaterial(0, DynamicDissolveMaterialInstance);
-	//	DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
-	//	DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Glow"), 200.f);
-	//}
-	//StartDissolve();
 
 	//** 캐릭터 움직임 제한
 	bDisableGameplay = true; // true면 캐릭터 움직임 제한. 마우스 회전으로 시야 회전은 가능
@@ -400,8 +388,7 @@ void ABaseCharacter::SetTeamColor(ETeam Team)
 		GetMesh()->SetMaterial(7, RedMaterial_7);
 		GetMesh()->SetMaterial(8, RedMaterial_8);
 		GetMesh()->SetMaterial(9, RedMaterial_9);
-		//BackpackMesh->SetMaterial(0, TransparentMaterial);
-		//DissolveMaterialInstance = BlueDissolveMatInst;
+		BackpackMesh->SetMaterial(0, TransparentMaterial);
 		break;
 	case ETeam::ET_RedTeam:
 		GetMesh()->SetMaterial(0, RedMaterial_0);
@@ -410,8 +397,7 @@ void ABaseCharacter::SetTeamColor(ETeam Team)
 		GetMesh()->SetMaterial(7, RedMaterial_7);
 		GetMesh()->SetMaterial(8, RedMaterial_8);
 		GetMesh()->SetMaterial(9, RedMaterial_9);
-		//BackpackMesh->SetMaterial(0, RedMaterial);
-		//DissolveMaterialInstance = RedDissolveMatInst;
+		BackpackMesh->SetMaterial(0, BackpackMaterial);
 		break;
 	case ETeam::ET_BlueTeam:
 		GetMesh()->SetMaterial(0, BlueMaterial_0);
@@ -420,8 +406,7 @@ void ABaseCharacter::SetTeamColor(ETeam Team)
 		GetMesh()->SetMaterial(7, BlueMaterial_7);
 		GetMesh()->SetMaterial(8, BlueMaterial_8);
 		GetMesh()->SetMaterial(9, BlueMaterial_9);
-		//BackpackMesh->SetMaterial(0, BlueMaterial);
-		//DissolveMaterialInstance = BlueDissolveMatInst;
+		BackpackMesh->SetMaterial(0, TransparentMaterial);
 		break;
 	}
 }
@@ -1072,24 +1057,6 @@ void ABaseCharacter::PollInit()
 		}
 	}
 }
-
-//void ABaseCharacter::UpdateDissolveMaterial(float DissolveValue)
-//{
-//	if (IsValid(DynamicDissolveMaterialInstance))
-//	{
-//		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), DissolveValue);
-//	}
-//}
-//
-//void ABaseCharacter::StartDissolve()
-//{
-//	DissolveTrack.BindDynamic(this, &ABaseCharacter::UpdateDissolveMaterial); // Delegate
-//	if (IsValid(DissolveCurve) && IsValid(DissolveTimeline))
-//	{
-//		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
-//		DissolveTimeline->Play();
-//	}
-//}
 
 void ABaseCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
