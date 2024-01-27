@@ -8,6 +8,8 @@
 #include "Multiplayer/Multiplayer.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "ProfilingDebugging/CookStats.h"
 
 AProjectile::AProjectile()
 {
@@ -39,7 +41,7 @@ void AProjectile::BeginPlay()
 			EAttachLocation::KeepWorldPosition
 		);//Emitter를 붙일 Bone이 있으면 FName()에 적으면된다. 없으면 위처럼 빈칸으로 나두면된다.
 	}
-
+	
 	if (HasAuthority()) // Server라면
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit); // Dynamic delegate 등록. UserObject는 발사체자신(this), 콜백함수는 &AProjectile::OnHit
@@ -47,9 +49,38 @@ void AProjectile::BeginPlay()
 	}
 }
 
-void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
-                        FVector NormalImpulse, const FHitResult& Hit)
+void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
+	TWeakObjectPtr<ABaseCharacter> HitCharacter = Cast<ABaseCharacter>(Hit.GetActor());
+	if (HitCharacter.IsValid())
+	{
+		bBloodParticle = true;
+	}
+
+	//if(HitCharacter.IsValid())
+	//{
+	//	UGameplayStatics::SpawnEmitterAtLocation( // Blood 피 튀기기
+	//		Hit.GetActor(),
+	//		ImpactBlood,
+	//		Hit.ImpactPoint,
+	//		UKismetMathLibrary::MakeRotFromXY(Hit.Normal.XAxisVector, Hit.Normal.YAxisVector),
+	//		UKismetMathLibrary::MakeRotationFromAxes(Hit.Normal.XAxisVector, Hit.Normal.YAxisVector, Hit.Normal.ZAxisVector),
+	//		FVector(0.4f, 0.4f, 0.4f),
+	//		true
+	//	);
+	//}
+	//else
+	//{
+	//	if (IsValid(ImpactParticles))
+	//	{	// 파티클 Spawn
+	//		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
+	//	}
+	//	if (IsValid(ImpactSound))
+	//	{
+	//		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	//	}
+	//}
+
 	Destroy(); // 충돌 후 충돌체 소멸
 }
 
@@ -119,10 +150,16 @@ void AProjectile::Destroyed()
 {
 	Super::Destroyed();
 
-	if (IsValid(ImpactParticles))
+	if (bBloodParticle && IsValid(ImpactBlood))
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactBlood, GetActorTransform());
+		bBloodParticle = false;
+	}
+	else if (IsValid(ImpactParticles))
 	{	// 파티클 Spawn
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
 	}
+
 	if (IsValid(ImpactSound))
 	{	
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());

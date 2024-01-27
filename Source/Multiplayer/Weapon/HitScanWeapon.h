@@ -19,7 +19,9 @@ protected:
 	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit);
 
 	UPROPERTY(EditAnywhere)
-	class UParticleSystem* ImpactParticles; // 충돌 시 파티클
+	class UParticleSystem* ImpactBlood;
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactParticles; // 충돌 시 파티클
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* HitSound; // 피격 사운드

@@ -53,6 +53,9 @@ protected:
 	class UProjectileMovementComponent* ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
+	UParticleSystem* ImpactBlood; // 충돌 후 피 튀김
+
+	UPROPERTY(EditAnywhere)
 	UParticleSystem* ImpactParticles; // 충돌 후 파티클
 
 	UPROPERTY(EditAnywhere)
@@ -77,5 +80,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float DestroyTime = 3.0f; // 소멸에 걸리는 시간. 충돌 후 3초 후에 소멸한다.
-	
+
+	bool bBloodParticle = false;
 };

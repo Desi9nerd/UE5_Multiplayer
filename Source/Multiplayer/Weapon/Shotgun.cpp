@@ -48,7 +48,11 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 					else HitMap.Emplace(BaseCharacter, 1); //첫 피격 시 TMap<ABaseCharacter*, uint32> HitMap에 등록
 				}
 				
-				if (ImpactParticles)
+				if (ImpactBlood && Cast<ABaseCharacter>(FireHit.GetActor()))
+				{
+					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactBlood, FireHit.ImpactPoint, FireHit.ImpactNormal.Rotation());
+				}
+				else if (ImpactParticles) // 충돌 시 파티클 스폰 
 				{
 					UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, FireHit.ImpactPoint, FireHit.ImpactNormal.Rotation());
 				}

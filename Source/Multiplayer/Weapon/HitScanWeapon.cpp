@@ -55,8 +55,12 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					); // HitTime = ServerTime - SingleTripTime 을 사용
 				}
 			}
-		} 
-		if (ImpactParticles) // 충돌 시 파티클 스폰 
+		}
+		if (ImpactBlood && Cast<ABaseCharacter>(FireHit.GetActor()))
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactBlood, FireHit.ImpactPoint, FireHit.ImpactNormal.Rotation());
+		}
+		else if (ImpactParticles) // 충돌 시 파티클 스폰 
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, FireHit.ImpactPoint, FireHit.ImpactNormal.Rotation());
 		} // if (ImpactParticles)
