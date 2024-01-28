@@ -22,4 +22,7 @@ https://www.youtube.com/playlist?list=PLyNJAZwmsbVvBHQMLxKhLLFTKO6sLGtsd
 ![SMG_Gif](https://github.com/Desi9nerd/UE5_Multiplayer/assets/97824341/4cf8b998-51d2-41a7-a7ee-d7789653deca)
 
 
-샷
+샷건
+</p>
+
+![Shotgun_Gif](https://github.com/Desi9nerd/UE5_Multiplayer/assets/97824341/13da44df-aaac-43e8-81c1-2fd0b78847f1)
