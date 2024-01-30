@@ -1,10 +1,11 @@
 # UE5_Multiplayer
 
+게임 플레이 영상
+https://youtu.be/JkfE0PlNrpw
+
 Devlog 영상
 https://www.youtube.com/playlist?list=PLyNJAZwmsbVuMoCuQVYDyTMLngmu0v8sf
 
-FPS/TPS Devlog 영상
-https://www.youtube.com/playlist?list=PLyNJAZwmsbVvBHQMLxKhLLFTKO6sLGtsd
 
 
 [ Weapon ]
@@ -26,3 +27,5 @@ https://www.youtube.com/playlist?list=PLyNJAZwmsbVvBHQMLxKhLLFTKO6sLGtsd
 </p>
 
 ![Shotgun_Gif](https://github.com/Desi9nerd/UE5_Multiplayer/assets/97824341/13da44df-aaac-43e8-81c1-2fd0b78847f1)
+
+
