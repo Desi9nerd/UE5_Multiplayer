@@ -9,7 +9,6 @@ https://www.youtube.com/playlist?list=PLyNJAZwmsbVuMoCuQVYDyTMLngmu0v8sf
 
 
 [ Weapon ]
-</p>
 
 권총
 </p>
@@ -31,10 +30,18 @@ https://www.youtube.com/playlist?list=PLyNJAZwmsbVuMoCuQVYDyTMLngmu0v8sf
 
 유탄 발사기
 </p>
-![GrenadeLauncher-ezgif com-video-to-gif-converter](https://github.com/Desi9nerd/UE5_Multiplayer/assets/97824341/4afa96e1-a2a8-437a-8972-c7434305ed04)
+
+![GrenadeLauncher-ezgif com-video-to-gif-converter (1)](https://github.com/Desi9nerd/UE5_Multiplayer/assets/97824341/889e0b89-e84d-45c6-aa3f-d5634383c0f9)
 
 
 로켓 런처
 </p>
 
+![RocketLauncher-ezgif com-video-to-gif-converter](https://github.com/Desi9nerd/UE5_Multiplayer/assets/97824341/a55d32ab-d198-4f63-9f1e-42c9778cfd06)
+
+
+소총
+</p>
+
+![Assault-ezgif com-video-to-gif-converter](https://github.com/Desi9nerd/UE5_Multiplayer/assets/97824341/9c3b50e3-986b-44be-b79d-13d901c84c0d)
 
