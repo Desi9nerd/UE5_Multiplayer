@@ -44,6 +44,3 @@ https://www.youtube.com/playlist?list=PLyNJAZwmsbVuMoCuQVYDyTMLngmu0v8sf
 </p>
 
 ![Assault-ezgif com-video-to-gif-converter](https://github.com/Desi9nerd/UE5_Multiplayer/assets/97824341/9c3b50e3-986b-44be-b79d-13d901c84c0d)
-
-메모
-하이라이트
