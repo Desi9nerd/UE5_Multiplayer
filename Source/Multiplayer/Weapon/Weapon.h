@@ -1,10 +1,13 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Multiplayer/EnumTypes/EWeaponTypes.h"
 #include "Multiplayer/EnumTypes/ETeam.h"
 #include "Weapon.generated.h"
+
+class USoundCue;
+class UWidgetComponent;
+class USphereComponent;
 
 UENUM(BlueprintType)
 enum class EWeaponState : uint8 //무기 상태 Enum
@@ -33,7 +36,23 @@ class MULTIPLAYER_API AWeapon : public AActor
 	GENERATED_BODY()
 
 public:
+	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
+	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
+	FORCEINLINE float GetDamage() const { return Damage; }
+	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
+	FORCEINLINE ETeam GetTeam() const { return Team; }
+	bool IsEmpty() { return Ammo <= 0; }
+	bool IsFull() { return Ammo == MagCapacity; }
+
 	AWeapon();
+	void SetWeaponState(EWeaponState State);
+
 	virtual void Tick(float DeltaTime) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void OnRep_Owner() override; // AActor의 함수 오버라이드
@@ -47,7 +66,7 @@ public:
 
 	//** Crosshair Texture
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-	class UTexture2D* CrosshairCenter;
+	UTexture2D* CrosshairCenter;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	UTexture2D* CrosshairLeft;
@@ -76,7 +95,7 @@ public:
 	bool bAutomatic = true; // 자동 발사무기 true/false
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* EquipSound; // 무기장착 사운드
+	USoundCue* EquipSound; // 무기장착 사운드
 	
 	void EnableCustomDepth(bool bEnable); // Custom Depth 적용 true/false
 
@@ -105,14 +124,14 @@ protected:
 
 	//** Trace end with scatter
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float DistanceToSphere = 800.0f; // 샷건의 SphereRadius까지의 거리
+	float DistanceToSphere = 800.f; // 샷건의 SphereRadius까지의 거리
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float SphereRadius = 75.0f; // 샷건의 산탄분포에 이용될 SphereRadius
+	float SphereRadius = 75.f; // 샷건의 산탄분포에 이용될 SphereRadius
 
 	UPROPERTY(EditAnywhere)
-	float Damage = 20.0f; // 무기 데미지
+	float Damage = 20.f; // 무기 데미지
 	UPROPERTY(EditAnywhere)
-	float HeadShotDamage = 60.0f; // 무기 헤드샷 데미지
+	float HeadShotDamage = 60.f; // 무기 헤드샷 데미지
 
 	UPROPERTY(Replicated, EditAnywhere)
 	bool bUseServerSideRewind = false; // ServerSideRewind 사용 true/false
@@ -166,20 +185,4 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	ETeam Team;
-
-public:
-	void SetWeaponState(EWeaponState State);
-	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
-	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
-	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
-	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
-	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
-	bool IsEmpty(); // 총알이 없는지 확인하는 함수. Ammo<=0면 true 리턴.
-	bool IsFull();
-	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
-	FORCEINLINE int32 GetAmmo() const { return Ammo; }
-	FORCEINLINE int32 GetMagCapacity() const { return MagCapacity; }
-	FORCEINLINE float GetDamage() const { return Damage; }
-	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
-	FORCEINLINE ETeam GetTeam() const { return Team; }
 };
