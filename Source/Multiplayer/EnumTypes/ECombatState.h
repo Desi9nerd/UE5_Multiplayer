@@ -1,8 +1,5 @@
 #pragma once
 
-/**
- * 
- */
 UENUM(BlueprintType)
 enum class ECombatState : uint8
 {

@@ -1,8 +1,12 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Pickup.generated.h"
+
+class USphereComponent;
+class USoundCue;
+class UNiagaraComponent;
+class UNiagaraSystem;
 
 UCLASS()
 class MULTIPLAYER_API APickup : public AActor
@@ -24,23 +28,24 @@ protected:
 	float BaseTurnRate = 45.0f;
 
 private:
-	UPROPERTY(EditAnywhere)
-	class USphereComponent* OverlapSphere;
+	void BindOverlapTimerFinished();
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* PickupSound;
+	TObjectPtr<USphereComponent> OverlapSphere;
 
 	UPROPERTY(EditAnywhere)
-	UStaticMeshComponent* PickupMesh;
+	TObjectPtr<USoundCue> PickupSound;
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UStaticMeshComponent> PickupMesh;
 
 	UPROPERTY(VisibleAnywhere)
-	class UNiagaraComponent* PickupEffectComponent;
+	TObjectPtr<UNiagaraComponent> PickupEffectComponent;
 
 	UPROPERTY(EditAnywhere)
-	class UNiagaraSystem* PickupEffect;
+	TObjectPtr<UNiagaraSystem> PickupEffect;
 
 	FTimerHandle BindOverlapTimer;
 	float BindOverlapTime = 0.25f;
-	void BindOverlapTimerFinished();
 
 };

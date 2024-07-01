@@ -74,8 +74,8 @@ void AMultiplayerGameMode::OnMatchStateSet()
 
 void AMultiplayerGameMode::PlayerEliminated(ABaseCharacter* ElimmedCharacter, AMainPlayerController* VictimController, AMainPlayerController* AttackerController)
 {
-	if (AttackerController == nullptr || AttackerController->PlayerState == nullptr) return;
-	if (VictimController == nullptr || VictimController->PlayerState == nullptr) return;
+	if (false == IsValid(AttackerController) || nullptr == AttackerController->PlayerState) return;
+	if (false == IsValid(VictimController) || nullptr == VictimController->PlayerState) return;
 
 	TObjectPtr<AMultiplayerPlayerState> AttackerPlayerState = AttackerController ? Cast<AMultiplayerPlayerState>(AttackerController->PlayerState) : nullptr;
 	TObjectPtr<AMultiplayerPlayerState> VictimPlayerState = VictimController ? Cast<AMultiplayerPlayerState>(VictimController->PlayerState) : nullptr;
@@ -136,13 +136,13 @@ void AMultiplayerGameMode::PlayerEliminated(ABaseCharacter* ElimmedCharacter, AM
 
 void AMultiplayerGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController)
 {
-	if (ElimmedCharacter)
+	if (IsValid(ElimmedCharacter))
 	{
 		ElimmedCharacter->Reset();
 		ElimmedCharacter->Destroy();
 	}
 
-	if (ElimmedController)
+	if (IsValid(ElimmedController))
 	{
 		TArray<AActor*> PlayerStarts;
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
@@ -154,7 +154,7 @@ void AMultiplayerGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AControl
 
 void AMultiplayerGameMode::PlayerLeftGame(AMultiplayerPlayerState* PlayerLeaving) // 플레이어 게임 퇴장
 {
-	if (PlayerLeaving == nullptr) return;
+	if (false == IsValid(PlayerLeaving)) return;
 
 	TWeakObjectPtr<AMultiplayerGameState> MultiplayerGameState = GetGameState<AMultiplayerGameState>();
 	if (MultiplayerGameState.IsValid() && MultiplayerGameState->TopScoringPlayers.Contains(PlayerLeaving))

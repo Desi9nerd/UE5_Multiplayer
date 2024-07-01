@@ -1,9 +1,7 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "BuffComponent.generated.h"
-
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MULTIPLAYER_API UBuffComponent : public UActorComponent
@@ -28,7 +26,7 @@ protected:
 	void ShieldRampUp(float DeltaTime);
 
 private:
-	TWeakObjectPtr<class ABaseCharacter> Character;
+	TWeakObjectPtr<ABaseCharacter> Character;
 
 	//** Health Buff
 	bool bHealing = false; // 회복 true/false
@@ -54,5 +52,4 @@ private:
 	bool bReplenishingShield = false;
 	float ShieldReplenishRate = 0.0f; // Shield 채우기 속도
 	float ShieldReplenishAmount = 0.0f; // Shield 채우는 정도
-
 };

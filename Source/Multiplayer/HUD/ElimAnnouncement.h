@@ -1,8 +1,10 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "ElimAnnouncement.generated.h"
+
+class UHorizontalBox;
+class UTextBlock;
 
 /**
  * 
@@ -16,8 +18,8 @@ public:
 	void SetElimAnnouncementText(FString AttackerName, FString VictimName);
 
 	UPROPERTY(meta = (BindWidget))
-	class UHorizontalBox* AnnouncementBox;
+	TObjectPtr<UHorizontalBox> AnnouncementBox;
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* AnnouncementText;
+	TObjectPtr<UTextBlock> AnnouncementText;
 };

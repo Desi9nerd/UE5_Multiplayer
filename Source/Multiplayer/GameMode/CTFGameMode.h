@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "TeamGameMode.h"
 #include "CTFGameMode.generated.h"

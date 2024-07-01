@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Pickup.h"
 #include "Multiplayer/EnumTypes/EWeaponTypes.h"

@@ -1,9 +1,10 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Multiplayer/EnumTypes/ETeam.h"
 #include "FlagZone.generated.h"
+
+class USphereComponent;
 
 UCLASS()
 class MULTIPLAYER_API AFlagZone : public AActor
@@ -24,6 +25,5 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere)
-	class USphereComponent* ZoneSphere;
-
+	USphereComponent* ZoneSphere;
 };

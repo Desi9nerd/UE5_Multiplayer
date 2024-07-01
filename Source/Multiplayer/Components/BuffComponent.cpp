@@ -5,13 +5,11 @@
 UBuffComponent::UBuffComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
 }
 
 void UBuffComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
 }
 
 void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -38,7 +36,7 @@ void UBuffComponent::ReplenishShield(float ShieldAmount, float ReplenishTime)
 
 void UBuffComponent::HealRampUp(float DeltaTime)
 {
-	if (bHealing == false || Character == nullptr || Character->IsElimmed()) return; // 예외처리
+	if (false == bHealing || false == Character.IsValid() || Character->IsElimmed()) return; // 예외처리
 
 	const float HealThisFrame = HealingRate * DeltaTime; // HealThisFrame는 초당 체력이 회복되는 수치
 	Character->SetHealth(FMath::Clamp(Character->GetHealth() + HealThisFrame, 0.0f, Character->GetMaxHealth()));
@@ -54,7 +52,7 @@ void UBuffComponent::HealRampUp(float DeltaTime)
 
 void UBuffComponent::ShieldRampUp(float DeltaTime)
 {
-	if (bReplenishingShield == false || Character == nullptr || Character->IsElimmed()) return;
+	if (false == bReplenishingShield || false == Character.IsValid() || Character->IsElimmed()) return;
 
 	const float ReplenishThisFrame = ShieldReplenishRate * DeltaTime; // ReplenishThisFrame는 초당 Shield가 회복되는 수치
 	Character->SetShield(FMath::Clamp(Character->GetShield() + ReplenishThisFrame, 0.0f, Character->GetMaxShield()));
@@ -76,7 +74,7 @@ void UBuffComponent::SetInitialSpeeds(float BaseSpeed, float CrouchSpeed)
 
 void UBuffComponent::BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float BuffTime)
 {
-	if (Character == nullptr) return;
+	if (false == Character.IsValid()) return;
 
 	// Speed Buff 지속시간 설정.
 	Character->GetWorldTimerManager().SetTimer(SpeedBuffTimer, this, &UBuffComponent::ResetSpeeds, BuffTime);
@@ -91,7 +89,7 @@ void UBuffComponent::BuffSpeed(float BuffBaseSpeed, float BuffCrouchSpeed, float
 
 void UBuffComponent::ResetSpeeds() // Speed를 원래대로 되돌리는 함수
 {
-	if (Character == nullptr || Character->GetCharacterMovement() == nullptr) return;
+	if (false == Character.IsValid() || nullptr == Character->GetCharacterMovement()) return;
 
 	Character->GetCharacterMovement()->MaxWalkSpeed = InitialBaseSpeed;
 	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = InitialCrouchSpeed;
@@ -111,7 +109,7 @@ void UBuffComponent::SetInitialJumpVelocity(float Velocity)
 
 void UBuffComponent::BuffJump(float BuffJumpVelocity, float BuffTime)
 {
-	if (Character == nullptr) return;
+	if (false == Character.IsValid()) return;
 
 	// Jump Buff 지속시간 설정. 
 	Character->GetWorldTimerManager().SetTimer(JumpBuffTimer, this, &UBuffComponent::ResetJump, BuffTime);

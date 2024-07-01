@@ -3,6 +3,8 @@
 #include "Components/ActorComponent.h"
 #include "LagCompensationComponent.generated.h"
 
+class AMainPlayerController;
+
 /** Server-side Rewind를 구현
  *  Recording Frame History: 모든 Player들의 위치를 기록
  */
@@ -145,13 +147,12 @@ protected:
 
 private:
 	UPROPERTY()
-	ABaseCharacter* Character;
+	TObjectPtr<ABaseCharacter> Character;
 	UPROPERTY()
-	class AMainPlayerController* Controller;
+	AMainPlayerController* Controller;
 
 	TDoubleLinkedList<FFramePackage> FrameHistory;
 
 	UPROPERTY(EditAnywhere)
 	float MaxRecordTime = 4.0f;
-
 };

@@ -1,12 +1,13 @@
 #include "CharacterOverlay.h"
 #include "Components/Image.h"
+#include "Components/ProgressBar.h"
 #include "Multiplayer/EnumTypes/EWeaponTypes.h"
 
 UCharacterOverlay::UCharacterOverlay(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	if(HealthBar == nullptr)
+	if (false == IsValid(HealthBar))
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("binding HealthBar is failed. Check WBP name to match HealthBar variable")));		
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("binding HealthBar is failed. Check WBP name to match HealthBar variable")));		
 	}
 }
 

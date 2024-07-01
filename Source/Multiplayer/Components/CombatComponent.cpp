@@ -2,7 +2,6 @@
 #include "Multiplayer/Weapon/Weapon.h"
 #include "Multiplayer/Character/BaseCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
-#include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -464,7 +463,7 @@ void UCombatComponent::ReloadEmptyWeapon() // 총알이 비었는지 확인하고 만약 비었
 void UCombatComponent::Reload()
 {
 	// CarriedAmmo가 0보다 큰지 확인. 0보다 작은면 재장전 할 필요X. CarriedAmmo가 꽉 차지 않았는지 확인
-	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading && EquippedWeapon && EquippedWeapon->IsFull() == false && bLocallyReloading == false)
+	if (CarriedAmmo > 0 && CombatState != ECombatState::ECS_Reloading && EquippedWeapon && false == EquippedWeapon->IsFull() && false == bLocallyReloading)
 	{
 		ServerReload(); // Server RPC 호출.
 		HandleReload();
@@ -474,7 +473,7 @@ void UCombatComponent::Reload()
 
 void UCombatComponent::ServerReload_Implementation() // Server RPC, 이 함수가 호출되면 Server이든 Client이든 서버에서만 실행된다. 
 {
-	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	if (false == Character.IsValid() || false == IsValid(EquippedWeapon)) return;
 
 	CombatState = ECombatState::ECS_Reloading; // CombatState을 재장전 상태로 변경
 
@@ -486,7 +485,7 @@ void UCombatComponent::ServerReload_Implementation() // Server RPC, 이 함수가 호
 
 void UCombatComponent::FinishReloading()
 {
-	if (Character == nullptr) return;
+	if (false == Character.IsValid()) return;
 
 	bLocallyReloading = false;
 	if (Character->HasAuthority()) // Server
@@ -542,13 +541,13 @@ void UCombatComponent::JumpToShotgunEnd()
 	TWeakObjectPtr<UAnimInstance> AnimInstance = Character->GetMesh()->GetAnimInstance();
 	if (AnimInstance.IsValid() && Character->GetReloadMontage())
 	{
-		AnimInstance->Montage_JumpToSection(FName("ShotgunEnd"));
+		AnimInstance->Montage_JumpToSection(FName(TEXT("ShotgunEnd")));
 	}
 }
 
 void UCombatComponent::UpdateAmmoValues()
 {
-	if (Character == nullptr || EquippedWeapon == nullptr) return;
+	if (false == Character.IsValid() || false == IsValid(EquippedWeapon)) return;
 
 	int32 ReloadAmount = AmountToReload();
 	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
@@ -625,7 +624,7 @@ void UCombatComponent::OnRep_CombatState() // Client
 
 int32 UCombatComponent::AmountToReload()
 {
-	if (EquippedWeapon == nullptr) return 0;
+	if (false == IsValid(EquippedWeapon)) return 0;
 	
 	int32 RoomInMag = EquippedWeapon->GetMagCapacity() - EquippedWeapon->GetAmmo(); // 넣을 수 있는 총알 수 = 장착된 무기가 가질 수 있는 탄창 최대 총알 수 - 현재 총알 수
 
@@ -822,7 +821,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 
 void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 {
-	if (Character == nullptr || Character->Controller == nullptr) return;
+	if (false == Character.IsValid() || false == IsValid(Character->Controller)) return;
 
 
 	Controller = Controller == nullptr ? Cast<AMainPlayerController>(Character->Controller) : Controller;
@@ -889,7 +888,7 @@ void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
 
 void UCombatComponent::InterpFOV(float DeltaTime)
 {
-	if (EquippedWeapon == nullptr) return; // 무기 장착 중이 아니라면 return
+	if (false == IsValid(EquippedWeapon)) return; // 무기 장착 중이 아니라면 return
 
 	//** 무기 장착 중
 	if (bAiming) // Aiming O

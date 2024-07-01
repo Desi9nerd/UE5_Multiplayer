@@ -372,16 +372,6 @@ void AWeapon::Dropped()
 	MainPlayerOwnerController = nullptr; // 무기소유 controller가 없도록 nullptr
 }
 
-bool AWeapon::IsEmpty()
-{
-	return Ammo <= 0;
-}
-
-bool AWeapon::IsFull()
-{
-	return Ammo == MagCapacity;
-}
-
 FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget) // 산탄분포를 위해 LineTrace의 End Loc 랜덤 변경하는 함수
 {
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");

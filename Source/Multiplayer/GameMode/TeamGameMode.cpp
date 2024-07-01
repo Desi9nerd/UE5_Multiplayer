@@ -56,7 +56,7 @@ float ATeamGameMode::CalculateDamage(AController* Attacker, AController* Victim,
 {
 	TWeakObjectPtr<AMultiplayerPlayerState> AttackerPState = Attacker->GetPlayerState<AMultiplayerPlayerState>();
 	TWeakObjectPtr<AMultiplayerPlayerState> VictimPState = Victim->GetPlayerState<AMultiplayerPlayerState>();
-	if (AttackerPState == nullptr || VictimPState == nullptr) return BaseDamage;
+	if (false == AttackerPState.IsValid() || false == VictimPState.IsValid()) return BaseDamage;
 
 	if (VictimPState == AttackerPState) // 자기 스스로 데미지 입히는 경우
 	{
@@ -99,7 +99,7 @@ void ATeamGameMode::HandleMatchHasStarted() // Team 배정
 	if (MGameState.IsValid())
 	{
 		// MGameState->PlayerArray는 MGameState이 가지고 있는 PlayerState들 TArray배열
-		for (auto PState : MGameState->PlayerArray)
+		for (TObjectPtr<APlayerState> PState : MGameState->PlayerArray)
 		{
 			TWeakObjectPtr<AMultiplayerPlayerState> MPlayerState = Cast<AMultiplayerPlayerState>(PState.Get());
 			if (MPlayerState.IsValid() && MPlayerState->GetTeam() == ETeam::ET_NoTeam)

@@ -3,13 +3,15 @@
 #include "Blueprint/UserWidget.h"
 #include "OverheadWidget.generated.h"
 
+class UTextBlock;
+
 UCLASS()
 class MULTIPLAYER_API UOverheadWidget : public UUserWidget
 {
 	GENERATED_BODY()
 public:
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* DisplayText;
+	TObjectPtr<UTextBlock> DisplayText;
 
 	void SetDisplayText(FString TextToDisplay);
 

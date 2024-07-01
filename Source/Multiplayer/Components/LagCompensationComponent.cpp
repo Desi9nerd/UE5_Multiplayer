@@ -9,13 +9,11 @@
 ULagCompensationComponent::ULagCompensationComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
 }
 
 void ULagCompensationComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 FFramePackage ULagCompensationComponent::InterpBetweenFrames(const FFramePackage& OlderFrame,
@@ -197,7 +195,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 	TWeakObjectPtr<UWorld> World = GetWorld();
 
 	//** 충돌체크: 헤드샷 
-	for (auto& HitLocation : HitLocations)
+	for (const FVector_NetQuantize& HitLocation : HitLocations)
 	{
 		FHitResult ConfirmHitResult;
 		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
@@ -224,7 +222,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 	//** head 외의 HitCollisionBoxes들을 활성화. 헤드샷용 head HitCollsionBox는 비활성화
 	for (auto& Frame : FramePackages)
 	{
-		for (auto& HitBoxPair : Frame.Character->HitCollisionBoxes)
+		for (TTuple<FName, UBoxComponent*>& HitBoxPair : Frame.Character->HitCollisionBoxes)
 		{
 			if (HitBoxPair.Value != nullptr)
 			{
@@ -237,7 +235,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 	}
 
 	//** 충돌 체크: 바디샷. head 외 나머지 몸의 HitCollisionBoxes들의 충돌 체크
-	for (auto& HitLocation : HitLocations)
+	for (const FVector_NetQuantize& HitLocation : HitLocations)
 	{
 		FHitResult ConfirmHitResult;
 		const FVector TraceEnd = TraceStart + (HitLocation - TraceStart) * 1.25f;
@@ -260,7 +258,7 @@ FShotgunServerSideRewindResult ULagCompensationComponent::ShotgunConfirmHit(cons
 	}
 
 	//** HitCollissionBoxes 초기화
-	for (auto& Frame : CurrentFrames)
+	for (FFramePackage& Frame : CurrentFrames)
 	{
 		ResetHitBoxes(Frame.Character, Frame);
 		EnableCharacterMeshCollision(Frame.Character, ECollisionEnabled::QueryAndPhysics);
@@ -274,7 +272,7 @@ void ULagCompensationComponent::CacheBoxPositions(ABaseCharacter* HitCharacter, 
 	if (HitCharacter == nullptr) return;
 
 	// HitCharacter의 HitCollisionBoxes 정보 업데이트 후 넣기
-	for (auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
+	for (TTuple<FName, UBoxComponent*>& HitBoxPair : HitCharacter->HitCollisionBoxes)
 	{
 		if (HitBoxPair.Value != nullptr) // 값이 있다면
 		{
@@ -293,7 +291,7 @@ void ULagCompensationComponent::MoveBoxes(ABaseCharacter* HitCharacter, const FF
 {
 	if (HitCharacter == nullptr) return;
 
-	for (auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
+	for (TTuple<FName, UBoxComponent*>& HitBoxPair : HitCharacter->HitCollisionBoxes)
 	{
 		if (HitBoxPair.Value != nullptr) // 값이 있다면
 		{
@@ -309,7 +307,7 @@ void ULagCompensationComponent::ResetHitBoxes(ABaseCharacter* HitCharacter, cons
 {
 	if (HitCharacter == nullptr) return;
 
-	for (auto& HitBoxPair : HitCharacter->HitCollisionBoxes)
+	for (TTuple<FName, UBoxComponent*>& HitBoxPair : HitCharacter->HitCollisionBoxes)
 	{
 		if (HitBoxPair.Value != nullptr)
 		{
@@ -332,7 +330,7 @@ void ULagCompensationComponent::EnableCharacterMeshCollision(ABaseCharacter* Hit
 void ULagCompensationComponent::ShowFramePackage(const FFramePackage& Package, const FColor& Color) // Package 내의 HitBoxInfo 사용
 {
 	// SaveFramePackage에서 갱신된 정보 사용
-	for (auto& BoxInfo : Package.HitBoxInfo)
+	for (const TTuple<FName, FBoxInformation>& BoxInfo : Package.HitBoxInfo)
 	{
 		DrawDebugBox(GetWorld(), BoxInfo.Value.Location, BoxInfo.Value.BoxExtent, FQuat(BoxInfo.Value.Rotation), Color, false, 4.0f);
 	}
@@ -346,8 +344,7 @@ FServerSideRewindResult ULagCompensationComponent::ServerSideRewind(ABaseCharact
 	return ConfirmHit(FrameToCheck, HitCharacter, TraceStart, HitLocation);
 }
 
-FServerSideRewindResult ULagCompensationComponent::ProjectileServerSideRewind(ABaseCharacter* HitCharacter,
-	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
+FServerSideRewindResult ULagCompensationComponent::ProjectileServerSideRewind(ABaseCharacter* HitCharacter,	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, float HitTime)
 {
 	FFramePackage FrameToCheck = GetFrameToCheck(HitCharacter, HitTime);
 
@@ -428,12 +425,11 @@ FFramePackage ULagCompensationComponent::GetFrameToCheck(ABaseCharacter* HitChar
 	return FrameToCheck;
 }
 
-void ULagCompensationComponent::ServerScoreRequest_Implementation(ABaseCharacter* HitCharacter,
-	const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime)
+void ULagCompensationComponent::ServerScoreRequest_Implementation(ABaseCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, float HitTime)
 {
 	FServerSideRewindResult Confirm = ServerSideRewind(HitCharacter, TraceStart, HitLocation, HitTime); // ServerSideRewind 알고리즘으로 Hit 여부 판별
 
-	if (Character && HitCharacter && Confirm.bHitConfirmed && Character->GetEquippedWeapon()) // Hit 되었다면
+	if (IsValid(Character) && HitCharacter && Confirm.bHitConfirmed && Character->GetEquippedWeapon()) // Hit 되었다면
 	{
 		const float Damage = Confirm.bHeadShot ? Character->GetEquippedWeapon()->GetHeadShotDamage() : Character->GetEquippedWeapon()->GetDamage(); // 헤드샷, 바디샷 데미지 중 맞는거 담음
 
@@ -452,7 +448,7 @@ void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(ABas
 {
 	FServerSideRewindResult Confirm = ProjectileServerSideRewind(HitCharacter, TraceStart, InitialVelocity, HitTime);
 
-	if (Character && HitCharacter && Confirm.bHitConfirmed && Character->GetEquippedWeapon()) // Hit 되었다면
+	if (IsValid(Character) && HitCharacter && Confirm.bHitConfirmed && Character->GetEquippedWeapon()) // Hit 되었다면
 	{
 		const float Damage = Confirm.bHeadShot ? Character->GetEquippedWeapon()->GetHeadShotDamage() : Character->GetEquippedWeapon()->GetDamage();
 
@@ -500,7 +496,7 @@ void ULagCompensationComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 
 void ULagCompensationComponent::SaveFramePackage()
 {
-	if (Character == nullptr || Character->HasAuthority() == false) return; // Client(=Server가 아니라면)면 리턴
+	if (false == IsValid(Character) || false == Character->HasAuthority()) return; // Client(=Server가 아니라면)면 리턴
 
 	if (FrameHistory.Num() <= 1)
 	{
@@ -533,7 +529,7 @@ void ULagCompensationComponent::SaveFramePackage(FFramePackage& Package)
 	{
 		Package.Time = GetWorld()->GetTimeSeconds(); // Server Time 기록
 		Package.Character = Character;
-		for (auto& BoxPair : Character->HitCollisionBoxes)
+		for (TTuple<FName, UBoxComponent*>& BoxPair : Character->HitCollisionBoxes)
 		{
 			FBoxInformation BoxInformation;
 			BoxInformation.Location = BoxPair.Value->GetComponentLocation();

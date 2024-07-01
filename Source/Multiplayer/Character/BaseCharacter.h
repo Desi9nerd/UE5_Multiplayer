@@ -1,36 +1,67 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Multiplayer/EnumTypes/ETurningInPlace.h"
 #include "Multiplayer/Interfaces/ICrosshair.h"
-#include "Components/TimelineComponent.h"
 #include "Multiplayer/EnumTypes/ECombatState.h"
 #include "Multiplayer/EnumTypes/ETeam.h"
 #include "BaseCharacter.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
-
+class AMultiplayerGameMode;
+class UWidgetComponent;
+class USpringArmComponent;
+class ULagCompensationComponent;
+class UBuffComponent;
+class UCombatComponent;
+class UCameraComponent;
 class AWeapon;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
+
 UCLASS()
-class MULTIPLAYER_API ABaseCharacter
-	: public ACharacter, public IICrosshair
+class MULTIPLAYER_API ABaseCharacter : public ACharacter, public IICrosshair
 {
 	GENERATED_BODY()
 
 public:
+	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
+	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
+	AWeapon* GetEquippedWeapon();
+	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; } // TurningInPlace Enum값을 return
+	FVector GetHitTarget() const; // CombatComponent의 HitTaget을 return하는 함수
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
+	FORCEINLINE bool IsElimmed() const { return bElimmed; }
+	FORCEINLINE float GetHealth() const { return Health; }
+	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
+	FORCEINLINE float GetShield() const { return Shield; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
+	FORCEINLINE void SetShield(float Amount) { Shield = Amount; }
+	ECombatState GetCombatState() const;
+	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
+	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
+	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
+	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
+	FORCEINLINE UBuffComponent* GetBuff() const { return Buff; }
+	bool IsLocallyReloading();
+	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
+	FORCEINLINE bool IsHoldingTheFlag() const;
+	ETeam GetTeam();
+	void SetHoldingTheFlag(bool bHolding);
+
 	ABaseCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
-	//** Play 몽타주
+	
 	void PlayFireMontage(bool bAiming);
 	void PlayReloadMontage();
 	void PlayElimMontage();
 	void PlayThrowGrenadeMontage();
 	void PlaySwapMontage();
+
 	virtual void OnRep_ReplicatedMovement() override;
 	void Elim(bool bPlayerLeftGame); // Server에서만 콜되는 Elim함수
 	UFUNCTION(NetMulticast, Reliable) // RPC
@@ -64,6 +95,10 @@ public:
 	void MulticastLostTheLead(); // 1등에서 밀려나면 Crown 띄운거 없애기
 	void SetTeamColor(ETeam Team);
 
+	void SetOverlappingWeapon(AWeapon* Weapon);
+	bool IsWeaponEquipped();
+	bool IsAiming();//조준 중인지 true/false리턴하는 함수
+
 protected:
 	virtual void BeginPlay() override;
 	void MoveForward(float Value);
@@ -95,26 +130,26 @@ protected:
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-	class USpringArmComponent* CameraSpringArm;
+	USpringArmComponent* CameraSpringArm;
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
-	class UCameraComponent* FollowCamera;
+	UCameraComponent* FollowCamera;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* OverheadWidget;
+	UWidgetComponent* OverheadWidget;
 
 	//OnRep_OverlappingWeapon 함수가 client에 호출되었을때 Replicate해준다.
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)  
-	class AWeapon* OverlappingWeapon;
+	AWeapon* OverlappingWeapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UCombatComponent* Combat;
+	UCombatComponent* Combat;
 
 	UPROPERTY(VisibleAnywhere)
-	class UBuffComponent* Buff;
+	UBuffComponent* Buff;
 
 	UPROPERTY(VisibleAnywhere)
-	class ULagCompensationComponent* LagCompensation;
+	ULagCompensationComponent* LagCompensation;
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
@@ -133,7 +168,7 @@ private:
 	void TurnInPlace(float DeltaTime);
 
 	UPROPERTY(EditAnywhere, Category = Combat)
-	class UAnimMontage* FireWeaponMontage; // 발사 몽타주
+	UAnimMontage* FireWeaponMontage; // 발사 몽타주
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ReloadMontage; // 재장전 몽타주
 	UPROPERTY(EditAnywhere, Category = Combat)
@@ -191,33 +226,33 @@ private:
 
 
 	//** Team colors
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* TransparentMaterial;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* BackpackMaterial;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* RedMaterial_0;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* RedMaterial_1;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* RedMaterial_2;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* RedMaterial_7;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* RedMaterial_8;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* RedMaterial_9;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* BlueMaterial_0;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* BlueMaterial_1;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* BlueMaterial_2;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* BlueMaterial_7;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* BlueMaterial_8;
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(EditAnywhere, Category = Material)
 	UMaterial* BlueMaterial_9;
 
 	//** Elim Coin
@@ -233,9 +268,9 @@ private:
 
 	//** Crown Effect
 	UPROPERTY(EditAnywhere)
-	class UNiagaraSystem* CrownSystem;
+	UNiagaraSystem* CrownSystem;
 	UPROPERTY()
-	class UNiagaraComponent* CrownComponent;
+	UNiagaraComponent* CrownComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* AttachedGrenade; // 수류탄 매쉬
@@ -245,46 +280,15 @@ private:
 	TSubclassOf<AWeapon> DefaultWeaponClass;
 
 	UPROPERTY()
-	class AMultiplayerGameMode* MGameMode;
-
-public:
-	void SetOverlappingWeapon(AWeapon* Weapon);
-	bool IsWeaponEquipped();
-	bool IsAiming();//조준 중인지 true/false리턴하는 함수
-
-	FORCEINLINE float GetAO_Yaw() const { return AO_Yaw; }
-	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
-	AWeapon* GetEquippedWeapon();
-	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; } // TurningInPlace Enum값을 return
-	FVector GetHitTarget() const; // CombatComponent의 HitTaget을 return하는 함수
-	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
-	FORCEINLINE bool ShouldRotateRootBone() const { return bRotateRootBone; }
-	FORCEINLINE bool IsElimmed() const { return bElimmed; }
-	FORCEINLINE float GetHealth() const { return Health; }
-	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
-	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
-	FORCEINLINE float GetShield() const { return Shield; }
-	FORCEINLINE float GetMaxShield() const { return MaxShield; }
-	FORCEINLINE void SetShield(float Amount) { Shield = Amount; }
-	ECombatState GetCombatState() const;
-	FORCEINLINE UCombatComponent* GetCombat() const { return Combat; }
-	FORCEINLINE bool GetDisableGameplay() const { return bDisableGameplay; }
-	FORCEINLINE UAnimMontage* GetReloadMontage() const { return ReloadMontage; }
-	FORCEINLINE UStaticMeshComponent* GetAttachedGrenade() const { return AttachedGrenade; }
-	FORCEINLINE UBuffComponent* GetBuff() const { return Buff; }
-	bool IsLocallyReloading();
-	FORCEINLINE ULagCompensationComponent* GetLagCompensation() const { return LagCompensation; }
-	FORCEINLINE bool IsHoldingTheFlag() const;
-	ETeam GetTeam();
-	void SetHoldingTheFlag(bool bHolding);
+	AMultiplayerGameMode* MGameMode;
 
 protected:
 	UPROPERTY(VisibleAnywhere)
-	class UStaticMeshComponent* BackpackMesh;
+	UStaticMeshComponent* BackpackMesh;
 
 	//** Hit Boxes used for Server-side Rewind
 	UPROPERTY(EditAnywhere)
-	class UBoxComponent* head;
+	UBoxComponent* head;
 	UPROPERTY(EditAnywhere)
 	UBoxComponent* pelvis;
 	UPROPERTY(EditAnywhere)

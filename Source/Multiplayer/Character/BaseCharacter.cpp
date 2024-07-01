@@ -260,7 +260,7 @@ void ABaseCharacter::ServerLeaveGame_Implementation() // 게임 퇴장
 
 void ABaseCharacter::DropOrDestroyWeapon(AWeapon* Weapon) // 무기를 떨어뜨리거나 소멸시킴
 {
-	if (Weapon == nullptr) return;
+	if (false == IsValid(Weapon)) return;
 
 	if (Weapon->bDestroyWeapon)
 	{
@@ -301,7 +301,7 @@ void ABaseCharacter::SetSpawnPoint() // 게임시작 위치 초기화
 
 		//** 팀 배정이 된 캐릭터들 중 같은 팀의 ATeamPlayerStart들을 TeamPlayerStarts 배열에 다 담는다. 
 		TArray<TObjectPtr<ATeamPlayerStart>> TeamPlayerStarts;
-		for (auto Start : PlayerStarts)
+		for (TObjectPtr<AActor> Start : PlayerStarts)
 		{
 			TObjectPtr<ATeamPlayerStart> TeamStart = Cast<ATeamPlayerStart>(Start);
 			if (IsValid(TeamStart) && TeamStart->Team == MultiplayerPlayerState->GetTeam())
@@ -347,8 +347,9 @@ void ABaseCharacter::Destroyed()
 
 void ABaseCharacter::MulticastGainedTheLead_Implementation() // 1등 Crown 띄우기
 {
-	if (CrownSystem == nullptr) return;
-	if (CrownComponent == nullptr) // Crown이 새로 생기는 경우
+	if (false == IsValid(CrownSystem)) return;
+
+	if (false == IsValid(CrownComponent)) // Crown이 새로 생기는 경우
 	{
 		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			CrownSystem,
@@ -523,10 +524,10 @@ void ABaseCharacter::PostInitializeComponents()
 
 void ABaseCharacter::PlayFireMontage(bool bAiming)
 {
-	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+	if (false == IsValid(Combat) || false == IsValid(Combat->EquippedWeapon)) return;
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && FireWeaponMontage)
+	if (IsValid(AnimInstance) && FireWeaponMontage)
 	{
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName;
@@ -537,7 +538,7 @@ void ABaseCharacter::PlayFireMontage(bool bAiming)
 
 void ABaseCharacter::PlayReloadMontage() // 재장전 몽타주 재생
 {
-	if (Combat == nullptr || Combat->EquippedWeapon == nullptr) return;
+	if (false == IsValid(Combat) || false == IsValid(Combat->EquippedWeapon)) return;
 	
 	TWeakObjectPtr<UAnimInstance> AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance.IsValid() && IsValid(ReloadMontage))
@@ -680,7 +681,7 @@ void ABaseCharacter::MoveRight(float Value)
 {
 	if (bDisableGameplay) return;
 
-	if (Controller != nullptr && Value != 0.0f)
+	if (IsValid(Controller) && Value != 0.0f)
 	{
 		const FRotator YawRotation(0.0f, Controller->GetControlRotation().Yaw, 0.0f);
 		const FVector Direction(FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y));//수정된 Yaw의 Y방향의 FVector
@@ -1100,36 +1101,35 @@ bool ABaseCharacter::IsAiming()
 
 AWeapon* ABaseCharacter::GetEquippedWeapon()
 {
-	if (Combat == nullptr) // 무기가 없다면
-		return nullptr;
+	if (false == IsValid(Combat)) return nullptr; // 무기가 없다면 nullptr 리턴
 
 	return Combat->EquippedWeapon; // 장착된 무기 return
 }
 
 FVector ABaseCharacter::GetHitTarget() const
 {
-	if (Combat == nullptr) return FVector(); //nullptr면 빈 FVector 리턴
+	if (false == IsValid(Combat)) return FVector(); //nullptr면 빈 FVector 리턴
 
 	return Combat->HitTarget; // CombatComponent의 HitTaget을 return
 }
 
 ECombatState ABaseCharacter::GetCombatState() const
 {
-	if (Combat == nullptr) return ECombatState::ECS_MAX;
+	if (false == IsValid(Combat)) return ECombatState::ECS_MAX;
 
 	return Combat->CombatState;
 }
 
 bool ABaseCharacter::IsLocallyReloading()
 {
-	if (Combat == nullptr) return false;
+	if (false == IsValid(Combat)) return false;
 
 	return Combat->bLocallyReloading;
 }
 
 bool ABaseCharacter::IsHoldingTheFlag() const
 {
-	if (Combat == nullptr) return false;
+	if (false == IsValid(Combat)) return false;
 
 	return Combat->bHoldingTheFlag;
 }
@@ -1144,7 +1144,7 @@ ETeam ABaseCharacter::GetTeam()
 
 void ABaseCharacter::SetHoldingTheFlag(bool bHolding)
 {
-	if (Combat == nullptr) return;
+	if (false == IsValid(Combat)) return;
 
 	Combat->bHoldingTheFlag = bHolding;
 }

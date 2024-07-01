@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Multiplayer/HUD/MainHUD.h"
@@ -7,12 +6,17 @@
 #include "Multiplayer/EnumTypes/ECombatState.h"
 #include "CombatComponent.generated.h"
 
+class AMainPlayerController;
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MULTIPLAYER_API UCombatComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
+		
 public:
+	bool ShouldSwapWeapons() { return (EquippedWeapon != nullptr && SecondaryWeapon != nullptr); };
+	FORCEINLINE int32 GetGrenades() const { return Grenades; }
+
 	UCombatComponent();
 	friend class ABaseCharacter;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -51,12 +55,6 @@ protected:
 
 	UFUNCTION(Server, Reliable) //Server RPC
 	void ServerSetAiming(bool bIsAiming);
-
-	UFUNCTION()
-	void OnRep_EquippedWeapon();
-
-	UFUNCTION()
-	void OnRep_SecondaryWeapon();
 
 	void Fire();
 	void FireProjectileWeapon();
@@ -103,22 +101,58 @@ protected:
 	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
 
 private:
-	TWeakObjectPtr<class ABaseCharacter> Character;
-	TWeakObjectPtr<class AMainPlayerController> Controller;
-	TWeakObjectPtr<class AMainHUD> HUD;
+	bool CanFire(); // 총알 발사가 가능한지 true/false 리턴하는 함수
+
+	void InitializeCarriedAmmo(); // 게임 시작 시 CarriedAmmo 설정
+	void InterpFOV(float DeltaTime);
+	void StartFireTimer();
+	void FireTimerFinished();
+
+	void UpdateAmmoValues(); // 총알 수 업데이트
+	void UpdateShotgunAmmoValues();
+	void UpdateHUDGrenades();
+
+	TWeakObjectPtr<ABaseCharacter> Character;
+	TWeakObjectPtr<AMainPlayerController> Controller;
+	TWeakObjectPtr<AMainHUD> HUD;
 
 	//서버에 알린다. 그 후 모든 Client에 알린다.
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon) 
-	AWeapon* EquippedWeapon;
+	TObjectPtr<AWeapon> EquippedWeapon;
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
 
 	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon)
 	AWeapon* SecondaryWeapon;
+	UFUNCTION()
+	void OnRep_SecondaryWeapon();
 
 	UPROPERTY(ReplicatedUsing = OnRep_Aiming)
 	bool bAiming = false; // 조준 
 	bool bAimButtonPressed = false; // 조준버튼눌림 
 	UFUNCTION()
 	void OnRep_Aiming();
+
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo; // 현재 장착무기 탄창의 최대 총알 수
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	// Server에서 변경하면 Replicate 해준다. 모든 Client들은 CombatState을 알아야 한다.
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState = ECombatState::ECS_Unoccupied;
+	UFUNCTION()
+	void OnRep_CombatState();
+
+	UPROPERTY(ReplicatedUsing = OnRep_Grenades) // Replicated 되는 변수로 설정
+	int32 Grenades = 4;
+	UFUNCTION() // Rep Notify
+	void OnRep_Grenades();
+
+	UPROPERTY(ReplicatedUsing = OnRep_HoldingTheFlag)
+	bool bHoldingTheFlag = false; // 점령전 깃발 들고있는지 true/false
+	UFUNCTION()
+	void OnRep_HoldingTheFlag();
 
 	UPROPERTY(EditAnywhere)
 	float BaseWalkSpeed; // Aiming(X) 캐릭터 Walk이동속도 
@@ -147,22 +181,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float ZoomInterpSpeed = 20.0f; // FOV 전환 시간간격
 
-	void InterpFOV(float DeltaTime);
+	UPROPERTY()
+	AWeapon* TheFlag;
 
 	//** 자동 발사 Automatic Fire
 	FTimerHandle FireTimer; // Automatic Fire 타이머 핸들러
 	bool bCanFire = true; // 총알 발사 여부가 가능한지 정하는 true/false 변수
-
-	void StartFireTimer();
-	void FireTimerFinished();
-
-	bool CanFire(); // 총알 발사가 가능한지 true/false 리턴하는 함수
-
-	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
-	int32 CarriedAmmo; // 현재 장착무기 탄창의 최대 총알 수
-
-	UFUNCTION()
-	void OnRep_CarriedAmmo();
 
 	TMap<EWeaponType, int32> CarriedAmmoMap; // 무기별 탄창 최대 총알 수 Map
 	UPROPERTY(EditAnywhere)
@@ -182,38 +206,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingGrenadeLauncherAmmo = 0;
 
-	void InitializeCarriedAmmo(); // 게임 시작 시 CarriedAmmo 설정
-
-	// Server에서 변경하면 Replicate 해준다. 모든 Client들은 CombatState을 알아야 한다.
-	UPROPERTY(ReplicatedUsing = OnRep_CombatState) 
-	ECombatState CombatState = ECombatState::ECS_Unoccupied;
-
-	UFUNCTION()
-	void OnRep_CombatState();
-
-	void UpdateAmmoValues(); // 총알 수 업데이트
-	void UpdateShotgunAmmoValues();
-
-	UPROPERTY(ReplicatedUsing = OnRep_Grenades) // Replicated 되는 변수로 설정
-	int32 Grenades = 4;
-
-	UFUNCTION() // Rep Notify
-	void OnRep_Grenades(); 
-
 	UPROPERTY(EditAnywhere)
 	int32 MaxGrenades = 4;
-
-	void UpdateHUDGrenades();
-
-	UPROPERTY(ReplicatedUsing = OnRep_HoldingTheFlag)
-	bool bHoldingTheFlag = false; // 점령전 깃발 들고있는지 true/false
-	UFUNCTION()
-	void OnRep_HoldingTheFlag();
-
-	UPROPERTY()
-	AWeapon* TheFlag;
-
-public:
-	bool ShouldSwapWeapons() { return (EquippedWeapon != nullptr && SecondaryWeapon != nullptr); };
-	FORCEINLINE int32 GetGrenades() const { return Grenades; }
 };

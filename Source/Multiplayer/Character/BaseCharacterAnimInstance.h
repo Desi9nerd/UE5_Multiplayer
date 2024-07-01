@@ -1,9 +1,11 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "Multiplayer/EnumTypes/ETurningInPlace.h"
 #include "BaseCharacterAnimInstance.generated.h"
+
+class ABaseCharacter;
+class AWeapon;
 
 UCLASS()
 class MULTIPLAYER_API UBaseCharacterAnimInstance : public UAnimInstance
@@ -16,7 +18,7 @@ public:
 
 private:
 	UPROPERTY(BlueprintReadOnly, Category = Character, meta = (AllowPrivateAccess = "true"))
-	class ABaseCharacter* BaseCharacter;
+	ABaseCharacter* BaseCharacter;
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float Speed;
@@ -30,7 +32,7 @@ private:
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	bool bWeaponEquipped; // 현재 장착된 무기가 있는지 확인 true/false
 
-	class AWeapon* EquippedWeapon; // 현재 장착된 무기
+	AWeapon* EquippedWeapon; // 현재 장착된 무기
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	bool bIsCrouched;

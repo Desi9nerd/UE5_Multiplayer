@@ -16,11 +16,11 @@ void UBaseCharacterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 {
 	Super::NativeUpdateAnimation(DeltaTime);
 
-	if (BaseCharacter == nullptr)
+	if (false == IsValid(BaseCharacter))
 	{
 		BaseCharacter = Cast<ABaseCharacter>(TryGetPawnOwner());
 	}
-	if (BaseCharacter == nullptr) return;
+	if (false == IsValid(BaseCharacter)) return;
 
 	FVector Velocity = BaseCharacter->GetVelocity();
 	Velocity.Z = 0.0f; //Z속도를 0으로 설정

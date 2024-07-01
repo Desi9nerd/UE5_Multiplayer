@@ -1,8 +1,10 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "ReturnToMainMenu.generated.h"
+
+class UMultiplayerSessionsSubsystem;
+class UButton;
 
 /** 메뉴로 돌아가기 위젯
  *
@@ -45,11 +47,11 @@ private:
 	void ReturnButtonClicked();
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* ReturnButton;
+	TObjectPtr<UButton> ReturnButton;
 
 	UPROPERTY()
-	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
+	TObjectPtr<UMultiplayerSessionsSubsystem> MultiplayerSessionsSubsystem;
 
 	UPROPERTY()
-	class APlayerController* PlayerController;
+	TObjectPtr<APlayerController> PlayerController;
 };
