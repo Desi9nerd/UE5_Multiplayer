@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "RocketMovementComponent.generated.h"

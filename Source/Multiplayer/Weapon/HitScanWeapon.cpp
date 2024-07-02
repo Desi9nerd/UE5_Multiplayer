@@ -4,10 +4,7 @@
 #include "Multiplayer/PlayerController/MainPlayerController.h"
 #include "Kismet/GameplayStatics.h"
 #include "particles/ParticleSystemComponent.h"
-#include "Sound/SoundCue.h"
-#include "Multiplayer/EnumTypes/EWeaponTypes.h"
 #include "Multiplayer/Components/LagCompensationComponent.h"
-#include "DrawDebugHelpers.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
@@ -18,7 +15,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 
 
 	TObjectPtr<AController> InstigatorController = OwnerPawn->GetController();
-	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(TEXT("MuzzleFlash"));
 
 	if (IsValid(MuzzleFlashSocket) && IsValid(InstigatorController))
 	{
@@ -108,7 +105,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& TraceStart, const FVector& Hi
 			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(World, 	BeamParticles, TraceStart, FRotator::ZeroRotator,true);
 			if (Beam)
 			{
-				Beam->SetVectorParameter(FName("Target"), BeamEnd);
+				Beam->SetVectorParameter(FName(TEXT("Target")), BeamEnd);
 			}
 		}
 	}

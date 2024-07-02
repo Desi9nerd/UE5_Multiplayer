@@ -1,8 +1,9 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Casing.generated.h"
+
+class USoundCue;
 
 UCLASS()
 class MULTIPLAYER_API ACasing : public AActor
@@ -20,10 +21,10 @@ protected:
 
 private:
 	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* CasingMesh; //ÃÑ¾ËÅºÇÇ ¸Å½¬
+	TObjectPtr<UStaticMeshComponent> CasingMesh; //ÃÑ¾ËÅºÇÇ ¸Å½¬
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* ShellSound; //ÃÑ¾ËÅºÇÇ°¡ ºÎµúÇûÀ»¶§ ³ª´Â ¼Ò¸®
+	TObjectPtr<USoundCue> ShellSound; //ÃÑ¾ËÅºÇÇ°¡ ºÎµúÇûÀ»¶§ ³ª´Â ¼Ò¸®
 
 	UPROPERTY(EditAnywhere)
 	float ShellEjectionImpulse; //ÃÑ¾ËÅºÇÇ°¡ ³ª°¥¶§ ¼Óµµ°ª

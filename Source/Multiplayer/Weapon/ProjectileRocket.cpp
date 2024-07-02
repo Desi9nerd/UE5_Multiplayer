@@ -4,7 +4,6 @@
 #include "NiagaraComponent.h"
 #include "Sound/SoundCue.h"
 #include "Components/BoxComponent.h"
-#include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "RocketMovementComponent.h"

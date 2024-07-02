@@ -1,8 +1,9 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Weapon.h"
 #include "ProjectileWeapon.generated.h"
+
+class AProjectile;
 
 UCLASS()
 class MULTIPLAYER_API AProjectileWeapon : public AWeapon
@@ -14,7 +15,7 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere) // Replicated O
-	TSubclassOf<class AProjectile> ProjectileClass;
+	TSubclassOf<AProjectile> ProjectileClass;
 
 	UPROPERTY(EditAnywhere) // Replicated X. Local에서만 Spawn된다
 	TSubclassOf<AProjectile> ServerSideRewindProjectileClass;

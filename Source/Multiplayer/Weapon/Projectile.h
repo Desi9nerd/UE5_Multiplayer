@@ -1,8 +1,13 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Projectile.generated.h"
+
+class UBoxComponent;
+class UNiagaraSystem;
+class UNiagaraComponent;
+class UProjectileMovementComponent;
+class USoundCue;
 
 UCLASS()
 class MULTIPLAYER_API AProjectile : public AActor
@@ -23,10 +28,10 @@ public:
 	UPROPERTY(EditAnywhere)
 	float InitialRocketSpeed = 1500.0f; // ProjectileRocket(=로켓) 속도
 
-	// Only set this for Grenades and Rockets
+	// 수류탄 & 로켓 런처
 	UPROPERTY(EditAnywhere)
 	float Damage = 20.0f; // 발사체가 입힐 데미지
-	// Doesn't matter for Grenades and Rockets
+	
 	UPROPERTY(EditAnywhere)
 	float HeadShotDamage = 40.0f; // 발사체가 입힐 헤드샷 데미지
 
@@ -41,28 +46,28 @@ protected:
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
 	UPROPERTY(EditAnywhere)
-	class UBoxComponent* CollisionBox;
+	TObjectPtr<UBoxComponent> CollisionBox;
 
 	UPROPERTY(EditAnywhere)
-	class UNiagaraSystem* TrailSystem; // 발사체 Trail 이펙트
+	TObjectPtr<UNiagaraSystem> TrailSystem; // 발사체 Trail 이펙트
 
 	UPROPERTY()
-	class UNiagaraComponent* TrailSystemComponent;
+	TObjectPtr<UNiagaraComponent> TrailSystemComponent;
 
 	UPROPERTY(VisibleAnywhere)
-	class UProjectileMovementComponent* ProjectileMovementComponent;
+	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComponent;
 
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* ImpactBlood; // 충돌 후 피 튀김
+	TObjectPtr<UParticleSystem> ImpactBlood; // 충돌 후 피 튀김
 
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* ImpactParticles; // 충돌 후 파티클
+	TObjectPtr<UParticleSystem> ImpactParticles; // 충돌 후 파티클
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* ImpactSound;  // 충돌 후 사운드
+	TObjectPtr<USoundCue> ImpactSound;  // 충돌 후 사운드
 
 	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* ProjectileMesh; // 발사체 매쉬 ex.총알, 로켓
+	TObjectPtr<UStaticMeshComponent> ProjectileMesh; // 발사체 매쉬 ex.총알, 로켓
 
 	UPROPERTY(EditAnywhere)
 	float DamageInnerRadius = 200.0f;
@@ -71,10 +76,10 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere)
-	class UParticleSystem* Tracer; // 발사체 궤적을 보이게 할 파티클
+	TObjectPtr<UParticleSystem> Tracer; // 발사체 궤적을 보이게 할 파티클
 
 	UPROPERTY()
-	class UParticleSystemComponent* TracerComponent;//Tracer를 Spawn시킨 후 저장할 변수
+	TObjectPtr<UParticleSystemComponent> TracerComponent;//Tracer를 Spawn시킨 후 저장할 변수
 
 	FTimerHandle DestroyTimer; // DestroyTimerFinshed() 함수와 함께 쓰일 타이머 변수
 

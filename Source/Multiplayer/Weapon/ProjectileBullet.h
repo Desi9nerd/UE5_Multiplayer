@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Projectile.h"
 #include "ProjectileBullet.generated.h"

@@ -1,9 +1,13 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "Multiplayer/EnumTypes/EWeaponTypes.h"
 #include "MainPlayerController.generated.h"
+
+class AMultiplayerGameMode;
+class UReturnToMainMenu;
+class AMainHUD;
+class UCharacterOverlay;
 
 /** PlayerController
  *  HUD를 Update 한다.
@@ -39,17 +43,20 @@ public:
 	void OnMatchStateSet(FName State, bool bTeamsMatch = false);
 	void HandleMatchHasStarted(bool bTeamsMatch = false); // 경기 시작 시 Announcement 위젯 안 보이게 하기
 	void HandleCooldown(); // 경기 끝난 후 Announcement 위젯 보이게 하기
+	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim); // GameMode에서 실행(=Server에서 call된다)
 
 	float SingleTripTime = 0.0f; // SingleTripTime = 0.5f * RoundTripTime;
 	FHighPingDelegate HighPingDelegate;
-
-	void BroadcastElim(APlayerState* Attacker, APlayerState* Victim); // GameMode에서 실행(=Server에서 call된다)
 
 protected:
 	virtual void BeginPlay() override;
 	void SetHUDTime();
 	void PollInit(); // 체력, 점수, 승패, 수류탄 초기화
 	virtual void SetupInputComponent() override;
+
+	//** Announcement 띄우기 문자
+	FString GetInfoText(const TArray<class AMultiplayerPlayerState*>& Players);
+	FString GetTeamsInfoText(class AMultiplayerGameState* MultiplayerGameState);
 
 	//** Server와 Client 사이의 Sync Time	
 	// Request 받았을 때 Client의 Time을 전달하여 현재 Server Time을 요청하는 함수.
@@ -85,25 +92,30 @@ protected:
 
 	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
 	bool bShowTeamScores = false;
-
 	UFUNCTION()
 	void OnRep_ShowTeamScores();
 
-	//** Announcement 띄우기 문자
-	FString GetInfoText(const TArray<class AMultiplayerPlayerState*>& Players);
-	FString GetTeamsInfoText(class AMultiplayerGameState* MultiplayerGameState);
 
 private:
+	UFUNCTION()
+	void OnRep_MatchState();
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState) // Client들에게 Replicated 되도록 설정.
+	FName MatchState; // GameMode.h의 이름이 같은 MatchState이 있다.
+
 	UPROPERTY()
-	class AMainHUD* MainHUD;
+	TObjectPtr<AMultiplayerGameMode> MultiplayerGameMode;
+
 	UPROPERTY()
-	class AMultiplayerGameMode* MultiplayerGameMode;
+	TObjectPtr<AMainHUD> MainHUD;
+	UPROPERTY()
+	TObjectPtr<UCharacterOverlay> CharacterOverlay;
 
 	//** Return to Main Menu
 	UPROPERTY(EditAnywhere, Category = HUD)
-	TSubclassOf<class UUserWidget> ReturnToMainMenuWidget;
+	TSubclassOf<UUserWidget> ReturnToMainMenuWidget;
 	UPROPERTY()
-	class UReturnToMainMenu* ReturnToMainMenu;
+	TObjectPtr<UReturnToMainMenu> ReturnToMainMenu;
 
 	bool bReturnToMainMenuOpen = false;
 
@@ -112,15 +124,6 @@ private:
 	float WarmupTime = 0.0f;	// 경기 시작 전 대기 시간
 	float CooldownTime = 0.0f;  // 경기 끝난 후 대기 시간
 	uint32 CountdownInt = 0;
-
-	UPROPERTY(ReplicatedUsing = OnRep_MatchState) // Client들에게 Replicated 되도록 설정.
-	FName MatchState; // GameMode.h의 이름이 같은 MatchState이 있다.
-
-	UFUNCTION()
-	void OnRep_MatchState();
-
-	UPROPERTY()
-	class UCharacterOverlay* CharacterOverlay;
 
 	bool bInitializeHealth = false;
 	bool bInitializeScore = false;
@@ -139,7 +142,10 @@ private:
 	int32 HUDDefeats;
 	int32 HUDGrenades;
 
+	//********************************************************
 	//** Ping 관련 변수들 + 함수
+	UFUNCTION(Server, Reliable) // Server RPC
+	void ServerReportPingStatus(bool bHighPing);
 	float HighPingRunningTime = 0.0f;
 	UPROPERTY(EditAnywhere)
 	float HighPingDuration = 5.0f;
@@ -148,6 +154,5 @@ private:
 	float CheckPingFrequency = 20.0f;
 	UPROPERTY(EditAnywhere)
 	float HighPingThreshold = 50.0f;
-	UFUNCTION(Server, Reliable) // Server RPC
-	void ServerReportPingStatus(bool bHighPing);
+	//********************************************************
 };

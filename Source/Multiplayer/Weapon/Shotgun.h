@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "HitScanWeapon.h"
 #include "Shotgun.generated.h"

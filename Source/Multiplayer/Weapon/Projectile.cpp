@@ -2,12 +2,9 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
-#include "Particles/ParticleSystem.h"
-#include "Sound/SoundCue.h"
 #include "Multiplayer/Character/BaseCharacter.h"
 #include "Multiplayer/Multiplayer.h"
 #include "NiagaraFunctionLibrary.h"
-#include "NiagaraComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "ProfilingDebugging/CookStats.h"
 

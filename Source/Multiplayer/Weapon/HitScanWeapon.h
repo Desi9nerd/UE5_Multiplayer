@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Weapon.h"
 #include "HitScanWeapon.generated.h"
@@ -19,21 +18,20 @@ protected:
 	void WeaponTraceHit(const FVector& TraceStart, const FVector& HitTarget, FHitResult& OutHit);
 
 	UPROPERTY(EditAnywhere)
-	class UParticleSystem* ImpactBlood;
+	TObjectPtr<UParticleSystem> ImpactBlood;
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* ImpactParticles; // 충돌 시 파티클
+	TObjectPtr<UParticleSystem> ImpactParticles; // 충돌 시 파티클
 
 	UPROPERTY(EditAnywhere)
-	USoundCue* HitSound; // 피격 사운드
+	TObjectPtr<USoundCue> HitSound; // 피격 사운드
 
 private:
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* BeamParticles; // Trail 궤적 파티클 이펙트
+	TObjectPtr<UParticleSystem> BeamParticles; // Trail 궤적 파티클 이펙트
 
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* MuzzleFlash; // Muzzle 파티클 이펙트
+	TObjectPtr<UParticleSystem> MuzzleFlash; // Muzzle 파티클 이펙트
 
 	UPROPERTY(EditAnywhere)
-	USoundCue* FireSound; // 발사 사운드
-
+	TObjectPtr<USoundCue> FireSound; // 발사 사운드
 };

@@ -1,6 +1,5 @@
 #include "Casing.h"
 #include "Kismet/GameplayStatics.h"
-#include "Sound/SoundCue.h"
 
 ACasing::ACasing()
 {

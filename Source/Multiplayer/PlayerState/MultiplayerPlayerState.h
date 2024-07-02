@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
 #include "Multiplayer/EnumTypes/ETeam.h"
@@ -14,6 +13,9 @@ class MULTIPLAYER_API AMultiplayerPlayerState : public APlayerState
 	GENERATED_BODY()
 
 public:
+	FORCEINLINE ETeam GetTeam() const { return Team; }
+	void SetTeam(ETeam TeamToSet);
+
 	virtual void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override; // APlayerState에 정의된 함수 재정의
 
 	//** Replication notifies
@@ -36,8 +38,4 @@ private:
 	
 	UFUNCTION()
 	void OnRep_Team();
-
-public:
-	FORCEINLINE ETeam GetTeam() const { return Team; }
-	void SetTeam(ETeam TeamToSet);
 };

@@ -162,7 +162,7 @@ void AWeapon::OnEquipped() //무기 장착상태
 	{
 		MainPlayerOwnerController = MainPlayerOwnerController == nullptr ? Cast<AMainPlayerController>(BaseCharcterOwnerCharacter->Controller) : MainPlayerOwnerController;
 		if (MainPlayerOwnerController && HasAuthority() && 
-			MainPlayerOwnerController->HighPingDelegate.IsBound() == false)
+			false == MainPlayerOwnerController->HighPingDelegate.IsBound())
 		{
 			// Dynamic Delegate 등록
 			MainPlayerOwnerController->HighPingDelegate.AddDynamic(this, &AWeapon::OnPingTooHigh);
@@ -338,7 +338,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 
 	if (IsValid(CasingClass)) //총알 탄피 클래스가 있다면
 	{
-		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName("AmmoEject")); //GetSocketTransform을 사용하려면 SkeletalMeshSocket가 필요하다.아래에서 사용하기 위해 변수 생성.
+		const USkeletalMeshSocket* AmmoEjectSocket = WeaponMesh->GetSocketByName(FName(TEXT("AmmoEject"))); //GetSocketTransform을 사용하려면 SkeletalMeshSocket가 필요하다.아래에서 사용하기 위해 변수 생성.
 
 		if (IsValid(AmmoEjectSocket)) // "AmmoEject"소켓이 있다면
 		{
@@ -374,7 +374,7 @@ void AWeapon::Dropped()
 
 FVector AWeapon::TraceEndWithScatter(const FVector& HitTarget) // 산탄분포를 위해 LineTrace의 End Loc 랜덤 변경하는 함수
 {
-	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(TEXT("MuzzleFlash"));
 	if (MuzzleFlashSocket == nullptr) return FVector(); // MuzzleFlash 소켓이 없으면 빈 FVector 리턴
 
 	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());

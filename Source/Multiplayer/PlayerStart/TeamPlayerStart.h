@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerStart.h"
 #include "Multiplayer/EnumTypes/ETeam.h"

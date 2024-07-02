@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Weapon.h"
 #include "Flag.generated.h"
@@ -13,6 +12,8 @@ class MULTIPLAYER_API AFlag : public AWeapon
 	GENERATED_BODY()
 
 public:
+	FORCEINLINE FTransform GetInitialTransform() const { return InitialTransform; }
+
 	AFlag();
 	virtual void Dropped() override;
 	void ResetFlag();
@@ -27,7 +28,4 @@ private:
 	UStaticMeshComponent* FlagMesh;
 
 	FTransform InitialTransform; // 깃발 최초 위치
-
-public:
-	FORCEINLINE FTransform GetInitialTransform() const { return InitialTransform; }
 };

@@ -5,9 +5,12 @@
 #include "Multiplayer/EnumTypes/ETeam.h"
 #include "Weapon.generated.h"
 
+class AMainPlayerController;
+class ABaseCharacter;
 class USoundCue;
 class UWidgetComponent;
 class USphereComponent;
+class ACasing;
 
 UENUM(BlueprintType)
 enum class EWeaponState : uint8 //무기 상태 Enum
@@ -63,41 +66,38 @@ public:
 	virtual void Dropped(); // 소멸 후 무기 떨어뜨리기
 	void AddAmmo(int32 AmmoToAdd);
 	FVector TraceEndWithScatter(const FVector& HitTarget); // 산탄분포를 위해 LineTrace의 End Loc 랜덤 변경하는 함수
+	void EnableCustomDepth(bool bEnable); // Custom Depth 적용 true/false
 
 	//** Crosshair Texture
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-	UTexture2D* CrosshairCenter;
+	TObjectPtr<UTexture2D> CrosshairCenter;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-	UTexture2D* CrosshairLeft;
+	TObjectPtr<UTexture2D> CrosshairLeft;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-	UTexture2D* CrosshairRight;
+	TObjectPtr<UTexture2D> CrosshairRight;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-	UTexture2D* CrosshairTop;
+	TObjectPtr<UTexture2D> CrosshairTop;
 
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
-	UTexture2D* CrosshairBottom;
+	TObjectPtr<UTexture2D> CrosshairBottom;
 
 	//** 조준 중 Zoom FOV
 	UPROPERTY(EditAnywhere)
 	float ZoomedFOV = 30.0f;
-
 	UPROPERTY(EditAnywhere)
 	float ZoomInterpSpeed = 20.0f; // Zoom 전환 시간간격
 
 	//** 자동 발사 Automatic fire	
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float FireDelay = 0.15f; // 발사 간 간격 시간. 발사대기 시간
-
 	UPROPERTY(EditAnywhere, Category = Combat)
 	bool bAutomatic = true; // 자동 발사무기 true/false
 
 	UPROPERTY(EditAnywhere)
-	USoundCue* EquipSound; // 무기장착 사운드
-	
-	void EnableCustomDepth(bool bEnable); // Custom Depth 적용 true/false
+	TObjectPtr<USoundCue> EquipSound; // 무기장착 사운드
 
 	bool bDestroyWeapon = false;
 
@@ -137,16 +137,23 @@ protected:
 	bool bUseServerSideRewind = false; // ServerSideRewind 사용 true/false
 
 	UPROPERTY()
-	class ABaseCharacter* BaseCharcterOwnerCharacter;
+	TObjectPtr<ABaseCharacter> BaseCharcterOwnerCharacter;
 	UPROPERTY()
-	class AMainPlayerController* MainPlayerOwnerController;
+	TObjectPtr<AMainPlayerController> MainPlayerOwnerController;
 	
 private:
-	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	USkeletalMeshComponent* WeaponMesh;
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
+
+	void SpendRound(); // 총알(=Ammo) 소모 후 HUD 업데이트
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	class USphereComponent* AreaSphere;
+	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
+
+	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
+	TObjectPtr<USphereComponent> AreaSphere;
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 	EWeaponState WeaponState; //무기 상태
@@ -155,23 +162,16 @@ private:
 	void OnRep_WeaponState();
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
-	class UWidgetComponent* PickupWidget; //무기줍기 Widget(Press E-PickUp)
+	TObjectPtr<UWidgetComponent> PickupWidget; //무기줍기 Widget(Press E-PickUp)
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
-	class UAnimationAsset* FireAnimation; //무기 Animation
+	TObjectPtr<UAnimationAsset> FireAnimation; //무기 Animation
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<class ACasing> CasingClass; //총알 탄피 class
+	TSubclassOf<ACasing> CasingClass; //총알 탄피 class
 
 	UPROPERTY(EditAnywhere) // 총알은 더 이상 Replicate 하지 않는다.
 	int32 Ammo; // 현재 총알 수
-
-	UFUNCTION(Client, Reliable)
-	void ClientUpdateAmmo(int32 ServerAmmo);
-	UFUNCTION(Client, Reliable)
-	void ClientAddAmmo(int32 AmmoToAdd);
-
-	void SpendRound(); // 총알(=Ammo) 소모 후 HUD 업데이트
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity; // 무기 탄알집에 들어갈 수 있는 총알 최대값

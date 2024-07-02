@@ -1,5 +1,4 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "Projectile.h"
 #include "ProjectileGrenade.generated.h"
@@ -24,5 +23,5 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere)
-	USoundCue* BounceSound;
+	TObjectPtr<USoundCue> BounceSound;
 };
